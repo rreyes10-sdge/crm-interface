@@ -12,7 +12,8 @@ def get_connection():
         host=os.getenv('HOST'),
         user=os.getenv('USER'),
         password=os.getenv('PASSWORD'),
-        database=os.getenv('DATABASE')
+        database=os.getenv('DATABASE'),
+        connect_timeout=20 
     )
 
 def fetch_data(query):

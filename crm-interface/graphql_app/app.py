@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request, render_template_string
 from ariadne import QueryType, graphql_sync, make_executable_schema  # Ensure QueryType is imported
 from graphql_app.resolvers import Resolvers  # Update path to match renamed folder
+from flask_cors import CORS
+
 
 # Define the GraphQL schema
 type_defs = """
@@ -62,6 +64,9 @@ def graphql_server():
     success, result = graphql_sync(schema, data, context_value=request, debug=True)
     status_code = 200 if success else 400
     return jsonify(result), status_code
+
+# Enable CORS
+CORS(app, resources={r"/graphql": {"origins": "*"}})
 
 if __name__ == "__main__":
     app.run(debug=True)
