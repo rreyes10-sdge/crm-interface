@@ -1,24 +1,8 @@
 from flask import Flask, jsonify, request, render_template_string
 from ariadne import QueryType, graphql_sync, make_executable_schema  # Ensure QueryType is imported
-from graphql_app.resolvers import Resolvers  # Update path to match renamed folder
+from graphql_app.resolvers import Resolvers  
 from flask_cors import CORS
-
-
-# Define the GraphQL schema
-type_defs = """
-    type ProjectOverview {
-        projectNumber: String
-        projectName: String
-        totalServicesSelected: Int
-        servicesCompleted: Int
-        openServices: Int
-        percentCompleted: Float
-    }
-
-    type Query {
-        projectOverview: [ProjectOverview]
-    }
-"""
+from graphql_app.schema import type_defs
 
 # Set up resolvers
 query = QueryType()
@@ -71,9 +55,9 @@ def graphql_playground():
 
 @app.route("/graphql", methods=["POST"])
 def graphql_server():
-    print("Request received at /graphql")
-    print("Headers:", request.headers)
-    print("Body:", request.get_data().decode("utf-8"))  # Log raw request body
+    # print("Request received at /graphql")
+    # print("Headers:", request.headers)
+    # print("Body:", request.get_data().decode("utf-8"))  # Log raw request body
     try:
         data = request.get_json()
         print("Parsed JSON Body:", data)  # Log parsed JSON
@@ -89,7 +73,7 @@ def favicon():
     return app.send_static_file('favicon.ico')
 
 # Enable CORS
-CORS(app, resources={r"/graphql": {"origins": "https://fictional-space-cod-v4xq99566gxh6qqq-3000.app.github.dev"}})
+CORS(app, resources={r"/graphql": {"origins": "*"}})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
