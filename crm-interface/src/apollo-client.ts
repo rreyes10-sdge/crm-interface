@@ -1,10 +1,7 @@
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
-  uri: 'https://fictional-space-cod-v4xq99566gxh6qqq-5000.app.github.dev/graphql',
-  headers: {
-    Authorization: `Bearer ${process.env.CODESPACE_AUTH_TOKEN}`, // Replace with your actual token
-  },
+  uri: 'http/://127.0.0.1:5000/graphql',
   cache: new InMemoryCache(),
 });
 
