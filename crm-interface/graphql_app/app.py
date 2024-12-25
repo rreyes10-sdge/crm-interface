@@ -52,14 +52,29 @@ PLAYGROUND_HTML = """
 </html>
 """
 
+@app.route("/")
+def home():
+    """Serve a simple homepage."""
+    return "<h1>Welcome to the GraphQL API</h1><p>Go to <a href='/graphql'>/graphql</a> for the GraphQL Playground.</p>"
+
 @app.route("/graphql", methods=["GET"])
 def graphql_playground():
     """Serve GraphQL Playground."""
     return render_template_string(PLAYGROUND_HTML), 200
 
+# @app.route("/graphql", methods=["POST"])
+# def graphql_server():
+#     """Handle GraphQL requests."""
+#     data = request.get_json()
+#     success, result = graphql_sync(schema, data, context_value=request, debug=True)
+#     status_code = 200 if success else 400
+#     return jsonify(result), status_code
+
 @app.route("/graphql", methods=["POST"])
 def graphql_server():
     """Handle GraphQL requests."""
+    print("Headers:", request.headers)
+    print("Data:", request.get_json())
     data = request.get_json()
     success, result = graphql_sync(schema, data, context_value=request, debug=True)
     status_code = 200 if success else 400
