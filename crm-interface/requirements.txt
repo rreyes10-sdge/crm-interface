@@ -1,0 +1,7 @@
+flask
+graphene
+flask-graphql
+ariadne
+pymysql
+pandas
+python-dotenv
