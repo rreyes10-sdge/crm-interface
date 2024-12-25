@@ -30,6 +30,13 @@ schema = make_executable_schema(type_defs, query)
 # Set up Flask app
 app = Flask(__name__)
 
+@app.before_request
+def log_request():
+    print("Request URL:", request.url)
+    print("Request Method:", request.method)
+    print("Request Headers:", request.headers)
+    print("Request Body:", request.get_data().decode("utf-8"))
+
 # HTML for GraphQL Playground
 PLAYGROUND_HTML = """
 <!DOCTYPE html>
@@ -62,26 +69,27 @@ def graphql_playground():
     """Serve GraphQL Playground."""
     return render_template_string(PLAYGROUND_HTML), 200
 
-# @app.route("/graphql", methods=["POST"])
-# def graphql_server():
-#     """Handle GraphQL requests."""
-#     data = request.get_json()
-#     success, result = graphql_sync(schema, data, context_value=request, debug=True)
-#     status_code = 200 if success else 400
-#     return jsonify(result), status_code
-
 @app.route("/graphql", methods=["POST"])
 def graphql_server():
-    """Handle GraphQL requests."""
+    print("Request received at /graphql")
     print("Headers:", request.headers)
-    print("Data:", request.get_json())
-    data = request.get_json()
-    success, result = graphql_sync(schema, data, context_value=request, debug=True)
-    status_code = 200 if success else 400
-    return jsonify(result), status_code
+    print("Body:", request.get_data().decode("utf-8"))  # Log raw request body
+    try:
+        data = request.get_json()
+        print("Parsed JSON Body:", data)  # Log parsed JSON
+        success, result = graphql_sync(schema, data, context_value=request, debug=True)
+        status_code = 200 if success else 400
+        return jsonify(result), status_code
+    except Exception as e:
+        print("Error:", e)  # Log any exceptions
+        return jsonify({"error": str(e)}), 400
+    
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('favicon.ico')
 
 # Enable CORS
-CORS(app, resources={r"/graphql": {"origins": "*"}})
+CORS(app, resources={r"/graphql": {"origins": "https://fictional-space-cod-v4xq99566gxh6qqq-3000.app.github.dev"}})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
