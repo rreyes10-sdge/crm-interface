@@ -14,12 +14,12 @@ schema = make_executable_schema(type_defs, query)
 # Set up Flask app
 app = Flask(__name__)
 
-@app.before_request
-def log_request():
-    print("Request URL:", request.url)
-    print("Request Method:", request.method)
-    print("Request Headers:", request.headers)
-    print("Request Body:", request.get_data().decode("utf-8"))
+# @app.before_request
+# def log_request():
+    # print("Request URL:", request.url)
+    # print("Request Method:", request.method)
+    # print("Request Headers:", request.headers)
+    # print("Request Body:", request.get_data().decode("utf-8"))
 
 # HTML for GraphQL Playground
 PLAYGROUND_HTML = """
@@ -60,7 +60,7 @@ def graphql_server():
     # print("Body:", request.get_data().decode("utf-8"))  # Log raw request body
     try:
         data = request.get_json()
-        print("Parsed JSON Body:", data)  # Log parsed JSON
+        # print("Parsed JSON Body:", data)  # Log parsed JSON
         success, result = graphql_sync(schema, data, context_value=request, debug=True)
         status_code = 200 if success else 400
         return jsonify(result), status_code

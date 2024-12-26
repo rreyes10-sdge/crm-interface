@@ -7,9 +7,17 @@ type_defs = """
         openServices: Int
         percentCompleted: Float
         programId: Int
+        status: String
+        organizationName: String
     }
 
     type Query {
-        projectOverview: [ProjectOverview]
+        projectOverview(
+            programId: Int
+            projectName: String
+            projectNumber: String
+            status: String
+            organizationName: String
+        ): [ProjectOverview]
     }
 """
