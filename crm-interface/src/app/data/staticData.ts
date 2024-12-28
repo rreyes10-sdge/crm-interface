@@ -277,7 +277,7 @@ export const projectData: ProjectRow[] = [
     ProjectNumber: 'TE245005',
     ProjectId: '3237',
     ProjectName: '4927 Oceanside Blvd',
-    OrganizationName: 'Oceanside Police Department -City of Oceanside CA',
+    OrganizationName: 'Oceanside Police Department - City of Oceanside CA',
     OrganizationId: '2275',
     ProjectStatus: 'Duplicate',
     ProjectLead: 'Eva Brungardt',
