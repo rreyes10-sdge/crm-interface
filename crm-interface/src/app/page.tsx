@@ -1,15 +1,13 @@
-import Image from "next/image";
+'use client';  
+
 import styles from "./page.module.css";
-import ProjectOverview from './components/ProjectOverview';
+import Table from "./components/Table";
 
-
-export default function Page() {
+export default function Home() {
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <h1>GraphQL Project Overview</h1>
-        <ProjectOverview />
-      </main>
+        <h1>Hello World</h1>
+        <Table />
     </div>
   );
 }

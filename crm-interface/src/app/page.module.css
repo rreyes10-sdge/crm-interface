@@ -11,9 +11,10 @@
   align-items: center;
   justify-items: center;
   min-height: 100svh;
-  padding: 80px;
+  padding: 30px;
   gap: 64px;
   font-family: var(--font-geist-sans);
+  overflow-x: hidden; /* Add this line */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,6 +33,7 @@
   flex-direction: column;
   gap: 32px;
   grid-row-start: 2;
+  width: 100%; /* Add this line */
 }
 
 .main ol {
@@ -59,6 +61,7 @@
 .ctas {
   display: flex;
   gap: 16px;
+  width: 100%; /* Add this line */
 }
 
 .ctas a {
@@ -96,6 +99,7 @@ a.secondary {
   grid-row-start: 3;
   display: flex;
   gap: 24px;
+  width: 100%; /* Add this line */
 }
 
 .footer a {
@@ -128,12 +132,14 @@ a.secondary {
 
 @media (max-width: 600px) {
   .page {
-    padding: 32px;
-    padding-bottom: 80px;
+    padding: 18px;
+    padding-bottom: 40px;
+    overflow-x: hidden; /* Add this line */
   }
 
   .main {
     align-items: center;
+    width: 100%; /* Add this line */
   }
 
   .main ol {
@@ -142,6 +148,7 @@ a.secondary {
 
   .ctas {
     flex-direction: column;
+    width: 100%; /* Add this line */
   }
 
   .ctas a {
@@ -158,6 +165,7 @@ a.secondary {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    width: 100%; /* Add this line */
   }
 }
 

@@ -56,14 +56,8 @@ class Resolvers:
         {where_clause};  -- Dynamically insert WHERE clause
         """
  
-        # Debug: Log the constructed query
-        # print("Constructed SQL Query:", query)
- 
         # Fetch data from the database
         df = fetch_data(query)
- 
-        # Log the fetched data
-        # print("Fetched DataFrame:", df)
  
         # Return transformed data
         return [
