@@ -4,20 +4,22 @@ import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 
 const GET_PROJECT_OVERVIEW = gql`
-  query {
-    projectOverview {
-      projectNumber
+  query GetProjectOverview($programId: Int!) {
+    projectOverview(programId: $programId) {
       projectName
-      totalServicesSelected
+      projectNumber
+      programId
       servicesCompleted
-      openServices
-      percentCompleted
+      status
+      organizationName
     }
   }
 `;
 
 const ProjectOverview = () => {
-  const { loading, error, data } = useQuery(GET_PROJECT_OVERVIEW);
+  const { loading, error, data } = useQuery(GET_PROJECT_OVERVIEW, {
+    variables: { programId: 16 },
+  });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
@@ -28,7 +30,7 @@ const ProjectOverview = () => {
       <ul>
         {data.projectOverview.map((project: any) => (
           <li key={project.projectNumber}>
-            {project.projectName} - {project.percentCompleted}%
+            {project.projectName} - {project.servicesCompleted} services completed - {project.status}
           </li>
         ))}
       </ul>
