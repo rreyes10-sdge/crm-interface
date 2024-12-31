@@ -99,7 +99,7 @@ export default function MainGrid() {
     }, []);
 
     return (
-        <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '85%' }, mx: 'auto' }}>
+        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto' }}>
             <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
                 Overview
             </Typography>
