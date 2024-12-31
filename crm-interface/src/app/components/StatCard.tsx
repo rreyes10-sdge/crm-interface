@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -16,6 +14,7 @@ export type StatCardProps = {
   value: string;
   interval: string;
   trend: 'up' | 'down' | 'neutral';
+  percentageChange: number;
   data: number[];
 };
 
@@ -48,6 +47,7 @@ export default function StatCard({
   value,
   interval,
   trend,
+  percentageChange,
   data,
 }: StatCardProps) {
   const theme = useTheme();
@@ -77,7 +77,7 @@ export default function StatCard({
 
   const color = labelColors[trend];
   const chartColor = trendColors[trend];
-  const trendValues = { up: '+25%', down: '-25%', neutral: '+5%' };
+  const trendValues = { up: 'Up', down: 'Down', neutral: 'Neutral' };
 
   return (
     <Card variant="outlined" sx={{ height: '100%', flexGrow: 1 }}>
@@ -97,7 +97,7 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={trendValues[trend]} />
+              <Chip size="small" color={color} label={`${trendValues[trend]} (${percentageChange}%)`} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}

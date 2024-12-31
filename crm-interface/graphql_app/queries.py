@@ -104,9 +104,266 @@ QUERY_DURATION = """SELECT
     group by p.ProjectId, a.PhaseId 
     ORDER BY p.ProjectId asc;"""
 
+QUERY_PROJECTS = """-- Generate a series of dates for the past 30 days
+WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+)
+SELECT 
+    ds.Date AS LogDate,
+    COALESCE(COUNT(DISTINCT p.ProjectId), 0) AS ProjectCount
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.Project p ON DATE(p.CreatedAt) = ds.Date AND p.ProgramId = 16
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY ds.Date
+ORDER BY ds.Date;"""
+
+QUERY_PROJECTS_TREND = """-- Generate a series of dates for the past 30 days
+WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+),
+-- Query to count projects each day
+ProjectCounts AS (
+    SELECT 
+        ds.Date AS LogDate,
+        COALESCE(COUNT(DISTINCT p.ProjectId), 0) AS ProjectCount
+    FROM DateSeries ds
+    LEFT JOIN cleantranscrm.Project p ON DATE(p.CreatedAt) = ds.Date AND p.ProgramId = 16
+    WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+    GROUP BY ds.Date
+    ORDER BY ds.Date
+),
+-- Calculate the average count for the first half of the 30-day period
+FirstHalf AS (
+    SELECT AVG(ProjectCount) AS AvgFirstHalf
+    FROM ProjectCounts
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() - INTERVAL 16 DAY
+),
+-- Calculate the average count for the second half of the 30-day period
+SecondHalf AS (
+    SELECT AVG(ProjectCount) AS AvgSecondHalf
+    FROM ProjectCounts
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 15 DAY AND CURDATE()
+)
+-- Determine the trend based on the averages
+SELECT 
+    CASE 
+        WHEN sh.AvgSecondHalf > fh.AvgFirstHalf THEN 'up'
+        WHEN sh.AvgSecondHalf < fh.AvgFirstHalf THEN 'down'
+        ELSE 'neutral'
+    END AS Trend,
+    CASE 
+        WHEN fh.AvgFirstHalf = 0 THEN 0
+        ELSE ROUND(((sh.AvgSecondHalf - fh.AvgFirstHalf) / fh.AvgFirstHalf) * 100, 2)
+    END AS PercentageChange
+FROM FirstHalf fh, SecondHalf sh;"""
+
+QUERY_LOGGED_ACTIVITIES = """WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+)
+-- Query to count activities logged each day
+SELECT 
+    ds.Date AS LogDate,
+    COALESCE(COUNT(a.ActivityId), 0) AS ActivityCount
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date
+LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId AND p.ProgramId = 16
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+  AND (a.ActivityTypeId IN (1, 2, 3, 4, 5, 6) OR a.ActivityId IS NULL)
+GROUP BY ds.Date
+ORDER BY ds.Date;"""
+
+QUERY_LOGGED_ACTIVITIES_TREND = """-- Generate a series of dates for the past 30 days
+WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+),
+-- Query to count activities logged each day
+ActivityCounts AS (
+    SELECT 
+        ds.Date AS LogDate,
+        COALESCE(COUNT(a.ActivityId), 0) AS ActivityCount
+    FROM DateSeries ds
+    LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date
+    LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
+    WHERE p.ProgramId = 16
+      AND a.ActivityTypeId IN (1, 2, 3, 4, 5, 6)
+      AND ds.Date >= CURDATE() - INTERVAL 30 DAY
+    GROUP BY ds.Date
+    ORDER BY ds.Date
+),
+-- Calculate the average count for the first half of the 30-day period
+FirstHalf AS (
+    SELECT AVG(ActivityCount) AS AvgFirstHalf
+    FROM ActivityCounts
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() - INTERVAL 16 DAY
+),
+-- Calculate the average count for the second half of the 30-day period
+SecondHalf AS (
+    SELECT AVG(ActivityCount) AS AvgSecondHalf
+    FROM ActivityCounts
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 15 DAY AND CURDATE()
+)
+-- Determine the trend based on the averages
+SELECT 
+    CASE 
+        WHEN sh.AvgSecondHalf > fh.AvgFirstHalf THEN 'up'
+        WHEN sh.AvgSecondHalf < fh.AvgFirstHalf THEN 'down'
+        ELSE 'neutral'
+    END AS Trend,
+    CASE 
+        WHEN fh.AvgFirstHalf = 0 THEN 0
+        ELSE ROUND(((sh.AvgSecondHalf - fh.AvgFirstHalf) / fh.AvgFirstHalf) * 100, 2)
+    END AS PercentageChange
+FROM FirstHalf fh, SecondHalf sh;"""
+
+QUERY_ATTRIBUTES_FILLED = """WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+)
+-- Query to count attributes filled in each day
+SELECT 
+    ds.Date AS CompletionDate,
+    COALESCE(COUNT(pav.Id), 0) AS FilledCount
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY ds.Date
+ORDER BY ds.Date;"""
+
+QUERY_ATTRIBUTES_FILLED_TREND = """WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+),
+-- Query to count attributes filled in each day
+CompletedCounts AS (
+    SELECT 
+        ds.Date AS CompletionDate,
+        COALESCE(COUNT(pav.Id), 0) AS FilledCount
+    FROM DateSeries ds
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date
+    WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+    GROUP BY ds.Date
+    ORDER BY ds.Date
+),
+-- Calculate the average count for the first half of the 30-day period
+FirstHalf AS (
+    SELECT AVG(FilledCount) AS AvgFirstHalf
+    FROM CompletedCounts
+    WHERE CompletionDate BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() - INTERVAL 16 DAY
+),
+-- Calculate the average count for the second half of the 30-day period
+SecondHalf AS (
+    SELECT AVG(FilledCount) AS AvgSecondHalf
+    FROM CompletedCounts
+    WHERE CompletionDate BETWEEN CURDATE() - INTERVAL 15 DAY AND CURDATE()
+)
+-- Determine the trend based on the averages
+SELECT 
+    CASE 
+        WHEN sh.AvgSecondHalf > fh.AvgFirstHalf THEN 'up'
+        WHEN sh.AvgSecondHalf < fh.AvgFirstHalf THEN 'down'
+        ELSE 'neutral'
+    END AS Trend,
+    CASE 
+        WHEN fh.AvgFirstHalf = 0 THEN 0
+        ELSE ROUND(((sh.AvgSecondHalf - fh.AvgFirstHalf) / fh.AvgFirstHalf) * 100, 2)
+    END AS PercentageChange
+FROM FirstHalf fh, SecondHalf sh;"""
+
+QUERY_SERVICES_COMPLETED = """WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+)
+SELECT 
+    ds.Date AS CompletionDate,
+    COALESCE(COUNT(DISTINCT CONCAT(pav.projectid, '-', pav.ProgramAttributeId)), 0) AS CompletedCount
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete'
+LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY ds.Date
+ORDER BY ds.Date;"""
+
+QUERY_SERVICES_COMPLETED_TREND = """-- Generate a series of dates for the past 30 days
+WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+),
+-- Query to count completed services each day
+CompletedCounts AS (
+    SELECT 
+        ds.Date AS CompletionDate,
+        COALESCE(COUNT(DISTINCT CONCAT(pav.projectid, '-', pav.ProgramAttributeId)), 0) AS CompletedCount
+    FROM DateSeries ds
+    LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete'
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date
+    WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+    GROUP BY ds.Date
+    ORDER BY ds.Date
+),
+-- Calculate the average count for the first half of the 30-day period
+FirstHalf AS (
+    SELECT AVG(CompletedCount) AS AvgFirstHalf
+    FROM CompletedCounts
+    WHERE CompletionDate BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() - INTERVAL 16 DAY
+),
+-- Calculate the average count for the second half of the 30-day period
+SecondHalf AS (
+    SELECT AVG(CompletedCount) AS AvgSecondHalf
+    FROM CompletedCounts
+    WHERE CompletionDate BETWEEN CURDATE() - INTERVAL 15 DAY AND CURDATE()
+)
+-- Determine the trend based on the averages and calculate the percentage change
+SELECT 
+    CASE 
+        WHEN sh.AvgSecondHalf > fh.AvgFirstHalf THEN 'up'
+        WHEN sh.AvgSecondHalf < fh.AvgFirstHalf THEN 'down'
+        ELSE 'neutral'
+    END AS Trend,
+    CASE 
+        WHEN fh.AvgFirstHalf = 0 THEN 0
+        ELSE ROUND(((sh.AvgSecondHalf - fh.AvgFirstHalf) / fh.AvgFirstHalf) * 100, 2)
+    END AS PercentageChange
+FROM FirstHalf fh, SecondHalf sh;"""
+
 # Dictionary mapping query names to their SQL strings
 QUERIES = {
     'summary': QUERY_SUMMARY,
     'duration': QUERY_DURATION,
+    'projects': QUERY_PROJECTS,
+    'projects-trend': QUERY_PROJECTS_TREND,
+    'logged-activities': QUERY_LOGGED_ACTIVITIES,
+    'logged-activities-trend': QUERY_LOGGED_ACTIVITIES_TREND,
+    'attributes-filled': QUERY_ATTRIBUTES_FILLED,
+    'attributes-filled-trend': QUERY_ATTRIBUTES_FILLED_TREND,
+    'services-completed': QUERY_SERVICES_COMPLETED,
+    'services-completed-trend': QUERY_SERVICES_COMPLETED_TREND,
     # ... add other queries with descriptive names
 }

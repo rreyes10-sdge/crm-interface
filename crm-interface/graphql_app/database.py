@@ -29,11 +29,11 @@ def get_connection():
         print(f"Error connecting to database: {e}")
         return None
 
-def fetch_data(query):
+def fetch_data(query, params=None):
     """Fetch data from the database."""
     connection = get_connection()
     try:
-        return pd.read_sql_query(query, connection)
+        return pd.read_sql_query(query, connection, params=params)
     finally:
         connection.close()
 

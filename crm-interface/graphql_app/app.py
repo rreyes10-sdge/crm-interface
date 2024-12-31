@@ -1,22 +1,28 @@
-from flask import Flask, jsonify, request, render_template_string
+from flask import Flask, jsonify, request, render_template_string, abort
 from ariadne import QueryType, graphql_sync, make_executable_schema
 from graphql_app.resolvers import Resolvers  
 from flask_cors import CORS
 from graphql_app.schema import type_defs
-from .db_logic import fetch_and_process_data, get_connection, fetch_data
+from .db_logic import get_connection, fetch_data
 import pandas as pd
 from .queries import QUERIES
-from werkzeug.exceptions import HTTPException  # Import HTTPException from werkzeug
+from werkzeug.exceptions import HTTPException
 
 # Set up resolvers
 query = QueryType()
 query.set_field("projectOverview", Resolvers.resolve_project_overview)
+query.set_field("projectsWithFollowUpDates", Resolvers.resolve_projects_with_follow_up_dates)
+query.set_field("servicesStarted", Resolvers.resolve_services_started)
+query.set_field("projectsNotStarted", Resolvers.resolve_projects_not_started)
+query.set_field("completedProjects", Resolvers.resolve_completed_projects)
 
 # Create the executable schema
 schema = make_executable_schema(type_defs, query)
 
 # Set up Flask app
 app = Flask(__name__)
+
+CORS(app, resources={r"/graphql": {"origins": "http://localhost:3000"}})
 
 # HTML for GraphQL Playground
 PLAYGROUND_HTML = """
@@ -39,6 +45,18 @@ PLAYGROUND_HTML = """
   </body>
 </html>
 """
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    """Return JSON instead of HTML for HTTP errors."""
+    response = e.get_response()
+    response.data = jsonify({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    }).get_data(as_text=True)
+    response.content_type = "application/json"
+    return response
 
 @app.route("/")
 def home():
@@ -68,19 +86,19 @@ def favicon():
 @app.route("/api/data/<query_name>", methods=["GET"])
 def get_specific_data(query_name: str):
     if query_name not in QUERIES:
-        raise HTTPException(description=f"Query '{query_name}' not found", response=404)
+        abort(404, description=f"Query '{query_name}' not found")
         
     try:
         connection = get_connection()
         if connection is None:
-            raise HTTPException(description="Database connection failed", response=500)
+            abort(500, description="Database connection failed")
             
         df = fetch_data(QUERIES[query_name], connection)
         return jsonify(df.to_dict(orient='records'))
         
     except Exception as e:
         print("Error:", e)  # Log any exceptions
-        raise HTTPException(description=str(e), response=500)
+        abort(500, description=str(e))
     finally:
         if connection:
             connection.close()

@@ -2,6 +2,7 @@
   "name": "crm-interface",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,13 +13,19 @@
     "@apollo/client": "^3.12.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.3.0",
     "@mui/material": "^6.3.0",
     "@mui/x-charts": "^7.23.2",
     "@mui/x-data-grid": "^7.23.5",
+    "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
     "graphql": "^16.10.0",
     "next": "^15.1.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
