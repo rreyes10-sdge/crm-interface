@@ -1,6 +1,14 @@
-import React from 'react';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Card, CardContent, CardActions, Collapse, CardHeader } from '@mui/material';
 import getStatusColor from '../../utils/statusColor';
+import serviceImageMap from '../../utils/serviceImageMap';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import BallotOutlinedIcon from '@mui/icons-material/BallotOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { styled } from '@mui/material/styles';
+import IconButton, { IconButtonProps } from '@mui/material/IconButton';
+import ProjectAttributes from './ProjectAttributes';
+
 
 const statuses = ['Projects Not Started', 'Services Started', 'Follow Up Dates', 'Completed Projects'];
 
@@ -18,12 +26,32 @@ interface KanbanBoardProps {
     tasks: Task[];
 }
 
+interface ExpandMoreProps extends IconButtonProps {
+    expand: boolean;
+}
+
+const ExpandMore = styled((props: ExpandMoreProps) => {
+    const { expand, ...other } = props;
+    return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+    marginLeft: 'auto',
+    transition: theme.transitions.create('transform', {
+        duration: theme.transitions.duration.shortest,
+    }),
+    transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+}));
+
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
+    const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
+
+    const handleExpandClick = (taskId: number) => {
+        console.log(`Clicked task ID: ${taskId}`);
+        setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+        console.log(`Expanded task ID: ${expandedTaskId === taskId ? null : taskId}`);
+    };
+
     return (
         <Box>
-            <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                Kanban Board View
-            </Typography>
             <Box display="flex" justifyContent="space-between" sx={{ overflowX: 'auto' }}>
                 {statuses.map((status) => {
                     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -43,18 +71,68 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                 {status} <span style={{ color: getStatusColor(status) }}>({filteredTasks.length})</span>
                             </Typography>
                             {filteredTasks.map((task) => (
-                                <Card key={`${task.projectNumber}-${task.serviceName}`} sx={{ marginBottom: 2 }}>
-                                    <CardContent>
-                                        <Typography variant="h6">
-                                            {task.projectNumber} - {task.organizationName}
-                                        </Typography>
-                                        <Typography>
-                                            <strong>Service:</strong> {task.serviceName}
-                                        </Typography>
-                                        <Typography>
-                                            <strong>Latest Activity:</strong> {task.latestActivity}
-                                        </Typography>
+                                <Card key={task.id} sx={{ marginBottom: 2 }}>
+                                    <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <img
+                                            src={serviceImageMap[task.coreName as keyof typeof serviceImageMap]}
+                                            alt={task.serviceName}
+                                            title={task.serviceName}
+                                            width="32"
+                                            height="32"
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <Box>
+                                            <Typography variant="caption">
+                                                {task.projectNumber}
+                                            </Typography>
+                                            <Typography variant="h6">
+                                                {task.organizationName}
+                                            </Typography>
+                                            <Typography>
+                                                <strong>Service:</strong> {task.serviceName}
+                                            </Typography>
+                                        </Box>
                                     </CardContent>
+                                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }} />
+                                    <CardActions disableSpacing>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <ExpandMore
+                                                expand={expandedTaskId === task.id}
+                                                onClick={() => handleExpandClick(task.id)}
+                                                aria-expanded={expandedTaskId === task.id}
+                                                aria-label="show more"
+                                            >
+                                                <BallotOutlinedIcon />
+                                            </ExpandMore>
+                                        </Box>
+                                        {task.latestActivity !== "No recorded activity yet" && (
+                                            <ExpandMore
+                                                expand={expandedTaskId === task.id + 1000} // Use a different ID for latest activity
+                                                onClick={() => handleExpandClick(task.id + 1000)}
+                                                aria-expanded={expandedTaskId === task.id + 1000}
+                                                aria-label="show latest activity"
+                                            >
+                                                {expandedTaskId === task.id + 1000 ? <ExpandMoreIcon /> : <ChatBubbleOutlineIcon />}
+                                            </ExpandMore>
+                                        )}
+                                    </CardActions>
+                                    <Collapse in={expandedTaskId === task.id} timeout="auto" unmountOnExit>
+                                        <CardContent>
+                                            <ProjectAttributes
+                                                projectNumber={task.projectNumber}
+                                                organizationName={task.organizationName}
+                                                coreName={task.coreName}
+                                                serviceName={task.serviceName}
+                                            />
+                                        </CardContent>
+                                    </Collapse>
+                                    <Collapse in={expandedTaskId === task.id + 1000} timeout="auto" unmountOnExit>
+                                        <CardContent>
+                                            <Typography>
+                                                <strong>Latest Activity:</strong> {task.latestActivity}
+                                            </Typography>
+                                        </CardContent>
+                                    </Collapse>
                                 </Card>
                             ))}
                         </Box>

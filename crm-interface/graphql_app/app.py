@@ -22,8 +22,6 @@ schema = make_executable_schema(type_defs, query)
 # Set up Flask app
 app = Flask(__name__)
 
-CORS(app, resources={r"/graphql": {"origins": "http://localhost:3000"}})
-
 # HTML for GraphQL Playground
 PLAYGROUND_HTML = """
 <!DOCTYPE html>
@@ -109,6 +107,7 @@ def health_check():
     return {"status": "healthy"}
 
 # Enable CORS
+CORS(app, resources={r"/graphql": {"origins": "http://localhost:3000"}})
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
 if __name__ == "__main__":

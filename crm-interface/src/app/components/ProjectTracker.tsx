@@ -6,6 +6,7 @@ import ServicesStartedDataGrid from './ServicesStartedDataGrid';
 import ProjectsNotStartedDataGrid from './ProjectsNotStartedDataGrid';
 import CompletedProjectsDataGrid from './CompletedProjectsDataGrid';
 import KanbanBoard from './KanbanBoard';
+import hashStringToNumber from '../../utils/hashStringToNumber';
 
 const GET_ALL_PROJECTS = gql`
     query GetAllProjects {
@@ -79,6 +80,7 @@ type Project = {
 };
 
 type Task = {
+    id: number;
     projectNumber: string;
     projectId: string;
     organizationName: string;
@@ -101,10 +103,10 @@ const ProjectTracker = () => {
     useEffect(() => {
         if (data) {
             const combinedTasks: Task[] = [
-                ...data.projectsWithFollowUpDates.map((task: Project) => ({ ...task, status: 'Follow Up Dates' })),
-                ...data.servicesStarted.map((task: Project) => ({ ...task, status: 'Services Started' })),
-                ...data.projectsNotStarted.map((task: Project) => ({ ...task, status: 'Projects Not Started' })),
-                ...data.completedProjects.map((task: Project) => ({ ...task, status: 'Completed Projects' })),
+                ...data.projectsWithFollowUpDates.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Follow Up Dates' })),
+                ...data.servicesStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Services Started' })),
+                ...data.projectsNotStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Projects Not Started' })),
+                ...data.completedProjects.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Completed Projects' })),
             ];
             setTasks(combinedTasks);
         }
