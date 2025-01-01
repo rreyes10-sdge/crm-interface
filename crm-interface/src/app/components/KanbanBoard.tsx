@@ -15,6 +15,7 @@ const statuses = ['Projects Not Started', 'Services Started', 'Follow Up Dates',
 interface Task {
     id: number;
     status: string;
+    projectId: string;
     projectNumber: string;
     organizationName: string;
     coreName: string;
@@ -62,7 +63,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                             sx={{
                                 backgroundColor: '#f4f5f7',
                                 padding: 2,
-                                width: '24%', // Increase the width of each column
+                                width: '24%',
                                 minHeight: 500,
                                 marginRight: 2,
                             }}
@@ -119,6 +120,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                     <Collapse in={expandedTaskId === task.id} timeout="auto" unmountOnExit>
                                         <CardContent>
                                             <ProjectAttributes
+                                                projectId={task.projectId}
                                                 projectNumber={task.projectNumber}
                                                 organizationName={task.organizationName}
                                                 coreName={task.coreName}

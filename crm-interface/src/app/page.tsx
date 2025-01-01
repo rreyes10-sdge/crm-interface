@@ -39,7 +39,7 @@ const Home = () => {
           <Tab label="Project Tracker" />
         </Tabs>
       </Box>
-      <Box sx={{ p: 0 }}>
+      <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
         {selectedTab === 0 && <MainGrid />}
         {selectedTab === 1 && <ProjectTracker />}
       </Box>
