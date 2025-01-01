@@ -32,16 +32,16 @@ async function initializeData() {
     try {
         const projectsData = await fetchData('http://127.0.0.1:5000/api/data/projects');
         const projectsTrend = await fetchTrend('http://127.0.0.1:5000/api/data/projects-trend');
-        
+
         const loggedActivitiesData = await fetchData('http://127.0.0.1:5000/api/data/logged-activities');
         const loggedActivitiesTrend = await fetchTrend('http://127.0.0.1:5000/api/data/logged-activities-trend');
-        
+
         const attributesFilledData = await fetchData('http://127.0.0.1:5000/api/data/attributes-filled');
         const attributesFilledTrend = await fetchTrend('http://127.0.0.1:5000/api/data/attributes-filled-trend');
-        
+
         const servicesCompletedData = await fetchData('http://127.0.0.1:5000/api/data/services-completed');
         const servicesCompletedTrend = await fetchTrend('http://127.0.0.1:5000/api/data/services-completed-trend');
-        
+
         return [
             {
                 title: 'Projects',
@@ -99,14 +99,14 @@ export default function MainGrid() {
     }, []);
 
     return (
-        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto' }}>
+        <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '100%' }, mx: 'auto' }}>
             <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
                 Overview
             </Typography>
             <Grid
                 container
                 spacing={2}
-                columns={12}
+                columns={15}
                 sx={{ mb: (theme) => theme.spacing(2) }}
             >
                 {data.map((card, index) => (
@@ -114,28 +114,15 @@ export default function MainGrid() {
                         <StatCard {...card} />
                     </Grid>
                 ))}
+                <Grid item xs={12} sm={6} lg={3}>
+                    <ChartProjectSubmissions />
+                </Grid>
             </Grid>
             <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
                 Details
             </Typography>
-            <Grid container spacing={2} columns={12}>
-                <Grid item xs={11} lg={9}>
-                    <CustomizedDataGrid />
-                </Grid>
-                <Grid item xs={11} lg={3}>
-                    <Stack
-                        gap={2}
-                        direction={{ xs: 'column', sm: 'row', lg: 'column' }}
-                        sx={{
-                            pt: {
-                                xs: 0, // No padding on mobile
-                                lg: 11 // Padding on larger screens
-                            }
-                        }}
-                    >
-                        <ChartProjectSubmissions />
-                    </Stack>
-                </Grid>
+            <Grid item xs={11} lg={13}>
+                <CustomizedDataGrid />
             </Grid>
         </Box>
     );

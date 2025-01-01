@@ -135,8 +135,8 @@ const ProjectTracker = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto' }}>
-            <Box display="flex" justifyContent="center" sx={{ mb: 2 }}>
+        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto', marginLeft: 0, marginRight: 0 }}>
+            <Box display="flex" justifyContent="center" sx={{ mb: 2, marginLeft: 0, marginRight: 0 }}>
                 <Button variant="contained" onClick={toggleView}>
                     {view === 'table' ? 'Switch to Kanban View' : 'Switch to Table View'}
                 </Button>

@@ -17,6 +17,9 @@ QUERY_SUMMARY = """SELECT
             WHEN D.USC = 'false' THEN 'False'
             ELSE 'None'
         END AS 'USC',
+        F.SubmissionDate,
+        G.VettingCall,
+        H.ConsultationCall,
         A.ServiceSelectionCount as 'TotalServicesSelected',
         COALESCE(B.ServicesCompleted, 0) as 'ServicesCompleted',
         COALESCE(C.ServicesStarted, 0) - COALESCE(B.ServicesCompleted, 0) as 'ServicesInProgress',
@@ -83,6 +86,36 @@ QUERY_SUMMARY = """SELECT
         WHERE a.ActivityTypeId in (1,2,3,4,5,6)
         GROUP BY p.ProjectId
     ) E ON E.ProjectId = p.ProjectId
+    LEFT JOIN (
+        SELECT 
+            pav.projectid,
+            pav.Value AS 'SubmissionDate'
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        WHERE pa.ProgramId = 16 AND pa.label = 'Submission Date' AND pav.Value IS NOT NULL
+        GROUP BY pav.ProjectId
+    ) F ON F.ProjectId = p.ProjectId
+    LEFT JOIN (
+        SELECT 
+            pav.projectid,
+            pav.Value AS 'VettingCall'
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        WHERE pa.ProgramId = 16 AND pa.label = 'Vetting Call' AND pav.Value IS NOT NULL
+        GROUP BY pav.ProjectId
+    ) G ON G.ProjectId = p.ProjectId
+    LEFT JOIN (
+        SELECT 
+            pav.projectid,
+            pav.Value AS 'ConsultationCall'
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        WHERE pa.ProgramId = 16 AND pa.label = 'Consultation Call' AND pav.Value IS NOT NULL
+        GROUP BY pav.ProjectId
+    ) H ON H.ProjectId = p.ProjectId
     WHERE p.programid = 16 and p.projectid not in (3467) and p.deleted = 0"""
 
 QUERY_DURATION = """SELECT 
@@ -353,6 +386,134 @@ SELECT
     END AS PercentageChange
 FROM FirstHalf fh, SecondHalf sh;"""
 
+QUERY_PROJECT_SERVICE_ATTRIBUTES = """SELECT 
+        p.ProjectNumber,
+        p.ProjectId,
+        pal.PhaseId,
+        pp.Name AS ServiceName,
+        pal.ControlName,
+        pal.ControlType,
+        pal.Label,
+        pal.Description,
+        COALESCE(pal.IsGatingItem,0) AS IsGatingItem,
+        CASE 
+            WHEN A.DisplayName IS NULL THEN PR.ProperName
+            ELSE A.DisplayName 
+        END AS 'DisplayName',
+        pal.Value,
+        pal.UpdatedAt,
+        pal.UpdatedBy,
+        PR.Initials
+    FROM 
+        (SELECT 
+            p.ProjectId, 
+            p.CurrentPhaseId AS CurrentProjectPhase, 
+            a.ProgramAttributeId, 
+            a.ProgramId, 
+            a.PhaseId, 
+            a.SortOrder, 
+            a.ControlName, 
+            a.ControlType, 
+            a.ValueType, 
+            a.ReadOnly, 
+            a.Source, 
+            a.Required, 
+            a.Label, 
+            a.Description, 
+            a.IsGatingItem, 
+            a.IsDocument, 
+            a.AssignedUserUserId, 
+            a.TableId, 
+            v.Value, 
+            v.UpdatedAt, 
+            v.UpdatedBy 
+        FROM 
+            cleantranscrm.ProgramAttribute AS a 
+        INNER JOIN
+            cleantranscrm.Project AS p ON a.ProgramId = p.ProgramId 
+        LEFT OUTER JOIN
+            cleantranscrm.ProjectAttributeValue AS v ON v.ProgramAttributeId = a.ProgramAttributeId AND v.ProjectId = p.ProjectId
+        ) pal
+    LEFT JOIN 
+        cleantranscrm.Project p ON p.ProjectId = pal.ProjectId
+    LEFT JOIN 
+        (SELECT 
+            pa.ProgramAttributeid,
+            pa.AssignedUserUserId,
+            u.DisplayName
+        FROM 
+            cleantranscrm.ProgramAttribute pa
+        LEFT JOIN 
+            cleantranscrm.`User` u ON u.UserId = pa.AssignedUserUserId
+        ) A ON A.ProgramAttributeId = pal.ProgramAttributeId
+    LEFT JOIN 
+        (SELECT 
+            pr.ProjectId, 
+            u.DisplayName,
+            u.Initials,
+            u.ProperName 
+        FROM 
+            cleantranscrm.ProjectRole pr 
+        LEFT JOIN 
+            cleantranscrm.`User` u ON pr.UserId = u.UserId
+        ) PR ON PR.ProjectId = p.ProjectId
+    LEFT JOIN 
+        cleantranscrm.ProgramPhase pp ON pal.PhaseId = pp.PhaseId AND pal.ProgramId = pp.ProgramId
+    LEFT JOIN 
+        (SELECT 
+            pal.ProjectId,
+            pal.Label
+        FROM 
+            (SELECT 
+                p.ProjectId, 
+                p.CurrentPhaseId AS CurrentProjectPhase, 
+                a.ProgramAttributeId, 
+                a.ProgramId, 
+                a.PhaseId, 
+                a.SortOrder, 
+                a.ControlName, 
+                a.ControlType, 
+                a.ValueType, 
+                a.ReadOnly, 
+                a.Source, 
+                a.Required, 
+                a.Label, 
+                a.Description, 
+                a.IsGatingItem, 
+                a.IsDocument, 
+                a.AssignedUserUserId, 
+                a.TableId, 
+                v.Value, 
+                v.UpdatedAt, 
+                v.UpdatedBy 
+            FROM 
+                cleantranscrm.ProgramAttribute AS a 
+            INNER JOIN
+                cleantranscrm.Project AS p ON a.ProgramId = p.ProgramId 
+            LEFT OUTER JOIN
+                cleantranscrm.ProjectAttributeValue AS v ON v.ProgramAttributeId = a.ProgramAttributeId AND v.ProjectId = p.ProjectId
+            ) pal
+        LEFT JOIN 
+            cleantranscrm.Project p ON p.ProjectId = pal.ProjectId
+        WHERE 
+            pal.ProgramId = 16 
+            AND pal.PhaseId = 2
+            AND p.Deleted = 0
+            AND pal.Value = 'True'
+        ) svc ON pp.Name = svc.Label AND pal.ProjectId = svc.ProjectId
+    WHERE 
+        1=1
+        AND pal.ProgramId = 16
+        AND p.Deleted = 0
+        AND pal.Required = 1
+        AND (svc.Label IS NOT NULL OR pal.PhaseId = 0)
+        AND p.ProjectId NOT IN (3467)
+        AND p.ProjectId = %(projectId)s AND pp.Name LIKE %(serviceName)s
+    ORDER BY
+        p.ProjectId ASC, pal.SortOrder ASC;"""
+
+
+
 # Dictionary mapping query names to their SQL strings
 QUERIES = {
     'summary': QUERY_SUMMARY,
@@ -365,5 +526,6 @@ QUERIES = {
     'attributes-filled-trend': QUERY_ATTRIBUTES_FILLED_TREND,
     'services-completed': QUERY_SERVICES_COMPLETED,
     'services-completed-trend': QUERY_SERVICES_COMPLETED_TREND,
+    'project-service-attributes': QUERY_PROJECT_SERVICE_ATTRIBUTES,
     # ... add other queries with descriptive names
 }

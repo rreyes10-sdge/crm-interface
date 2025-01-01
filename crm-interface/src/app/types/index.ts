@@ -11,6 +11,27 @@ export interface ProjectRow {
   ServicesCompleted: number;
   ServicesInProgress: number;
   OpenServices: number | null;
+  TotalDurationMins: number | null;
   ServicesNotReady: number | null;
   PercentCompleted: number | null;
+  SubmissionDate: string | null;
+  VettingCall: string | null;
+  ConsultationCall: string | null;
 } 
+
+export interface ProjectServiceAttributes {
+  ControlName: string;
+  ControlType: string;
+  Description: string;
+  DisplayName: string;
+  IsGatingItem: number;
+  Label: string;
+  PhaseId: number;
+  ServiceName: string;
+  ProjectId: number;
+  ProjectNumber: string;
+  UpdatedAt: string;
+  UpdatedBy: string;
+  Value: string;
+  Initials: string;
+}

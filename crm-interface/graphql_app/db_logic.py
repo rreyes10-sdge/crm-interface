@@ -29,13 +29,17 @@ def get_connection():
         print(f"Error connecting to database: {e}")
         return None
 
-def fetch_data(query, connection):
+# working fetch without processing data
+def fetch_data(query, connection, params=None):
     """Execute SQL query and return results as DataFrame"""
     try:
-        return pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection, params=params)
+        # print(f"query name: ", {query})
+        return df
     except Exception as e:
         print(f"Error executing query: {e}")
         return pd.DataFrame()
+    
 
 def is_iso_format_date(string):
     """Check if string is in ISO date format"""
@@ -60,33 +64,6 @@ def format_dates(df, date_columns):
         df[col] = df[col].fillna('None')
     return df
 
-def fetch_and_process_data():
-    """Main function to fetch and process all required data"""
-    connection = get_connection()
-    if connection is None:
-        return None
-        
-    try:
-        results = {}
-        
-        # Fetch data for each query
-        for query_name, query in QUERIES.items():
-            df = fetch_data(query, connection)
-            
-            # Apply date formatting if needed
-            if query_name in ['summary', 'duration']:  # Add conditions for date formatting
-                date_columns = []  # Specify date columns for each query type
-                if query_name == 'summary':
-                    date_columns = ['CreateAt']  # Example date columns
-                elif query_name == 'duration':
-                    date_columns = ['CreateAt']  # Example date columns
-                
-                if date_columns:
-                    df = format_dates(df, date_columns)
-            
-            results[query_name] = df
-        
-        return results
-        
-    finally:
-        connection.close()
+def get_project_service_attributes(connection, projectId, serviceName):
+    df = fetch_data(QUERIES['project-service-attributes'], connection, params={'projectId': projectId, 'serviceName': f"%{serviceName}%"})
+    return df

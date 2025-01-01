@@ -10,6 +10,7 @@ import { ActiveFilterChip } from './ActiveFilterChips';
 import ProjectStatusFilter from './ProjectStatusFilter';
 
 
+
 const CustomizedDataGrid = () => {
   const [rows, setRows] = useState<ProjectRow[]>([]);
   const [filteredRows, setFilteredRows] = useState<ProjectRow[]>([]);
@@ -23,7 +24,7 @@ const CustomizedDataGrid = () => {
         const response = await fetch('http://127.0.0.1:5000/api/data/summary');
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data = await response.json();
-        
+
         if (data && data.length > 0) {
           setRows(data);
           setFilteredRows(data);
@@ -44,11 +45,25 @@ const CustomizedDataGrid = () => {
 
     fetchData();
   }, []);
-  
+
+  const calculateDaysBetween = (startDate: string | null, endDate: string | null) => {
+    const today = new Date().toISOString().split('T')[0];
+    const start = startDate && startDate !== "None" ? new Date(startDate) : new Date(today);
+    const end = endDate && endDate !== "None" ? new Date(endDate) : new Date(today);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const calculateColorIntensity = (daysOverTarget: number, targetDays: number) => {
+    const maxIntensity = 255; 
+    const intensity = Math.min((1 / (daysOverTarget / targetDays)) * 255, maxIntensity);
+    return `rgba(${intensity}, 0, 0)`;
+  };
+
   const columns = [
-    { 
-      field: 'ProjectNumber', 
-      headerName: 'Project Number', 
+    {
+      field: 'ProjectNumber',
+      headerName: 'Project Number',
       width: 125,
       renderCell: (params: any) => (
         <a href={`https://ctsolutions.sempra.com/projects/${params.row.ProjectId}`} target="_blank" rel="noopener noreferrer">
@@ -56,9 +71,9 @@ const CustomizedDataGrid = () => {
         </a>
       )
     },
-    { 
-      field: 'OrganizationName', 
-      headerName: 'Organization', 
+    {
+      field: 'OrganizationName',
+      headerName: 'Organization',
       width: 250,
       renderCell: (params: any) => (
         <a href={`https://ctsolutions.sempra.com/projects/${params.row.ProjectId}`} target="_blank" rel="noopener noreferrer">
@@ -66,15 +81,15 @@ const CustomizedDataGrid = () => {
         </a>
       )
     },
-    { 
-      field: 'USC', 
-      headerName: 'Underserved Flag', 
+    {
+      field: 'USC',
+      headerName: 'Underserved Flag',
       width: 140,
       renderCell: (params: any) => {
         const isUSC = params.value === 'True' || params.value === true;
         return (
-          <Chip 
-            label={isUSC ? 'USC' : 'Non-USC'} 
+          <Chip
+            label={isUSC ? 'USC' : 'Non-USC'}
             color={isUSC ? 'primary' : 'default'}
             size="small"
           />
@@ -84,6 +99,74 @@ const CustomizedDataGrid = () => {
     { field: 'ProjectStatus', headerName: 'Status', width: 100 },
     { field: 'ProjectLead', headerName: 'Project Lead', width: 150 },
     {
+      field: 'submissionToVetting',
+      headerName: 'Submission to Vetting',
+      width: 200,
+      renderCell: (params: any) => {
+        const submissionToVettingDays = calculateDaysBetween(params.row.SubmissionDate, params.row.VettingCall);
+        const submissionToVettingTarget = params.row.USC === 'True' || params.row.USC === true ? 1 : 2;
+        const overTarget = submissionToVettingDays > submissionToVettingTarget;
+        const progressColor = overTarget ? calculateColorIntensity(submissionToVettingDays - submissionToVettingTarget, submissionToVettingTarget) : 'rgba(8, 136, 86, 1)';
+
+        return (
+          <Tooltip title={`Submission Date: ${params.row.SubmissionDate || 'N/A'} | Vetting Call: ${params.row.VettingCall || 'N/A'}`}>
+            <Box sx={{ width: '100%', mr: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <LinearProgress
+                variant="determinate"
+                value={(submissionToVettingDays / submissionToVettingTarget) * 100}
+                sx={{
+                  height: 8,
+                  borderRadius: 5,
+                  width: '100%',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 5,
+                    backgroundColor: progressColor,
+                  }
+                }}
+              />
+              <Typography variant="caption" sx={{ mt: 0.5 }}>
+                {submissionToVettingDays} / {submissionToVettingTarget} days
+              </Typography>
+            </Box>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      field: 'vettingToConsultation',
+      headerName: 'Vetting to Consultation',
+      width: 200,
+      renderCell: (params: any) => {
+        const vettingToConsultationDays = calculateDaysBetween(params.row.VettingCall, params.row.ConsultationCall);
+        const vettingToConsultationTarget = 7;
+        const overTarget = vettingToConsultationDays > vettingToConsultationTarget;
+        const progressColor = overTarget ? calculateColorIntensity(vettingToConsultationDays - vettingToConsultationTarget, vettingToConsultationTarget) : 'rgba(8, 136, 86, 1)';
+
+        return (
+          <Tooltip title={`Vetting Call: ${params.row.VettingCall || 'N/A'} | Consultation Call: ${params.row.ConsultationCall || 'N/A'}`}>
+            <Box sx={{ width: '100%', mr: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <LinearProgress
+                variant="determinate"
+                value={(vettingToConsultationDays / vettingToConsultationTarget) * 100}
+                sx={{
+                  height: 8,
+                  borderRadius: 5,
+                  width: '100%',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 5,
+                    backgroundColor: progressColor,
+                  }
+                }}
+              />
+              <Typography variant="caption" sx={{ mt: 0.5 }}>
+                {vettingToConsultationDays} / {vettingToConsultationTarget} days
+              </Typography>
+            </Box>
+          </Tooltip>
+        );
+      }
+    },
+    {
       field: 'progress',
       headerName: 'Services Progress',
       width: 200,
@@ -91,7 +174,7 @@ const CustomizedDataGrid = () => {
         const completed = params.row.ServicesCompleted;
         const inProgress = params.row.ServicesInProgress;
         const total = params.row.TotalServicesSelected;
-        
+
         return (
           <Tooltip title={`Completed: ${completed} | In Progress: ${inProgress} | Total: ${total}`}>
             <Box sx={{ width: '100%', mr: 1 }}>
@@ -143,7 +226,7 @@ const CustomizedDataGrid = () => {
       renderCell: (params: any) => (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           <Tooltip title={`Completed: ${params.row.ServicesCompleted}`}>
-            <Chip 
+            <Chip
               label={params.row.ServicesCompleted}
               size="small"
               color="success"
@@ -151,7 +234,7 @@ const CustomizedDataGrid = () => {
             />
           </Tooltip>
           <Tooltip title={`In Progress: ${params.row.ServicesInProgress}`}>
-            <Chip 
+            <Chip
               label={params.row.ServicesInProgress}
               size="small"
               color="primary"
@@ -159,7 +242,7 @@ const CustomizedDataGrid = () => {
             />
           </Tooltip>
           <Tooltip title={`Not Ready: ${params.row.ServicesNotReady}`}>
-            <Chip 
+            <Chip
               label={params.row.ServicesNotReady}
               size="small"
               color="warning"
@@ -169,9 +252,9 @@ const CustomizedDataGrid = () => {
         </Box>
       )
     },
-    { 
-      field: 'TotalDurationMins', 
-      headerName: 'Non-Service Duration', 
+    {
+      field: 'TotalDurationMins',
+      headerName: 'Non-Service Duration',
       width: 170,
       renderCell: (params: any) => `${params.value} mins`
     }
@@ -201,19 +284,19 @@ const CustomizedDataGrid = () => {
   // Modify the filter logic to handle both status and organization
   useEffect(() => {
     let filtered = [...rows];
-    
+
     if (selectedStatuses.length > 0) {
-      filtered = filtered.filter(row => 
+      filtered = filtered.filter(row =>
         selectedStatuses.includes(row.ProjectStatus)
       );
     }
-    
+
     if (selectedOrganizations.length > 0) {
-      filtered = filtered.filter(row => 
+      filtered = filtered.filter(row =>
         selectedOrganizations.includes(row.OrganizationName)
       );
     }
-    
+
     setFilteredRows(filtered);
   }, [rows, selectedStatuses, selectedOrganizations]);
 
@@ -235,10 +318,13 @@ const CustomizedDataGrid = () => {
     );
   }
 
+  // Use the first project in the filteredRows for the ProjectDashboard
+  const firstProject = filteredRows[0];
+
   return (
     <Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <ProjectStatusFilter 
+        <ProjectStatusFilter
           rows={rows}
           statusFilter={selectedStatuses[0] || 'All'}
           onStatusChange={handleStatusChange}
@@ -268,7 +354,7 @@ const CustomizedDataGrid = () => {
           getOptionKey={(option) => option}
           getOptionLabel={(option) => option}
         />
-        
+
         <ActiveFilterChip
           name="Organization"
           options={selectedOrganizations}
@@ -277,7 +363,7 @@ const CustomizedDataGrid = () => {
           getOptionLabel={(option) => option}
         />
       </Box>
-      
+
       <DataGrid
         rows={filteredRows}
         columns={columns}
@@ -320,8 +406,15 @@ const CustomizedDataGrid = () => {
           }
         }}
       />
+      {/* <Box>
+        <ProjectDashboard projects={filteredRows} />
+      </Box> */}
     </Box>
   );
 };
 
 export default CustomizedDataGrid;
+
+function hsl(arg0: number, arg1: number, arg2: number) {
+  throw new Error('Function not implemented.');
+}

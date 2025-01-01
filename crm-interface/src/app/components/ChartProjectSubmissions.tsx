@@ -131,10 +131,11 @@ export default function ChartProjectSubmissions() {
       sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}
     >
       <CardContent>
-        <Typography component="h2" variant="subtitle2">
+        <Typography component="h2" variant="subtitle2" gutterBottom>
           Project Submissions
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <br></br>
+        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <PieChart
             colors={statusColors}
             margin={{
@@ -166,7 +167,7 @@ export default function ChartProjectSubmissions() {
               secondaryText="Total" 
             />
           </PieChart>
-        </Box>
+        </Box> */}
         {projectStatuses.map((item, index) => (
           <Stack
             key={index}

@@ -3,7 +3,7 @@ from ariadne import QueryType, graphql_sync, make_executable_schema
 from graphql_app.resolvers import Resolvers  
 from flask_cors import CORS
 from graphql_app.schema import type_defs
-from .db_logic import get_connection, fetch_data
+from .db_logic import get_connection, fetch_data, format_dates, get_project_service_attributes
 import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
@@ -92,6 +92,17 @@ def get_specific_data(query_name: str):
             abort(500, description="Database connection failed")
             
         df = fetch_data(QUERIES[query_name], connection)
+        if query_name in ['summary', 'duration', 'project-service-attributes']:
+            date_columns = []
+            if query_name == 'duration':
+                date_columns = ['CreateAt']
+            elif query_name == 'summary':
+                date_columns = ['SubmissionDate', 'VettingCall','ConsultationCall']
+            elif query_name == 'project-service-attributes':
+                date_columns = ['Value', 'UpdatedAt']
+            if date_columns:
+                print(f"Formatting dates for query: {query_name}, date columns: {date_columns}")
+                df = format_dates(df, date_columns)
         return jsonify(df.to_dict(orient='records'))
         
     except Exception as e:
@@ -100,6 +111,21 @@ def get_specific_data(query_name: str):
     finally:
         if connection:
             connection.close()
+
+@app.route('/api/data/project-service-attributes', methods=['GET'])
+def project_service_attributes():
+    projectId = request.args.get('projectId')
+    serviceName = request.args.get('serviceName')
+    if not projectId or not serviceName:
+        return jsonify({'error': 'Missing projectId or serviceName'}), 400
+    try:
+        connection = get_connection()
+        data = get_project_service_attributes(connection, projectId, serviceName)
+        return data.to_json(orient='records')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        connection.close()
 
 # Optional: Add a health check endpoint
 @app.route("/health", methods=["GET"])

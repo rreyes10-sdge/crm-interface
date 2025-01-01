@@ -167,7 +167,7 @@ const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
 
     return (
         <Box>
-            <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
+            <Typography component="h3" variant="h6" sx={{ mb: 2, marginLeft: 0, marginRight: 0 }}>
                 Follow Up Dates <span style={{ color: getStatusColor('Follow Up Dates') }}>({rows.length})</span>
             </Typography>
             <DataGrid
