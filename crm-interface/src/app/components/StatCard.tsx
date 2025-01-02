@@ -14,6 +14,7 @@ export type StatCardProps = {
   value: string;
   interval: string;
   trend: 'up' | 'down' | 'neutral';
+  percentageChange: number;
   data: number[];
 };
 
@@ -48,6 +49,7 @@ export default function StatCard({
   value,
   interval,
   trend,
+  percentageChange,
   data,
 }: StatCardProps) {
   const theme = useTheme();
@@ -96,7 +98,7 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={`${trendValues[trend]}`} />
+              <Chip size="small" color={color} label={`${trendValues[trend]} (${percentageChange}%)`} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}
