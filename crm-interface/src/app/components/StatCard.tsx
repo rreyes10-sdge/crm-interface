@@ -6,15 +6,14 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { SparkLineChart, areaElementClasses } from '@mui/x-charts';
-import { useState } from 'react';
+import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
+import { areaElementClasses } from '@mui/x-charts/LineChart';
 
 export type StatCardProps = {
   title: string;
   value: string;
   interval: string;
   trend: 'up' | 'down' | 'neutral';
-  percentageChange: number;
   data: number[];
 };
 
@@ -23,10 +22,12 @@ function getLast30Days() {
   for (let i = 29; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    dates.push(date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    }));
+    dates.push(
+      date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
+    );
   }
   return dates;
 }
@@ -47,11 +48,9 @@ export default function StatCard({
   value,
   interval,
   trend,
-  percentageChange,
   data,
 }: StatCardProps) {
   const theme = useTheme();
-  const [hoverData, setHoverData] = useState<{ value: number; date: string } | null>(null);
   const last30Days = getLast30Days();
 
   const trendColors = {
@@ -97,51 +96,22 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={`${trendValues[trend]} (${percentageChange}%)`} />
+              <Chip size="small" color={color} label={`${trendValues[trend]}`} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}
             </Typography>
           </Stack>
-          <Box sx={{ width: '100%', height: 50, position: 'relative' }}>
+          <Box sx={{ width: '100%', height: 50 }}>
             <SparkLineChart
               colors={[chartColor]}
               data={data}
               area
-              showHighlight={true}
-              showTooltip={false}
-              slots={{
-                area: (props) => (
-                  <g
-                    onMouseLeave={() => setHoverData(null)}
-                  >
-                    <rect
-                      x={0}
-                      y={0}
-                      width="100%"
-                      height="100%"
-                      fill="transparent"
-                      onMouseMove={(event) => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        const relativeX = event.clientX - rect.left;
-                        const dataIndex = Math.floor((relativeX / rect.width) * data.length);
-                        
-                        if (dataIndex >= 0 && dataIndex < data.length) {
-                          setHoverData({
-                            value: data[dataIndex],
-                            date: last30Days[dataIndex]
-                          });
-                        }
-                      }}
-                      onMouseLeave={() => setHoverData(null)}
-                    />
-                    {props.children}
-                  </g>
-                )
-              }}
+              showHighlight
+              showTooltip // Enable tooltips
               xAxis={{
                 scaleType: 'band',
-                data: last30Days,
+                data: last30Days, // Correct x-axis labels
               }}
               sx={{
                 [`& .${areaElementClasses.root}`]: {
@@ -151,48 +121,6 @@ export default function StatCard({
             >
               <AreaGradient color={chartColor} id={`area-gradient-${value}`} />
             </SparkLineChart>
-            {hoverData !== null && (
-              <Box
-                sx={{ 
-                  position: 'absolute',
-                  top: -45,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: theme.palette.background.paper,
-                  borderRadius: 1,
-                  boxShadow: theme.shadows[2],
-                  minWidth: '80px',
-                  overflow: 'hidden',
-                }}
-              >
-                <Stack
-                  spacing={0.5}
-                  sx={{
-                    p: 1,
-                  }}
-                >
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: theme.palette.text.secondary,
-                      display: 'block',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {hoverData.date}
-                  </Typography>
-                  <Typography 
-                    variant="body2"
-                    sx={{ 
-                      fontWeight: 'medium',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {hoverData.value}
-                  </Typography>
-                </Stack>
-              </Box>
-            )}
           </Box>
         </Stack>
       </CardContent>

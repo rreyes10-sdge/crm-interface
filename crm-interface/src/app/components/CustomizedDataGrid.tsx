@@ -54,12 +54,6 @@ const CustomizedDataGrid = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const calculateColorIntensity = (daysOverTarget: number, targetDays: number) => {
-    const maxIntensity = 255; 
-    const intensity = Math.min((1 / (daysOverTarget / targetDays)) * 255, maxIntensity);
-    return `rgba(${intensity}, 0, 0)`;
-  };
-
   const columns = [
     {
       field: 'ProjectNumber',
@@ -101,19 +95,25 @@ const CustomizedDataGrid = () => {
     {
       field: 'submissionToVetting',
       headerName: 'Submission to Vetting',
-      width: 200,
+      width: 220,
       renderCell: (params: any) => {
         const submissionToVettingDays = calculateDaysBetween(params.row.SubmissionDate, params.row.VettingCall);
         const submissionToVettingTarget = params.row.USC === 'True' || params.row.USC === true ? 1 : 2;
+        const isPending = !params.row.VettingCall || params.row.VettingCall === 'None';
         const overTarget = submissionToVettingDays > submissionToVettingTarget;
-        const progressColor = overTarget ? calculateColorIntensity(submissionToVettingDays - submissionToVettingTarget, submissionToVettingTarget) : 'rgba(8, 136, 86, 1)';
+
+        const progressColor = isPending
+          ? 'rgba(255, 194, 0, 1)' // Yellow for pending
+          : overTarget
+            ? 'rgba(255, 0, 0, 1)' // Red for overdue
+            : 'rgba(8, 136, 86, 1)'; // Green for on target
 
         return (
           <Tooltip title={`Submission Date: ${params.row.SubmissionDate || 'N/A'} | Vetting Call: ${params.row.VettingCall || 'N/A'}`}>
             <Box sx={{ width: '100%', mr: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <LinearProgress
                 variant="determinate"
-                value={(submissionToVettingDays / submissionToVettingTarget) * 100}
+                value={isPending ? 100 : overTarget ? (submissionToVettingTarget / submissionToVettingDays) * 100 : (submissionToVettingDays / submissionToVettingTarget) * 100}
                 sx={{
                   height: 8,
                   borderRadius: 5,
@@ -125,7 +125,9 @@ const CustomizedDataGrid = () => {
                 }}
               />
               <Typography variant="caption" sx={{ mt: 0.5 }}>
-                {submissionToVettingDays} / {submissionToVettingTarget} days
+                {isPending
+                  ? `${submissionToVettingDays} days elapsed (pending)`
+                  : `${submissionToVettingDays} days elapsed (${overTarget ? `${submissionToVettingDays - submissionToVettingTarget} overdue` : 'on target'})`}
               </Typography>
             </Box>
           </Tooltip>
@@ -135,31 +137,55 @@ const CustomizedDataGrid = () => {
     {
       field: 'vettingToConsultation',
       headerName: 'Vetting to Consultation',
-      width: 200,
+      width: 220,
       renderCell: (params: any) => {
         const vettingToConsultationDays = calculateDaysBetween(params.row.VettingCall, params.row.ConsultationCall);
         const vettingToConsultationTarget = 7;
+        const isPending = !params.row.ConsultationCall || params.row.ConsultationCall === 'None';
         const overTarget = vettingToConsultationDays > vettingToConsultationTarget;
-        const progressColor = overTarget ? calculateColorIntensity(vettingToConsultationDays - vettingToConsultationTarget, vettingToConsultationTarget) : 'rgba(8, 136, 86, 1)';
 
+        const progressColor = isPending
+          ? 'rgba(255, 194, 0, 1)' // Yellow for pending
+          : overTarget
+            ? 'rgba(255, 0, 0, 1)' // Red for overdue
+            : 'rgba(8, 136, 86, 1)'; // Green for on target
+
+        const progressValue = isPending 
+          ? overTarget
+            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100 
+            : 100
+          : overTarget 
+            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100 
+            : (vettingToConsultationDays / vettingToConsultationTarget) * 100
+        
+          console.log('Row:', params.row.ProjectNumber, {
+          isPending,
+          vettingToConsultationDays,
+          vettingToConsultationTarget,
+          overTarget,
+          progressColor,
+          progressValue,
+        })
         return (
           <Tooltip title={`Vetting Call: ${params.row.VettingCall || 'N/A'} | Consultation Call: ${params.row.ConsultationCall || 'N/A'}`}>
             <Box sx={{ width: '100%', mr: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <LinearProgress
                 variant="determinate"
-                value={(vettingToConsultationDays / vettingToConsultationTarget) * 100}
+                value={progressValue}
                 sx={{
                   height: 8,
                   borderRadius: 5,
                   width: '100%',
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 5,
-                    backgroundColor: progressColor,
+                    backgroundColor: overTarget ? 'rgba(255, 0, 0, 1)' : progressColor,
                   }
                 }}
               />
               <Typography variant="caption" sx={{ mt: 0.5 }}>
-                {vettingToConsultationDays} / {vettingToConsultationTarget} days
+                {isPending
+                  ? `${vettingToConsultationDays} days elapsed (pending)`
+                  : `${vettingToConsultationDays} days elapsed (${overTarget ? `${vettingToConsultationDays - vettingToConsultationTarget} overdue` : 'on target'})`}
               </Typography>
             </Box>
           </Tooltip>
