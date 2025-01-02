@@ -35,3 +35,10 @@ export interface ProjectServiceAttributes {
   Value: string;
   Initials: string;
 }
+
+export interface Alert {
+  projectNumber: string;
+  organization: string;
+  milestone: string;
+  daysElapsed: number;
+}

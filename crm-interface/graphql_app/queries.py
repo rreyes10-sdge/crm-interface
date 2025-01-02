@@ -205,15 +205,13 @@ QUERY_LOGGED_ACTIVITIES = """WITH RECURSIVE DateSeries AS (
     FROM DateSeries
     WHERE Date > CURDATE() - INTERVAL 29 DAY
 )
--- Query to count activities logged each day
 SELECT 
     ds.Date AS LogDate,
-    COALESCE(COUNT(a.ActivityId), 0) AS ActivityCount
+    COUNT(a.ActivityId) AS ActivityCount
 FROM DateSeries ds
-LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date
+LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND (a.ActivityTypeId IN (1, 2, 3, 4, 5, 6) OR a.ActivityId IS NULL)
 LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId AND p.ProgramId = 16
 WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
-  AND (a.ActivityTypeId IN (1, 2, 3, 4, 5, 6) OR a.ActivityId IS NULL)
 GROUP BY ds.Date
 ORDER BY ds.Date;"""
 
