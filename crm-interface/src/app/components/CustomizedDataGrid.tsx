@@ -389,15 +389,29 @@ const CustomizedDataGrid = () => {
           getOptionLabel={(option) => option}
         />
       </Box>
-
+      {/* Legend */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 8, backgroundColor: 'rgba(8, 136, 86, 1)', borderRadius: 1 }} />
+          <Typography variant="caption">On Target</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 8, backgroundColor: 'rgba(255, 194, 0, 1)', borderRadius: 1 }} />
+          <Typography variant="caption">Pending</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 8, backgroundColor: 'rgba(255, 0, 0, 1)', borderRadius: 1 }} />
+          <Typography variant="caption">Overdue</Typography>
+        </Box>
+      </Box>
       <DataGrid
         rows={filteredRows}
         columns={columns}
         getRowId={(row) => row.ProjectId}
         initialState={{
-          pagination: { paginationModel: { pageSize: 10 } },
+          pagination: { paginationModel: { pageSize: 15 } },
         }}
-        pageSizeOptions={[10, 25, 50]}
+        pageSizeOptions={[15, 25, 50]}
         slots={{
           noRowsOverlay: () => (
             <Box
