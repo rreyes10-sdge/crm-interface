@@ -4,7 +4,6 @@ import { Box, Typography, Grid, Stack } from '@mui/material';
 import StatCard from './StatCard';
 import CustomizedDataGrid from './CustomizedDataGrid';
 import ChartProjectSubmissions from './ChartProjectSubmissions';
-import PendingActions from './PendingActions';
 
 interface StatCardProps {
     title: string;
@@ -119,12 +118,6 @@ export default function MainGrid() {
                     <ChartProjectSubmissions />
                 </Grid>
             </Grid>
-            <Grid item xs={11} lg={13}>
-                <PendingActions rows={[]} />
-            </Grid>
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-                Details
-            </Typography>
             <Grid item xs={11} lg={13}>
                 <CustomizedDataGrid />
             </Grid>

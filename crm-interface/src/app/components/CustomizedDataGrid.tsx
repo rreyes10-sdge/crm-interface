@@ -4,19 +4,21 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useState, useEffect } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { MenuItem, Select, FormControl, InputLabel, Box, SelectChangeEvent, Chip, LinearProgress, Tooltip, Typography } from '@mui/material';
-import { ProjectRow } from '../types';
+import { ProjectRow, Alert } from '../types';
 import { projectData } from '../data/staticData';
 import { ActiveFilterChip } from './ActiveFilterChips';
 import ProjectStatusFilter from './ProjectStatusFilter';
-
-
+import PendingActions from './PendingActions';
+import { calculateDaysBetween } from '@/utils/calculateDaysBetween';
+import NotificationBanner from './NotificationBanner';
 
 const CustomizedDataGrid = () => {
   const [rows, setRows] = useState<ProjectRow[]>([]);
   const [filteredRows, setFilteredRows] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['Active']);
   const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,6 +30,7 @@ const CustomizedDataGrid = () => {
         if (data && data.length > 0) {
           setRows(data);
           setFilteredRows(data);
+          setAlerts(data);
         } else {
           // Fallback to static data if API returns empty
           setRows(projectData);
@@ -46,13 +49,13 @@ const CustomizedDataGrid = () => {
     fetchData();
   }, []);
 
-  const calculateDaysBetween = (startDate: string | null, endDate: string | null) => {
-    const today = new Date().toISOString().split('T')[0];
-    const start = startDate && startDate !== "None" ? new Date(startDate) : new Date(today);
-    const end = endDate && endDate !== "None" ? new Date(endDate) : new Date(today);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+  // const calculateDaysBetween = (startDate: string | null, endDate: string | null) => {
+  //   const today = new Date().toISOString().split('T')[0];
+  //   const start = startDate && startDate !== "None" ? new Date(startDate) : new Date(today);
+  //   const end = endDate && endDate !== "None" ? new Date(endDate) : new Date(today);
+  //   const diffTime = Math.abs(end.getTime() - start.getTime());
+  //   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // };
 
   const columns = [
     {
@@ -150,15 +153,15 @@ const CustomizedDataGrid = () => {
             ? 'rgba(255, 0, 0, 1)' // Red for overdue
             : 'rgba(8, 136, 86, 1)'; // Green for on target
 
-        const progressValue = isPending 
+        const progressValue = isPending
           ? overTarget
-            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100 
+            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100
             : 100
-          : overTarget 
-            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100 
+          : overTarget
+            ? (vettingToConsultationTarget / vettingToConsultationDays) * 100
             : (vettingToConsultationDays / vettingToConsultationTarget) * 100
-        
-          console.log('Row:', params.row.ProjectNumber, {
+
+        console.log('Row:', params.row.ProjectNumber, {
           isPending,
           vettingToConsultationDays,
           vettingToConsultationTarget,
@@ -349,10 +352,16 @@ const CustomizedDataGrid = () => {
 
   return (
     <Box>
+      {/* Pending Actions */}
+      <PendingActions rows={filteredRows} />
+      {/* <NotificationBanner alerts={filteredRows} /> */}
+      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+        Details
+      </Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <ProjectStatusFilter
           rows={rows}
-          statusFilter={selectedStatuses[0] || 'All'}
+          statusFilter={selectedStatuses[0] || 'Active'}
           onStatusChange={handleStatusChange}
         />
 
@@ -446,9 +455,6 @@ const CustomizedDataGrid = () => {
           }
         }}
       />
-      {/* <Box>
-        <ProjectDashboard projects={filteredRows} />
-      </Box> */}
     </Box>
   );
 };
