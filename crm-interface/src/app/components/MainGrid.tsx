@@ -106,7 +106,7 @@ export default function MainGrid() {
             <Grid
                 container
                 spacing={2}
-                columns={15}
+                columns={12}
                 sx={{ mb: (theme) => theme.spacing(2) }}
             >
                 {data.map((card, index) => (
@@ -114,10 +114,11 @@ export default function MainGrid() {
                         <StatCard {...card} />
                     </Grid>
                 ))}
-                <Grid item xs={12} sm={6} lg={3}>
+                {/* <Grid item xs={12} sm={6} lg={3}>
                     <ChartProjectSubmissions />
-                </Grid>
+                </Grid> */}
             </Grid>
+            <Box sx={{ width: '100%', height: 5, backgroundColor: 'grey.300', mb: 4, mt: 4 }} />
             <Grid item xs={11} lg={13}>
                 <CustomizedDataGrid />
             </Grid>

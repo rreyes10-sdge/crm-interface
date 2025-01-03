@@ -510,6 +510,68 @@ QUERY_PROJECT_SERVICE_ATTRIBUTES = """SELECT
     ORDER BY
         p.ProjectId ASC, pal.SortOrder ASC;"""
 
+QUERY_PROJECT_SERVICE = """SELECT
+        p.ProjectNumber,
+        p.ProjectId,
+        tst2.Name as 'CoreName',
+        pa.Label AS ServiceName,
+        CASE
+            WHEN pa.ControlType = 'select' THEN so.OptionText
+            WHEN pal.Value IS NULL THEN 'False'
+            ELSE pal.Value
+        END AS AttributeValue,
+        A.Value AS 'ServiceStartDate',
+        B.Value as 'FollowUpDate',
+        C.Value as 'CompleteDate'
+    FROM cleantranscrm.TeasSupportType tst
+    LEFT JOIN cleantranscrm.TeasServiceType tst2 on CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
+    LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramAttributeId = pal.ProgramAttributeId
+    LEFT JOIN cleantranscrm.`Project` p ON p.ProjectId = pal.ProjectId
+    LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = pa.PhaseId AND pp.ProgramId = pa.ProgramId
+    LEFT JOIN cleantranscrm.SelectOption so ON pa.Source = so.SelectControlId
+        AND pa.ControlType = 'select'
+        AND CAST(pal.Value AS UNSIGNED) = so.OptionValue
+    LEFT JOIN (		SELECT 
+            pav.projectid,
+            tst.ProgramAttributeId ,
+            pa.Label ,
+            pav.Value
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Service Start Date' AND pav.Value IS NOT NULL
+        ) A on A.projectid = pal.ProjectId and A.programattributeid = tst.programattributeid
+    LEFT JOIN (		SELECT 
+            pav.projectid,
+            tst.ProgramAttributeId ,
+            pa.Label ,
+            pav.Value
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Follow Up' AND pav.Value IS NOT NULL
+        ) B on B.projectid = pal.ProjectId and B.programattributeid = tst.programattributeid
+    LEFT JOIN (		SELECT 
+            pav.projectid,
+            tst.ProgramAttributeId ,
+            pa.Label ,
+            pav.Value
+        FROM cleantranscrm.ProgramAttribute pa
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+        LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+        LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete' AND pav.Value IS NOT NULL
+        ) C on C.projectid = pal.ProjectId and C.programattributeid = tst.programattributeid
+    WHERE
+        pal.ProjectId IN (SELECT ProjectId FROM cleantranscrm.`Project` WHERE ProgramId = 16)
+        AND pa.PhaseId = 2 AND pa.ProgramId = 16 AND pal.Value='True'
+    GROUP BY p.ProjectNumber, tst2.Name, pa.Label
+    ORDER BY
+        p.ProjectNumber ASC, pp.SortOrder ASC, pa.SortOrder ASC;"""
+
 
 
 # Dictionary mapping query names to their SQL strings
@@ -525,5 +587,6 @@ QUERIES = {
     'services-completed': QUERY_SERVICES_COMPLETED,
     'services-completed-trend': QUERY_SERVICES_COMPLETED_TREND,
     'project-service-attributes': QUERY_PROJECT_SERVICE_ATTRIBUTES,
+    'project-service': QUERY_PROJECT_SERVICE,
     # ... add other queries with descriptive names
 }
