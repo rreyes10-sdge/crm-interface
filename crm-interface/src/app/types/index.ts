@@ -36,9 +36,13 @@ export interface ProjectServiceAttributes {
   Initials: string;
 }
 
-export interface Alert {
-  projectNumber: string;
-  organization: string;
-  milestone: string;
-  daysElapsed: number;
+export interface ProjectService {
+  ProjectId: string;
+  AttributeValue: string;
+  CompleteDate: string;
+  CoreName: string;
+  FollowUpDate: string;
+  ProjectNumber: string;
+  ServiceName: string;
+  ServiceStartDate: string;
 }

@@ -126,16 +126,18 @@ export default function ChartProjectSubmissions() {
   };
 
   return (
-    <Card
-      variant="outlined"
-      sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}
-    >
-      <CardContent>
-        <Typography component="h2" variant="subtitle2" gutterBottom>
-          Project Submissions
-        </Typography>
-        <br></br>
-        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Project Submissions
+      </Typography>
+
+      <Card
+        variant="outlined"
+        sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, width: '280px' }}
+      >
+        <CardContent>
+          <br></br>
+          {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <PieChart
             colors={statusColors}
             margin={{
@@ -168,42 +170,43 @@ export default function ChartProjectSubmissions() {
             />
           </PieChart>
         </Box> */}
-        {projectStatuses.map((item, index) => (
-          <Stack
-            key={index}
-            direction="row"
-            sx={{ alignItems: 'center', gap: 2, pb: 2 }}
-          >
-            <Stack sx={{ gap: 1, flexGrow: 1 }}>
-              <Stack
-                direction="row"
-                sx={{
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 2,
-                }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: '500' }}>
-                  {item.status}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {item.value} ({getPercentage(item.value)}%)
-                </Typography>
+          {projectStatuses.map((item, index) => (
+            <Stack
+              key={index}
+              direction="row"
+              sx={{ alignItems: 'center', gap: 2, pb: 2 }}
+            >
+              <Stack sx={{ gap: 1, flexGrow: 1 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: '500' }}>
+                    {item.status}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {item.value} ({getPercentage(item.value)}%)
+                  </Typography>
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  aria-label="Number of projects by status"
+                  value={getPercentage(item.value)}
+                  sx={{
+                    [`& .${linearProgressClasses.bar}`]: {
+                      backgroundColor: statusColors[index],
+                    },
+                  }}
+                />
               </Stack>
-              <LinearProgress
-                variant="determinate"
-                aria-label="Number of projects by status"
-                value={getPercentage(item.value)}
-                sx={{
-                  [`& .${linearProgressClasses.bar}`]: {
-                    backgroundColor: statusColors[index],
-                  },
-                }}
-              />
             </Stack>
-          </Stack>
-        ))}
-      </CardContent>
-    </Card>
+          ))}
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

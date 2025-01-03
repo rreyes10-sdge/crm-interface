@@ -4,13 +4,14 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useState, useEffect } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { MenuItem, Select, FormControl, InputLabel, Box, SelectChangeEvent, Chip, LinearProgress, Tooltip, Typography } from '@mui/material';
-import { ProjectRow, Alert } from '../types';
+import { ProjectRow } from '../types';
 import { projectData } from '../data/staticData';
 import { ActiveFilterChip } from './ActiveFilterChips';
 import ProjectStatusFilter from './ProjectStatusFilter';
 import PendingActions from './PendingActions';
 import { calculateDaysBetween } from '@/utils/calculateDaysBetween';
-import NotificationBanner from './NotificationBanner';
+import ChartProjectSubmissions from './ChartProjectSubmissions';
+import ProjectService from './ProjectService';
 
 const CustomizedDataGrid = () => {
   const [rows, setRows] = useState<ProjectRow[]>([]);
@@ -18,7 +19,6 @@ const CustomizedDataGrid = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['Active']);
   const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +30,6 @@ const CustomizedDataGrid = () => {
         if (data && data.length > 0) {
           setRows(data);
           setFilteredRows(data);
-          setAlerts(data);
         } else {
           // Fallback to static data if API returns empty
           setRows(projectData);
@@ -48,14 +47,6 @@ const CustomizedDataGrid = () => {
 
     fetchData();
   }, []);
-
-  // const calculateDaysBetween = (startDate: string | null, endDate: string | null) => {
-  //   const today = new Date().toISOString().split('T')[0];
-  //   const start = startDate && startDate !== "None" ? new Date(startDate) : new Date(today);
-  //   const end = endDate && endDate !== "None" ? new Date(endDate) : new Date(today);
-  //   const diffTime = Math.abs(end.getTime() - start.getTime());
-  //   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  // };
 
   const columns = [
     {
@@ -352,13 +343,7 @@ const CustomizedDataGrid = () => {
 
   return (
     <Box>
-      {/* Pending Actions */}
-      <PendingActions rows={filteredRows} />
-      {/* <NotificationBanner alerts={filteredRows} /> */}
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Details
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
         <ProjectStatusFilter
           rows={rows}
           statusFilter={selectedStatuses[0] || 'Active'}
@@ -380,8 +365,7 @@ const CustomizedDataGrid = () => {
           </Select>
         </FormControl>
       </Box>
-
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      {/* <Box sx={{ display: 'flex', gap: 1 }}>
         <ActiveFilterChip
           name="Project Status"
           options={selectedStatuses}
@@ -397,7 +381,22 @@ const CustomizedDataGrid = () => {
           getOptionKey={(option) => option}
           getOptionLabel={(option) => option}
         />
+      </Box> */}
+      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+        {/* Pending Actions */}
+        <PendingActions rows={filteredRows} />
+        <Box sx={{ flex: 1 }}>
+          <ProjectService rows={filteredRows} />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <ChartProjectSubmissions />
+        </Box>
+        
       </Box>
+      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+        Details
+      </Typography>
+
       {/* Legend */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

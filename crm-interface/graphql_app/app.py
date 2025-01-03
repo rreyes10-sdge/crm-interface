@@ -92,7 +92,7 @@ def get_specific_data(query_name: str):
             abort(500, description="Database connection failed")
             
         df = fetch_data(QUERIES[query_name], connection)
-        if query_name in ['summary', 'duration', 'project-service-attributes']:
+        if query_name in ['summary', 'duration', 'project-service-attributes', 'project-service']:
             date_columns = []
             if query_name == 'duration':
                 date_columns = ['CreateAt']
@@ -100,6 +100,8 @@ def get_specific_data(query_name: str):
                 date_columns = ['SubmissionDate', 'VettingCall','ConsultationCall']
             elif query_name == 'project-service-attributes':
                 date_columns = ['Value', 'UpdatedAt']
+            elif query_name == 'project-service':
+                date_columns = ['ServiceStartDate', 'FollowUpDate', 'CompleteDate']
             if date_columns:
                 print(f"Formatting dates for query: {query_name}, date columns: {date_columns}")
                 df = format_dates(df, date_columns)
