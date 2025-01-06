@@ -2,9 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, Tooltip } from '@mui/material';
 import { gql, useQuery } from '@apollo/client';
+import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
+import { GridRenderCellParams } from '@mui/x-data-grid';
+import serviceImageMap from '@/utils/serviceImageMap';
+import AddCommentIcon from '@mui/icons-material/AddComment';
 
 
 const GET_COMPLETED_PROJECTS = gql`
@@ -25,6 +30,73 @@ const GET_COMPLETED_PROJECTS = gql`
     }
 `;
 
+interface Project {
+    projectNumber: string;
+    projectId: string;
+    organizationName: string;
+    organizationId: string;
+    coreName: string;
+    serviceName: string;
+    serviceStartDate: string;
+    followUpDate: string;
+    completeDate: string;
+    latestActivity: string;
+    createdAt: string;
+}
+
+const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
+    const serviceName = params.value as keyof typeof serviceImageMap;
+    const imagePath = serviceImageMap[serviceName];
+
+    if (imagePath) {
+        return (
+            <img
+                src={imagePath}
+                alt={serviceName}
+                title={serviceName}
+                width="32"
+                height="32"
+            />
+        );
+    }
+
+    return serviceName;
+};
+
+const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
+    const dateValue = params.row[dateField];
+    const parsedDate = parseISO(dateValue);
+    const daysSince = differenceInDays(new Date(), parsedDate);
+
+    return (
+        <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
+            <Box display="flex" alignItems="center">
+                <Typography sx={{ marginRight: 1 }}>
+                    {dateValue}
+                </Typography>
+            </Box>
+        </Tooltip>
+    );
+};
+
+const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
+    const dateValue = params.row[dateField];
+    const parsedDate = parseISO(dateValue);
+    const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
+    const daysSince = differenceInDays(new Date(), parsedDate);
+
+    return (
+        <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
+            <Box display="flex" alignItems="center">
+                <Typography color={isOverdue ? 'error' : 'inherit'} sx={{ marginRight: 1 }}>
+                    {dateValue}
+                </Typography>
+                {isOverdue && <ErrorOutlineIcon color="error" />}
+            </Box>
+        </Tooltip>
+    );
+};
+
 type CompletedProjectsDataGridProps = {
 
     rows: any;
@@ -43,15 +115,34 @@ const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataG
     }, [data]);
 
     const columns = [
-        { field: 'projectNumber', headerName: 'Project Number', width: 150 },
-        { field: 'organizationName', headerName: 'Organization', width: 200 },
-        { field: 'coreName', headerName: 'Core Service', width: 200 },
-        { field: 'serviceName', headerName: 'Service Name', width: 200 },
+        {
+            field: 'projectNumber',
+            headerName: 'Project Number',
+            width: 125,
+            renderCell: (params: GridRenderCellParams<Project>) => (
+                <a href={`https://ctsolutions.sempra.com/projects/${params.row.projectId}`} target="_blank" rel="noopener noreferrer">
+                    {params.value}
+                </a>
+            )
+        },
+        {
+            field: 'organizationName',
+            headerName: 'Organization',
+            width: 250,
+            renderCell: (params: GridRenderCellParams<Project>) => (
+                <a href={`https://ctsolutions.sempra.com/organizations/${params.row.organizationId}`} target="_blank" rel="noopener noreferrer">
+                    {params.value}
+                </a>
+            )
+        },
+        { field: 'coreName', headerName: 'Core', width: 60, renderCell: renderCoreServiceCell },
+        { field: 'serviceName', headerName: 'Service Name', width: 280 },
+        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
         { field: 'serviceStartDate', headerName: 'Service Start Date', width: 200 },
-        { field: 'followUpDate', headerName: 'Follow Up Date', width: 200 },
+        // { field: 'followUpDate', headerName: 'Follow Up Date', width: 200 },
         { field: 'completeDate', headerName: 'Complete Date', width: 200 },
-        { field: 'latestActivity', headerName: 'Latest Activity', width: 200 },
-        { field: 'createdAt', headerName: 'Created At', width: 200 },
+        { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
+        { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
     ];
 
     if (loading) {
@@ -75,7 +166,7 @@ const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataG
     return (
         <Box>
             <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                Completed Projects <span style={{ color: getStatusColor('Completed Projects') }}>({rows.length})</span>
+                Completed Services <span style={{ color: getStatusColor('Completed Projects') }}>({rows.length})</span>
             </Typography>
             <DataGrid
                 rows={rows}

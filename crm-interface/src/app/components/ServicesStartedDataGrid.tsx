@@ -9,6 +9,8 @@ import getStatusColor from '../../utils/statusColor';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
 import serviceImageMap from '@/utils/serviceImageMap';
+import AddCommentIcon from '@mui/icons-material/AddComment';
+
 
 
 
@@ -136,7 +138,8 @@ const ServicesStartedDataGrid = ({ rows: initialRows }: ServicesStartedDataGridP
             )
         },
         { field: 'coreName', headerName: 'Core', width: 60, renderCell: renderCoreServiceCell },
-        { field: 'serviceName', headerName: 'Service Name', width: 220 },
+        { field: 'serviceName', headerName: 'Service Name', width: 280 },
+        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
         { field: 'serviceStartDate', headerName: 'Start Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderNoErrorDateCell(params, 'serviceStartDate') },
         { field: 'followUpDate', headerName: 'Follow Up Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderDateCell(params, 'followUpDate') },
         // { field: 'completeDate', headerName: 'Complete Date', width: 160 },
