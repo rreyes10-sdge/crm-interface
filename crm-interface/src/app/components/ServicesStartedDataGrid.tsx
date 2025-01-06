@@ -26,6 +26,7 @@ const GET_SERVICES_STARTED = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -42,6 +43,7 @@ interface Project {
     serviceStartDate: string;
     followUpDate: string;
     completeDate: string;
+    totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
 }
@@ -143,6 +145,7 @@ const ServicesStartedDataGrid = ({ rows: initialRows }: ServicesStartedDataGridP
         { field: 'serviceStartDate', headerName: 'Start Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderNoErrorDateCell(params, 'serviceStartDate') },
         { field: 'followUpDate', headerName: 'Follow Up Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderDateCell(params, 'followUpDate') },
         // { field: 'completeDate', headerName: 'Complete Date', width: 160 },
+        { field: 'totalDurationMins', headerName: 'Duration Logged', width: 140 },
         { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
         { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
     ];

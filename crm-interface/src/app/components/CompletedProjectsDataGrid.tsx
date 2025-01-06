@@ -24,6 +24,7 @@ const GET_COMPLETED_PROJECTS = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -40,6 +41,7 @@ interface Project {
     serviceStartDate: string;
     followUpDate: string;
     completeDate: string;
+    totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
 }
@@ -138,9 +140,10 @@ const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataG
         { field: 'coreName', headerName: 'Core', width: 60, renderCell: renderCoreServiceCell },
         { field: 'serviceName', headerName: 'Service Name', width: 280 },
         { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
-        { field: 'serviceStartDate', headerName: 'Service Start Date', width: 200 },
+        { field: 'serviceStartDate', headerName: 'Service Start Date', width: 160 },
         // { field: 'followUpDate', headerName: 'Follow Up Date', width: 200 },
-        { field: 'completeDate', headerName: 'Complete Date', width: 200 },
+        { field: 'completeDate', headerName: 'Complete Date', width: 160 },
+        { field: 'totalDurationMins', headerName: 'Duration Logged', width: 140 },
         { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
         { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
     ];

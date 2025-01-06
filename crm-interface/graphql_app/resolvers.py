@@ -139,6 +139,7 @@ class Resolvers:
             A.Value AS 'ServiceStartDate',
             B.Value AS 'FollowUpDate',
             C.Value AS 'CompleteDate',
+            COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') as 'LatestActivity',
             activity.CreatedAt
             FROM cleantranscrm.TeasSupportType tst
@@ -192,6 +193,7 @@ class Resolvers:
                 projectid,
                 phaseid,
                 MAX(a.ActivityId) as 'MaxId' ,
+                SUM(a.Duration) as 'TotalDurationMins',
                 MAX(a.`Text`) as 'LatestActivity',
                 MAX(a.CreatedAt) as 'CreatedAt'
             FROM cleantranscrm.Activity a
@@ -222,6 +224,7 @@ class Resolvers:
             'serviceStartDate': row['ServiceStartDate'],
             'followUpDate': row['FollowUpDate'],
             'completeDate': row['CompleteDate'],
+            'totalDurationMins': row['TotalDurationMins'],
             'latestActivity': row['LatestActivity'],
             'createdAt': row['CreatedAt']
             })
@@ -239,6 +242,7 @@ class Resolvers:
             A.Value AS 'ServiceStartDate',
             B.Value as 'FollowUpDate',
             C.Value as 'CompleteDate',
+            COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') AS 'LatestActivity',
             activity.CreatedAt
             FROM cleantranscrm.TeasSupportType tst
@@ -289,6 +293,7 @@ class Resolvers:
                 projectid,
                 phaseid,
                 MAX(a.ActivityId) as 'MaxId' ,
+                SUM(a.Duration) as 'TotalDurationMins',
                 MAX(a.`Text`) as 'LatestActivity',
                 MAX(a.CreatedAt) as 'CreatedAt'
             FROM cleantranscrm.Activity a
@@ -318,6 +323,7 @@ class Resolvers:
             'serviceStartDate': row['ServiceStartDate'],
             'followUpDate': row['FollowUpDate'],
             'completeDate': row['CompleteDate'],
+            'totalDurationMins': row['TotalDurationMins'],
             'latestActivity': row['LatestActivity'],
             'createdAt': row['CreatedAt']
             })
@@ -336,6 +342,7 @@ class Resolvers:
                 A.Value AS 'ServiceStartDate',
                 B.Value as 'FollowUpDate',
                 C.Value as 'CompleteDate',
+                COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
                 COALESCE(activity.LatestActivity, 'No recorded activity yet') AS 'LatestActivity',
                 activity.CreatedAt
             FROM cleantranscrm.TeasSupportType tst
@@ -386,6 +393,7 @@ class Resolvers:
                     projectid,
                     phaseid,
                     MAX(a.ActivityId) as 'MaxId' ,
+                    SUM(a.Duration) as 'TotalDurationMins',
                     MAX(a.`Text`) as 'LatestActivity',
                     MAX(a.CreatedAt) as 'CreatedAt'
                 FROM cleantranscrm.Activity a
@@ -417,6 +425,7 @@ class Resolvers:
             'serviceStartDate': row['ServiceStartDate'],
             'followUpDate': row['FollowUpDate'],
             'completeDate': row['CompleteDate'],
+            'totalDurationMins': row['TotalDurationMins'],
             'latestActivity': row['LatestActivity'],
             'createdAt': row['CreatedAt']
             })
@@ -434,6 +443,7 @@ class Resolvers:
             A.Value AS 'ServiceStartDate',
             B.Value AS 'FollowUpDate',
             C.Value AS 'CompleteDate',
+            COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') as 'LatestActivity',
             activity.CreatedAt
             FROM cleantranscrm.TeasSupportType tst
@@ -487,6 +497,7 @@ class Resolvers:
                 projectid,
                 phaseid,
                 MAX(a.ActivityId) as 'MaxId' ,
+                SUM(a.Duration) as 'TotalDurationMins',
                 MAX(a.`Text`) as 'LatestActivity',
                 MAX(a.CreatedAt) as 'CreatedAt'
             FROM cleantranscrm.Activity a
@@ -515,6 +526,7 @@ class Resolvers:
             'serviceStartDate': row['ServiceStartDate'],
             'followUpDate': row['FollowUpDate'],
             'completeDate': row['CompleteDate'],
+            'totalDurationMins': row['TotalDurationMins'],
             'latestActivity': row['LatestActivity'],
             'createdAt': row['CreatedAt']
             })
