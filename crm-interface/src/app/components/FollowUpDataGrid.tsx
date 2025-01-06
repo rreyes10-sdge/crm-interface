@@ -23,6 +23,7 @@ const GET_PROJECTS_WITH_FOLLOW_UP_DATES = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -39,6 +40,7 @@ interface Project {
     serviceStartDate: string;
     followUpDate: string;
     completeDate: string;
+    totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
 }
@@ -144,7 +146,7 @@ const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
         { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
         { field: 'serviceStartDate', headerName: 'Start Date', width: 160, renderCell: (params) => renderNoErrorDateCell(params, 'serviceStartDate') },
         { field: 'followUpDate', headerName: 'Follow Up Date', width: 160, renderCell: (params) => renderDateCell(params, 'followUpDate') },
-        // { field: 'completeDate', headerName: 'Complete Date', width: 160 },
+        { field: 'totalDurationMins', headerName: 'Duration Logged', width: 140 },
         { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
         { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
     ];

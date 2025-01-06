@@ -27,6 +27,7 @@ type_defs = """
         serviceStartDate: String
         followUpDate: String
         completeDate: String
+        totalDurationMins: Int
         latestActivity: String
         createdAt: String
     }

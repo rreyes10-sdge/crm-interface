@@ -20,6 +20,7 @@ const GET_ALL_PROJECTS = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -33,6 +34,7 @@ const GET_ALL_PROJECTS = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -46,6 +48,7 @@ const GET_ALL_PROJECTS = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -59,6 +62,7 @@ const GET_ALL_PROJECTS = gql`
             serviceStartDate
             followUpDate
             completeDate
+            totalDurationMins
             latestActivity
             createdAt
         }
@@ -75,6 +79,7 @@ type Project = {
     serviceStartDate: string;
     followUpDate: string;
     completeDate: string;
+    totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
 };
