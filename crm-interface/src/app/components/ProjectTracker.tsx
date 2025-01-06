@@ -105,8 +105,8 @@ const ProjectTracker = () => {
             const combinedTasks: Task[] = [
                 ...data.projectsWithFollowUpDates.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Follow Up Dates' })),
                 ...data.servicesStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Services Started' })),
-                ...data.projectsNotStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Projects Not Started' })),
-                ...data.completedProjects.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Completed Projects' })),
+                ...data.projectsNotStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Services Not Started' })),
+                ...data.completedProjects.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Completed Services' })),
             ];
             setTasks(combinedTasks);
         }
