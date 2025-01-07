@@ -13,6 +13,7 @@ const GET_ALL_PROJECTS = gql`
         projectsWithFollowUpDates {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -23,10 +24,13 @@ const GET_ALL_PROJECTS = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
         servicesStarted {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -37,10 +41,13 @@ const GET_ALL_PROJECTS = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
         projectsNotStarted {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -51,10 +58,13 @@ const GET_ALL_PROJECTS = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
         completedProjects {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -65,6 +75,8 @@ const GET_ALL_PROJECTS = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
     }
 `;
@@ -72,6 +84,7 @@ const GET_ALL_PROJECTS = gql`
 type Project = {
     projectNumber: string;
     projectId: string;
+    phaseId: string;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -82,6 +95,8 @@ type Project = {
     totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
+    totalRequired: number;
+    filledCount: number;
 };
 
 type Task = {

@@ -20,6 +20,7 @@ type_defs = """
     type ProjectDetails {
         projectNumber: String
         projectId: Int
+        phaseId: Int
         organizationName: String
         organizationId: Int
         coreName: String
@@ -30,6 +31,8 @@ type_defs = """
         totalDurationMins: Int
         latestActivity: String
         createdAt: String
+        totalRequired: Int
+        filledCount: Int
     }
 
     type Query {
