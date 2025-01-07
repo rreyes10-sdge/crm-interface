@@ -17,6 +17,7 @@ const GET_PROJECTS_NOT_STARTED = gql`
         projectsNotStarted {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -27,6 +28,8 @@ const GET_PROJECTS_NOT_STARTED = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
     }
 `;
@@ -34,6 +37,7 @@ const GET_PROJECTS_NOT_STARTED = gql`
 interface Project {
     projectNumber: string;
     projectId: string;
+    phaseId: number;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -41,9 +45,11 @@ interface Project {
     serviceStartDate: string;
     followUpDate: string;
     completeDate: string;
-    totalDurationMins; number;
+    totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
+    totalRequired: number;
+    filledCount: number;
 }
 
 const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
@@ -122,7 +128,7 @@ const ProjectsNotStartedDataGrid = ({ rows: initialRows }: ProjectsNotStartedDat
             headerName: 'Project Number',
             width: 125,
             renderCell: (params: GridRenderCellParams<Project>) => (
-                <a href={`https://ctsolutions.sempra.com/projects/${params.row.projectId}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://ctsolutions.sempra.com/projects/${params.row.projectId}?phase=${params.row.phaseId}`} target="_blank" rel="noopener noreferrer">
                     {params.value}
                 </a>
             )
@@ -146,6 +152,17 @@ const ProjectsNotStartedDataGrid = ({ rows: initialRows }: ProjectsNotStartedDat
         // { field: 'completeDate', headerName: 'Complete Date', width: 200 },
         { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
         { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
+        // { field: 'totalRequired', headerName: 'Total Required', width: 50 },
+        // { field: 'filledCount', headerName: 'Filled Count', width: 50 },
+        {
+            field: 'filledVsTotal',
+            headerName: 'Filled vs Total',
+            width: 130,
+            renderCell: (params) => {
+                const { totalRequired, filledCount } = params.row;
+                return `${filledCount} / ${totalRequired}`;
+            },
+        },
     ];
 
     if (loading) {

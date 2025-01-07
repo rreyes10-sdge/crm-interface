@@ -16,6 +16,7 @@ const GET_PROJECTS_WITH_FOLLOW_UP_DATES = gql`
         projectsWithFollowUpDates {
             projectNumber
             projectId
+            phaseId
             organizationName
             organizationId
             coreName
@@ -26,6 +27,8 @@ const GET_PROJECTS_WITH_FOLLOW_UP_DATES = gql`
             totalDurationMins
             latestActivity
             createdAt
+            totalRequired
+            filledCount
         }
     }
 `;
@@ -33,6 +36,7 @@ const GET_PROJECTS_WITH_FOLLOW_UP_DATES = gql`
 interface Project {
     projectNumber: string;
     projectId: string;
+    phaseId: number;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -43,6 +47,8 @@ interface Project {
     totalDurationMins: number;
     latestActivity: string;
     createdAt: string;
+    totalRequired: number;
+    filledCount: number;
 }
 
 const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
@@ -119,14 +125,14 @@ const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
         width: number;
         renderCell?: (params: GridRenderCellParams<Project>) => React.ReactNode;
     }
-
+    
     const columns: Column[] = [
         {
             field: 'projectNumber',
             headerName: 'Project Number',
             width: 125,
             renderCell: (params: GridRenderCellParams<Project>) => (
-                <a href={`https://ctsolutions.sempra.com/projects/${params.row.projectId}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://ctsolutions.sempra.com/projects/${params.row.projectId}?phase=${params.row.phaseId}`} target="_blank" rel="noopener noreferrer">
                     {params.value}
                 </a>
             )
@@ -149,6 +155,15 @@ const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
         { field: 'totalDurationMins', headerName: 'Duration Logged', width: 140 },
         { field: 'latestActivity', headerName: 'Latest Activity', width: 500 },
         { field: 'createdAt', headerName: 'Latest Activity Date', width: 180 },
+        {
+            field: 'filledVsTotal',
+            headerName: 'Filled vs Total',
+            width: 130,
+            renderCell: (params) => {
+                const { totalRequired, filledCount } = params.row;
+                return `${filledCount} / ${totalRequired}`;
+            },
+        },
     ];
 
     if (loading) {
