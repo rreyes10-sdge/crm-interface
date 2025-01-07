@@ -106,10 +106,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                                 aria-label="show more"
                                             >
                                                 <BallotOutlinedIcon />
+                                                <Typography variant="body2" sx={{ marginLeft: 1 }}>
+                                                    {task.filledCount} / {task.totalRequired}
+                                                </Typography>
                                             </ExpandMore>
-                                            <Typography variant="body2" sx={{ marginLeft: 1 }}>
-                                                {task.filledCount} / {task.totalRequired}
-                                            </Typography>
                                         </Box>
                                         {task.latestActivity !== "No recorded activity yet" && (
                                             <ExpandMore
