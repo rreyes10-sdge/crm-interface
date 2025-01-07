@@ -21,6 +21,8 @@ interface Task {
     coreName: string;
     serviceName: string;
     latestActivity: string;
+    totalRequired: number;
+    filledCount: number;
 }
 
 interface KanbanBoardProps {
@@ -96,7 +98,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                     </CardContent>
                                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }} />
                                     <CardActions disableSpacing>
-                                        <Box sx={{ flexGrow: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', marginRight: 2 }}>
                                             <ExpandMore
                                                 expand={expandedTaskId === task.id}
                                                 onClick={() => handleExpandClick(task.id)}
@@ -105,6 +107,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                             >
                                                 <BallotOutlinedIcon />
                                             </ExpandMore>
+                                            <Typography variant="body2" sx={{ marginLeft: 1 }}>
+                                                {task.filledCount} / {task.totalRequired}
+                                            </Typography>
                                         </Box>
                                         {task.latestActivity !== "No recorded activity yet" && (
                                             <ExpandMore

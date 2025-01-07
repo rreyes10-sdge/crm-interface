@@ -113,6 +113,8 @@ type Task = {
     latestActivity: string;
     createdAt: string;
     status: string;
+    totalRequired: number;
+    filledCount: number;
 };
 
 const ProjectTracker = () => {
