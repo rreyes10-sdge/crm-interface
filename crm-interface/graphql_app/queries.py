@@ -209,7 +209,7 @@ SELECT
     ds.Date AS LogDate,
     COUNT(a.ActivityId) AS ActivityCount
 FROM DateSeries ds
-LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND (a.ActivityTypeId IN (1, 2, 3, 4, 5, 6) OR a.ActivityId IS NULL)
+LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND (a.ActivityTypeId IN (1, 2, 3, 4, 5, 6) OR a.ActivityId IS NULL) AND a.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
 LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId AND p.ProgramId = 16
 WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
 GROUP BY ds.Date
@@ -229,10 +229,9 @@ ActivityCounts AS (
         ds.Date AS LogDate,
         COALESCE(COUNT(a.ActivityId), 0) AS ActivityCount
     FROM DateSeries ds
-    LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date
+    LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND a.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
     LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
-    WHERE p.ProgramId = 16
-      AND a.ActivityTypeId IN (1, 2, 3, 4, 5, 6)
+    WHERE a.ActivityTypeId IN (1, 2, 3, 4, 5, 6)
       AND ds.Date >= CURDATE() - INTERVAL 30 DAY
     GROUP BY ds.Date
     ORDER BY ds.Date
@@ -274,7 +273,7 @@ SELECT
     ds.Date AS CompletionDate,
     COALESCE(COUNT(pav.Id), 0) AS FilledCount
 FROM DateSeries ds
-LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date
+LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date and pav.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
 WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
 GROUP BY ds.Date
 ORDER BY ds.Date;"""
@@ -292,7 +291,7 @@ CompletedCounts AS (
         ds.Date AS CompletionDate,
         COALESCE(COUNT(pav.Id), 0) AS FilledCount
     FROM DateSeries ds
-    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON DATE(pav.UpdatedAt) = ds.Date and pav.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
     WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
     GROUP BY ds.Date
     ORDER BY ds.Date
