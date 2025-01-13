@@ -88,7 +88,7 @@ const Timeline: React.FC<TimelineProps> = ({ projectId }) => {
     // Sort the fetched data
     const timelineData: TimelineEvent[] = [...data.projectTimeline].sort(
         (a: TimelineEvent, b: TimelineEvent) =>
-            a.phaseSortOrder - b.phaseSortOrder || a.labelSortOrder - b.labelSortOrder
+            b.phaseSortOrder - a.phaseSortOrder || b.labelSortOrder - a.labelSortOrder
     );
 
     return (
