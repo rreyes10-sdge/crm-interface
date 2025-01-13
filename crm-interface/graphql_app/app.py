@@ -15,6 +15,7 @@ query.set_field("projectsWithFollowUpDates", Resolvers.resolve_projects_with_fol
 query.set_field("servicesStarted", Resolvers.resolve_services_started)
 query.set_field("projectsNotStarted", Resolvers.resolve_projects_not_started)
 query.set_field("completedProjects", Resolvers.resolve_completed_projects)
+query.set_field("projectTimeline", Resolvers.resolve_project_timeline)
 
 # Create the executable schema
 schema = make_executable_schema(type_defs, query)

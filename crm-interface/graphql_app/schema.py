@@ -35,6 +35,18 @@ type_defs = """
         filledCount: Int
     }
 
+    type ProjectTimeline {
+        id: Int
+        projectId: Int
+        programAttributeId: Int
+        updatedAt: String
+        label: String
+        updatedBy: String
+        phaseName: String
+        phaseSortOrder: Int
+        labelSortOrder: Int
+    }
+
     type Query {
         projectOverview(
             programId: Int
@@ -48,5 +60,10 @@ type_defs = """
         servicesStarted: [ProjectDetails]
         projectsNotStarted: [ProjectDetails]
         completedProjects: [ProjectDetails]
+        
+        projectTimeline(
+            projectId: Int
+        ): [ProjectTimeline]
+
     }
 """

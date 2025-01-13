@@ -16,8 +16,8 @@ class Resolvers:
             conditions.append("p.ProjectNumber = %(projectNumber)s")
             params['projectNumber'] = projectNumber
         if projectStatus:
-            conditions.append("ps.LongName LIKE %(status)s")
-            params['status'] = f"%{projectStatus}%"
+            conditions.append("ps.LongName LIKE %(projectStatus)s")
+            params['projectStatus'] = f"%{projectStatus}%"
         if organizationName:
             conditions.append("o.Name LIKE %(organizationName)s")
             params['organizationName'] = f"%{organizationName}%"
@@ -747,5 +747,48 @@ class Resolvers:
             'createdAt': row['CreatedAt'],
             'totalRequired': row['TotalRequired'],
             'filledCount': row['FilledCount']
+            })
+        return result
+    
+    @staticmethod
+    def resolve_project_timeline(root, info, projectId=None):
+        conditions = []
+        params = {}
+
+        if projectId:
+            conditions.append("ptv.ProjectId = %(projectId)s")
+            params['projectId'] = projectId
+
+        conditions.append("ptv.ProgramAttributeId IN (SELECT ProgramAttributeId FROM cleantranscrm.ProgramAttribute WHERE ControlType = 'date')")
+
+        where_clause = " AND ".join(conditions)
+        where_clause = f"WHERE {where_clause}" if where_clause else ""
+
+        query = f"""SELECT ptv.Id, ptv.ProjectId, ptv.ProgramAttributeId, ptv.UpdatedAt, ptv.UpdatedBy, ptv.Value, 
+            pa.Label, 
+            pa.SortOrder AS 'LabelSortOrder', 
+            pp.Name AS 'PhaseName', 
+            pp.SortOrder AS 'PhaseSortOrder'
+        FROM cleantranscrm.ProjectAttributeValue ptv
+        LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramAttributeId = ptv.ProgramAttributeId
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = pa.PhaseId AND pp.ProgramId = pa.ProgramId
+        {where_clause};
+        """
+        
+        df = fetch_data(query, params)
+        date_columns = ['UpdatedAt']
+        df = format_dates(df, date_columns)
+        result = []
+        for _, row in df.iterrows():
+            result.append({
+            'id': row['Id'],
+            'projectId': row['ProjectId'],
+            'phaseName': row['PhaseName'],
+            'programAttributeId': row['ProgramAttributeId'],
+            'updatedAt': row['UpdatedAt'],
+            'label': row['Label'],
+            'updatedBy': row['UpdatedBy'],
+            'phaseSortOrder': row['PhaseSortOrder'],
+            'labelSortOrder': row['LabelSortOrder'],
             })
         return result

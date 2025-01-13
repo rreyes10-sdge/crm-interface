@@ -8,6 +8,7 @@ import client from '../apollo-client';
 import styles from "./page.module.css";
 import MainGrid from "./components/MainGrid";
 import ProjectTracker from "./components/ProjectTracker";
+import Timeline from "./components/Timeline"
 
 const Home = () => {
   const location = useLocation();
@@ -17,6 +18,8 @@ const Home = () => {
   useEffect(() => {
     if (location.pathname === '/project-tracker') {
       setSelectedTab(1);
+    } else if (location.pathname === '/project-timeline') {
+      setSelectedTab(2);
     } else {
       setSelectedTab(0);
     }
@@ -26,6 +29,8 @@ const Home = () => {
     setSelectedTab(newValue);
     if (newValue === 1) {
       navigate('/project-tracker');
+    } else if (newValue === 2) {
+        navigate('/project-timeline');
     } else {
       navigate('/');
     }
@@ -37,11 +42,13 @@ const Home = () => {
         <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
           <Tab label="Project Status" />
           <Tab label="Project Tracker" />
+          <Tab label="Project Timeline" />
         </Tabs>
       </Box>
       <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
         {selectedTab === 0 && <MainGrid />}
         {selectedTab === 1 && <ProjectTracker />}
+        {selectedTab === 2 && <Timeline projectId={'30'} />}
       </Box>
     </div>
   );
@@ -53,6 +60,8 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/project-tracker" element={<Home />} />
+        <Route path="/project-timeline" element={<Home />} />
+        <Route path="*" element={<Home />} /> {/* Catch-all route */}
       </Routes>
     </Router>
   </ApolloProvider>
