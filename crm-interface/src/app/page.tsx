@@ -9,6 +9,7 @@ import styles from "./page.module.css";
 import MainGrid from "./components/MainGrid";
 import ProjectTracker from "./components/ProjectTracker";
 import Timeline from "./components/Timeline"
+import Head from 'next/head';
 
 const Home = () => {
   const location = useLocation();
@@ -30,27 +31,34 @@ const Home = () => {
     if (newValue === 1) {
       navigate('/project-tracker');
     } else if (newValue === 2) {
-        navigate('/project-timeline');
+      navigate('/project-timeline');
     } else {
       navigate('/');
     }
   };
 
   return (
-    <div className={styles.page}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
-          <Tab label="Project Status" />
-          <Tab label="Project Tracker" />
-          <Tab label="Project Timeline" />
-        </Tabs>
-      </Box>
-      <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
-        {selectedTab === 0 && <MainGrid />}
-        {selectedTab === 1 && <ProjectTracker />}
-        {selectedTab === 2 && <Timeline projectId={'30'} />}
-      </Box>
-    </div>
+    <>
+      <Head>
+        <title>My Awesome Project</title>
+        <meta name="description" content="This is an awesome project built with Next.js" />
+      </Head>
+
+      <div className={styles.page}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
+            <Tab label="Project Status" />
+            <Tab label="Project Tracker" />
+            <Tab label="Project Timeline" />
+          </Tabs>
+        </Box>
+        <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
+          {selectedTab === 0 && <MainGrid />}
+          {selectedTab === 1 && <ProjectTracker />}
+          {selectedTab === 2 && <Timeline projectId={'30'} />}
+        </Box>
+      </div>
+    </>
   );
 };
 
