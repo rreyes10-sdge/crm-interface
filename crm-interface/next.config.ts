@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         source: '/project-tracker',
         destination: '/',
       },
+      {
+        source: '/project-timeline',
+        destination: '/',
+      },
     ];
   },
 };

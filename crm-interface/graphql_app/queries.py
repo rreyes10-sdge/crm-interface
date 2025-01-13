@@ -571,6 +571,19 @@ QUERY_PROJECT_SERVICE = """SELECT
     ORDER BY
         p.ProjectNumber ASC, pp.SortOrder ASC, pa.SortOrder ASC;"""
 
+QUERY_PROJECT_TIMELINE = """SELECT ptv.*, 
+       pa.Label, 
+       pa.SortOrder AS 'LabelSortOrder', 
+       pp.Name AS 'PhaseName', 
+       pp.SortOrder AS 'PhaseSortOrder'
+FROM cleantranscrm.ProjectAttributeValue ptv
+LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramAttributeId = ptv.ProgramAttributeId
+LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = pa.PhaseId AND pp.ProgramId = pa.ProgramId
+WHERE ptv.projectid = 30
+  AND ptv.ProgramAttributeId IN (SELECT ProgramAttributeId 
+                                 FROM cleantranscrm.ProgramAttribute 
+                                 WHERE ControlType = 'date');"""
+
 
 
 # Dictionary mapping query names to their SQL strings
@@ -587,5 +600,6 @@ QUERIES = {
     'services-completed-trend': QUERY_SERVICES_COMPLETED_TREND,
     'project-service-attributes': QUERY_PROJECT_SERVICE_ATTRIBUTES,
     'project-service': QUERY_PROJECT_SERVICE,
+    'project-timeline': QUERY_PROJECT_TIMELINE,
     # ... add other queries with descriptive names
 }
