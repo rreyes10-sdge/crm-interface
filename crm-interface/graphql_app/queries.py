@@ -43,7 +43,7 @@ QUERY_SUMMARY = """SELECT
             COUNT(CASE WHEN pav.Value = 'True' THEN 1 END) AS 'ServiceSelectionCount'
         FROM cleantranscrm.ProjectAttributeValue pav
         LEFT JOIN cleantranscrm.ProgramAttribute pa ON pav.ProgramAttributeId = pa.ProgramAttributeId
-        WHERE pa.ProgramId = 16 AND pa.PhaseId = 2
+        WHERE pa.ProgramId = 16 AND pa.PhaseId = 2 AND pav.ProgramAttributeId not in (select programattributeid from cleantranscrm.TeasServiceType)
         GROUP BY pav.ProjectId
     ) A ON A.ProjectId = p.ProjectId
     LEFT JOIN (
@@ -53,7 +53,7 @@ QUERY_SUMMARY = """SELECT
         FROM cleantranscrm.ProgramAttribute pa
         LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
         LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
-        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'complete' AND pav.Value IS NOT NULL
+        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'complete' AND pav.Value IS NOT NULL AND pav.ProgramAttributeId not in (select programattributeid from cleantranscrm.TeasServiceType)
         GROUP BY pav.ProjectId
     ) B ON B.ProjectId = p.ProjectId
     LEFT JOIN (
@@ -63,7 +63,7 @@ QUERY_SUMMARY = """SELECT
         FROM cleantranscrm.ProgramAttribute pa
         LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
         LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
-        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Service Start Date' AND pav.Value IS NOT NULL
+        WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Service Start Date' AND pav.Value IS NOT NULL AND pav.ProgramAttributeId not in (select programattributeid from cleantranscrm.TeasServiceType)
         GROUP BY pav.ProjectId
     ) C ON C.ProjectId = p.ProjectId
     LEFT JOIN (
@@ -333,7 +333,7 @@ SELECT
     COALESCE(COUNT(DISTINCT CONCAT(pav.projectid, '-', pav.ProgramAttributeId)), 0) AS CompletedCount
 FROM DateSeries ds
 LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete'
-LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date
+LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date AND pav.ProgramAttributeId not in (select programattributeid from cleantranscrm.TeasServiceType)
 WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
 GROUP BY ds.Date
 ORDER BY ds.Date;"""
@@ -353,7 +353,7 @@ CompletedCounts AS (
         COALESCE(COUNT(DISTINCT CONCAT(pav.projectid, '-', pav.ProgramAttributeId)), 0) AS CompletedCount
     FROM DateSeries ds
     LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete'
-    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND DATE(pav.Value) = ds.Date AND pav.ProgramAttributeId not in (select programattributeid from cleantranscrm.TeasServiceType)
     WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
     GROUP BY ds.Date
     ORDER BY ds.Date
