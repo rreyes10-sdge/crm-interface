@@ -252,7 +252,7 @@ class Resolvers:
             AND pa.PhaseId = 2 AND pa.ProgramId = 16
             AND pal.Value = 'True'
             AND B.Value != ''
-            AND (B.Value < CURDATE() OR B.Value BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) + INTERVAL 1 DAY)
+            AND (B.Value < CURDATE())
             AND C.Value IS NULL
             GROUP BY p.ProjectNumber, tst2.Name, pa.Label
             ORDER BY B.value ASC;"""
@@ -402,7 +402,8 @@ class Resolvers:
             pal.ProjectId IN (SELECT ProjectId FROM cleantranscrm.`Project` WHERE ProgramId = 16)
             AND pa.PhaseId = 2 AND pa.ProgramId = 16 AND pal.Value='True'
             AND C.Value IS NULL
-            AND A.Value is not null
+            AND (B.Value > CURDATE() OR B.Value IS NULL)
+            AND A.Value REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z$'
             GROUP BY p.ProjectNumber, tst2.Name, pa.Label
             ORDER BY
             A.Value ASC;"""
