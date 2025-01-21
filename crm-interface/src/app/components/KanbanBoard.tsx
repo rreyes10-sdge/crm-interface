@@ -10,7 +10,7 @@ import IconButton, { IconButtonProps } from '@mui/material/IconButton';
 import ProjectAttributes from './ProjectAttributes';
 
 
-const statuses = ['Services Not Started', 'Services Started', 'Overdue Follow Up Dates', 'Completed Services'];
+const statuses = ['Services Not Started', 'Services Started', 'Overdue Follow Ups', 'Completed Services'];
 
 interface Task {
     id: number;
