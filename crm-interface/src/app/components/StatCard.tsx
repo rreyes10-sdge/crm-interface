@@ -98,7 +98,11 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={`${trendValues[trend]} (${percentageChange}%)`} />
+              <Chip 
+                size="small" 
+                color={color} 
+                label={percentageChange !== 0 ? `${trendValues[trend]} (${percentageChange}%)` : trendValues[trend]} 
+              />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}
