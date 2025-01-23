@@ -36,6 +36,9 @@ async function initializeData() {
         const loggedActivitiesData = await fetchData('http://127.0.0.1:5000/api/data/logged-activities');
         const loggedActivitiesTrend = await fetchTrend('http://127.0.0.1:5000/api/data/logged-activities-trend');
 
+        const loggedTimeData = await fetchData('http://127.0.0.1:5000/api/data/logged-time');
+        const loggedTimeTrend = await fetchTrend('http://127.0.0.1:5000/api/data/logged-time-trend');
+
         const attributesFilledData = await fetchData('http://127.0.0.1:5000/api/data/attributes-filled');
         const attributesFilledTrend = await fetchTrend('http://127.0.0.1:5000/api/data/attributes-filled-trend');
 
@@ -58,6 +61,14 @@ async function initializeData() {
                 trend: loggedActivitiesTrend.Trend,
                 percentageChange: loggedActivitiesTrend.PercentageChange,
                 data: loggedActivitiesData.map(item => item.ActivityCount), // Extracting the values for the sparkline
+            },
+            {
+                title: 'Logged Time (mins)',
+                value: calculateValue(loggedTimeData, 'DurationTotal'),
+                interval: 'Last 30 days',
+                trend: loggedTimeTrend.Trend,
+                percentageChange: loggedTimeTrend.PercentageChange,
+                data: loggedTimeData.map(item => item.DurationTotal), // Extracting the values for the sparkline
             },
             {
                 title: 'Attributes Filled In',
@@ -110,7 +121,7 @@ export default function MainGrid() {
                 sx={{ mb: (theme) => theme.spacing(2) }}
             >
                 {data.map((card, index) => (
-                    <Grid key={index} item xs={12} sm={6} lg={3}>
+                    <Grid key={index} item xs={12} sm={6} lg={2}>
                         <StatCard {...card} />
                     </Grid>
                 ))}
