@@ -260,6 +260,68 @@ SELECT
     END AS PercentageChange
 FROM FirstHalf fh, SecondHalf sh;"""
 
+QUERY_LOGGED_TIME = """WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+)
+SELECT 
+    ds.Date AS LogDate,
+    COALESCE(SUM(a.Duration), 0) AS DurationTotal
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND a.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
+LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId AND p.ProgramId = 16
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY ds.Date
+ORDER BY ds.Date;"""
+
+QUERY_LOGGED_TIME_TREND = """-- Generate a series of dates for the past 30 days
+WITH RECURSIVE DateSeries AS (
+    SELECT CURDATE() AS Date
+    UNION ALL
+    SELECT Date - INTERVAL 1 DAY
+    FROM DateSeries
+    WHERE Date > CURDATE() - INTERVAL 29 DAY
+),
+-- Query to count activities logged each day
+DurationTotal AS (
+    SELECT 
+    ds.Date AS LogDate,
+    COALESCE(SUM(a.Duration),0) AS DurationTotal
+FROM DateSeries ds
+LEFT JOIN cleantranscrm.Activity a ON DATE(a.CreatedAt) = ds.Date AND a.ProjectId in (select projectid from cleantranscrm.Project p where ProgramId = 16) 
+LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId AND p.ProgramId = 16
+WHERE ds.Date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY ds.Date
+ORDER BY ds.Date
+),
+-- Calculate the average count for the first half of the 30-day period
+FirstHalf AS (
+    SELECT AVG(DurationTotal) AS AvgFirstHalf
+    FROM DurationTotal
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() - INTERVAL 16 DAY
+),
+-- Calculate the average count for the second half of the 30-day period
+SecondHalf AS (
+    SELECT AVG(DurationTotal) AS AvgSecondHalf
+    FROM DurationTotal
+    WHERE LogDate BETWEEN CURDATE() - INTERVAL 15 DAY AND CURDATE()
+)
+-- Determine the trend based on the averages
+SELECT 
+    CASE 
+        WHEN sh.AvgSecondHalf > fh.AvgFirstHalf THEN 'up'
+        WHEN sh.AvgSecondHalf < fh.AvgFirstHalf THEN 'down'
+        ELSE 'neutral'
+    END AS Trend,
+    CASE 
+        WHEN fh.AvgFirstHalf = 0 THEN 0
+        ELSE ROUND(((sh.AvgSecondHalf - fh.AvgFirstHalf) / fh.AvgFirstHalf) * 100, 2)
+    END AS PercentageChange
+FROM FirstHalf fh, SecondHalf sh;"""
+
 QUERY_ATTRIBUTES_FILLED = """WITH RECURSIVE DateSeries AS (
     SELECT CURDATE() AS Date
     UNION ALL
@@ -600,5 +662,7 @@ QUERIES = {
     'project-service-attributes': QUERY_PROJECT_SERVICE_ATTRIBUTES,
     'project-service': QUERY_PROJECT_SERVICE,
     'project-timeline': QUERY_PROJECT_TIMELINE,
+    'logged-time': QUERY_LOGGED_TIME,
+    'logged-time-trend': QUERY_LOGGED_TIME_TREND,
     # ... add other queries with descriptive names
 }
