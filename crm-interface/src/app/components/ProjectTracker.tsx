@@ -125,7 +125,7 @@ const ProjectTracker = () => {
     useEffect(() => {
         if (data) {
             const combinedTasks: Task[] = [
-                ...data.projectsWithFollowUpDates.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Overdue Follow Ups' })),
+                ...data.projectsWithFollowUpDates.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Follow Up Dates' })),
                 ...data.servicesStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Services Started' })),
                 ...data.projectsNotStarted.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Services Not Started' })),
                 ...data.completedProjects.map((task: Project) => ({ ...task, id: hashStringToNumber(`${task.projectId}-${task.serviceName}`), status: 'Completed Services' })),

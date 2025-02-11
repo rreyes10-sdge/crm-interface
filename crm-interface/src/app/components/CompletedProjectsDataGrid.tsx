@@ -224,7 +224,7 @@ const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataG
                         alignItems: 'center',
                     },
                     '& .MuiDataGrid-row': {
-                        minHeight: '60px !important',
+                        minHeight: '40px !important',
                     }
                 }}
             />
