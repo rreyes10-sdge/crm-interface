@@ -450,7 +450,7 @@ const CustomizedDataGrid = () => {
             alignItems: 'center',
           },
           '& .MuiDataGrid-row': {
-            minHeight: '60px !important',
+            minHeight: '=100px !important',
           }
         }}
       />
