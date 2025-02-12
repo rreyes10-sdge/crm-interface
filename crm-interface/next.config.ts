@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         source: '/project-timeline',
         destination: '/',
       },
+      {
+        source: '/user-stats',
+        destination: '/',
+      },
     ];
   },
 };
