@@ -9,11 +9,15 @@ const nextConfig: NextConfig = {
         destination: '/',
       },
       {
-        source: '/project-timeline',
+        source: '/project-summary',
         destination: '/',
       },
       {
         source: '/user-stats',
+        destination: '/',
+      },
+      {
+        source: '/ev-calculator',
         destination: '/',
       },
     ];
