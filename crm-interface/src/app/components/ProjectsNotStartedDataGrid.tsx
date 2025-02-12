@@ -119,7 +119,7 @@ const ProjectsNotStartedDataGrid = ({ rows }: ProjectsNotStartedDataGridProps) =
         },
         { field: 'coreName', headerName: 'Core', width: 60, renderCell: renderCoreServiceCell },
         { field: 'serviceName', headerName: 'Service Name', width: 280 },
-        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
+        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params: any) => <AddCommentIcon /> },
         { field: 'serviceStartDate', headerName: 'Service Start Date', width: 160 },
         { field: 'followUpDate', headerName: 'Follow Up Date', width: 160 },
         { field: 'totalDurationMins', headerName: 'Duration Logged', width: 140 },
@@ -132,7 +132,7 @@ const ProjectsNotStartedDataGrid = ({ rows }: ProjectsNotStartedDataGridProps) =
             field: 'filledVsTotal',
             headerName: 'Filled vs Total',
             width: 130,
-            renderCell: (params) => {
+            renderCell: (params: { row: { totalRequired: any; filledCount: any; }; }) => {
                 const { totalRequired, filledCount } = params.row;
                 return `${filledCount} / ${totalRequired}`;
             },
