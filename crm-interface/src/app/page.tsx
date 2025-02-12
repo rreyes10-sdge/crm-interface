@@ -21,7 +21,7 @@ const Home = () => {
   useEffect(() => {
     if (location.pathname === '/project-tracker') {
       setSelectedTab(1);
-    } else if (location.pathname === '/project-timeline') {
+    } else if (location.pathname === '/project-summary') {
       setSelectedTab(2);
     } else if (location.pathname === '/user-stats') {
       setSelectedTab(3);
