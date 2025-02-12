@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import type { ProjectService } from '../types';
 import { BarChart } from '@mui/x-charts/BarChart';
-import serviceImageMap from '@/utils/serviceImageMap';
-
 
 const ProjectService = ({ rows }: { rows: ProjectRow[] }) => {
     const [serviceData, setServiceData] = useState<ProjectService[]>([]);
@@ -25,14 +23,14 @@ const ProjectService = ({ rows }: { rows: ProjectRow[] }) => {
     }, []);
 
     useEffect(() => {
-        console.log('Rows:', rows); // Log the rows prop
-        console.log('Service Data:', serviceData); // Log the fetched service data
+        // console.log('Rows:', rows); // Log the rows prop
+        // console.log('Service Data:', serviceData); // Log the fetched service data
 
         const filtered = serviceData.filter(service =>
             rows.some(row => row.ProjectId === service.ProjectId)
         );
 
-        console.log('Filtered Services:', filtered); // Log the filtered services
+        // console.log('Filtered Services:', filtered); // Log the filtered services
 
         setFilteredServices(filtered);
     }, [serviceData, rows]);
@@ -53,10 +51,18 @@ const ProjectService = ({ rows }: { rows: ProjectRow[] }) => {
 
     console.log('Grouped By CoreName:', groupedByCoreName); // Log the grouped data
 
-    const coreNames = Object.keys(groupedByCoreName);
-    const inProgressData = coreNames.map(coreName => groupedByCoreName[coreName].inProgress);
-    const completeData = coreNames.map(coreName => groupedByCoreName[coreName].complete);
-    const notStartedData = coreNames.map(coreName => groupedByCoreName[coreName].notStarted);
+    const coreNameMapping: Record<string, string> = {
+        'Fleet Electrification Planning': 'Plan',
+        'Pre-Energization Support': 'Pre',
+        'Post-Energization Support': 'Post',
+        'Emerging Technology Consulting': 'Tech'
+    };
+
+    const originalCoreNames = Object.keys(groupedByCoreName);
+    const coreNames = originalCoreNames.map(coreName => coreNameMapping[coreName] || coreName);
+    const inProgressData = originalCoreNames.map(coreName => groupedByCoreName[coreName].inProgress);
+    const completeData = originalCoreNames.map(coreName => groupedByCoreName[coreName].complete);
+    const notStartedData = originalCoreNames.map(coreName => groupedByCoreName[coreName].notStarted);
 
     console.log('Core Names:', coreNames); // Log the core names
     console.log('In Progress Data:', inProgressData); // Log the in-progress data
@@ -75,13 +81,15 @@ const ProjectService = ({ rows }: { rows: ProjectRow[] }) => {
             ) : (
                 <Box sx={{ height: 380, width: '100%', border: '1px solid #ccc', borderRadius: '4px', p: 2 }}>
                     <BarChart
-                        yAxis={[{ data: coreNames, scaleType: 'band' }]}
+                        yAxis={[{
+                            data: coreNames,
+                            scaleType: 'band',
+                          }]}
                         series={[
                             { data: inProgressData, label: 'In Progress', stack: 'stack1', color: 'blue' },
                             { data: completeData, label: 'Complete', stack: 'stack1', color: 'green' },
                             { data: notStartedData, label: 'Not Started', stack: 'stack1', color: 'red' },
                         ]}
-                        width={600}
                         grid={{ vertical: true }}
                         layout="horizontal"
                     />
