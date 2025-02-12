@@ -11,6 +11,7 @@ import ProjectTracker from "./components/ProjectTracker";
 import Timeline from "./components/Timeline"
 import Head from 'next/head';
 import UserStats from './components/UserStats';
+import EvCalculator from './components/EvCalculator';
 
 const Home = () => {
   const location = useLocation();
@@ -24,6 +25,8 @@ const Home = () => {
       setSelectedTab(2);
     } else if (location.pathname === '/user-stats') {
       setSelectedTab(3);
+    } else if (location.pathname === '/ev-calculator') {
+      setSelectedTab(4);
     } else {
       setSelectedTab(0);
     }
@@ -34,9 +37,11 @@ const Home = () => {
     if (newValue === 1) {
       navigate('/project-tracker');
     } else if (newValue === 2) {
-      navigate('/project-timeline');
+      navigate('/project-summary');
     } else if (newValue === 3) {
       navigate('/user-stats');
+    } else if (newValue === 4) {
+      navigate('/ev-calculator');
     } else {
       navigate('/');
     }
@@ -54,8 +59,9 @@ const Home = () => {
           <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
             <Tab label="Project Status" />
             <Tab label="Project Tracker" />
-            <Tab label="Project Timeline" />
+            <Tab label="Project Summary" />
             <Tab label="User Stats" />
+            <Tab label="EV Fuel Calculator" />
           </Tabs>
         </Box>
         <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
@@ -63,6 +69,7 @@ const Home = () => {
           {selectedTab === 1 && <ProjectTracker />}
           {selectedTab === 2 && <Timeline projectId={'30'} />}
           {selectedTab === 3 && <UserStats />}
+          {selectedTab === 4 && <EvCalculator />}
         </Box>
       </div>
     </>
@@ -75,7 +82,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/project-tracker" element={<Home />} />
-        <Route path="/project-timeline" element={<Home />} />
+        <Route path="/project-summary" element={<Home />} />
         <Route path="/user-stats" element={<Home />} />
         <Route path="*" element={<Home />} /> {/* Catch-all route */}
       </Routes>
