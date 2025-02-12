@@ -1,42 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import { Box, CircularProgress, Typography, Tooltip } from '@mui/material';
-import { gql, useQuery } from '@apollo/client';
+import React from 'react';
+import { DataGrid, GridRenderCellParams } from '@mui/x-data-grid';
+import { Box, Typography, Tooltip } from '@mui/material';
 import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
-import { GridRenderCellParams } from '@mui/x-data-grid';
 import serviceImageMap from '@/utils/serviceImageMap';
 import AddCommentIcon from '@mui/icons-material/AddComment';
-
-const GET_PROJECTS_WITH_FOLLOW_UP_DATES = gql`
-    query GetProjectsWithFollowUpDates {
-        projectsWithFollowUpDates {
-            projectNumber
-            projectId
-            phaseId
-            organizationName
-            organizationId
-            coreName
-            serviceName
-            serviceStartDate
-            followUpDate
-            completeDate
-            totalDurationMins
-            latestActivity
-            createdAt
-            totalRequired
-            filledCount
-        }
-    }
-`;
 
 interface Project {
     projectNumber: string;
     projectId: string;
-    phaseId: number;
+    phaseId: string;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -105,20 +81,10 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
 };
 
 type FollowUpDataGridProps = {
-    rows: any;
+    rows: Project[];
 };
 
-const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
-    const { loading, error, data } = useQuery(GET_PROJECTS_WITH_FOLLOW_UP_DATES);
-    const [rows, setRows] = useState<Project[]>([]);
-
-    useEffect(() => {
-        if (data && data.projectsWithFollowUpDates) {
-            console.log(data.projectsWithFollowUpDates); // Log the data to inspect it
-            setRows(data.projectsWithFollowUpDates);
-        }
-    }, [data]);
-
+const FollowUpDataGrid = ({ rows }: FollowUpDataGridProps) => {
     interface Column {
         field: keyof Project;
         headerName: string;
@@ -166,31 +132,13 @@ const FollowUpDataGrid = ({ rows: initialRows }: FollowUpDataGridProps) => {
         },
     ];
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <Typography variant="h6" color="error">
-                    Error loading data
-                </Typography>
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Typography component="h3" variant="h6" sx={{ mb: 2, marginLeft: 0, marginRight: 0 }}>
-                Overdue Follow Ups <span style={{ color: getStatusColor('Overdue Follow Up Dates') }}>({rows.length})</span>
+                Overdue Follow Ups <span style={{ color: getStatusColor('Overdue Follow Ups') }}>({rows ? rows.length : 0})</span>
             </Typography>
             <DataGrid
-                rows={rows}
+                rows={rows || []}
                 columns={columns}
                 getRowId={(row) => `${row.projectId}-${row.serviceName}`} // Ensure unique keys
                 initialState={{

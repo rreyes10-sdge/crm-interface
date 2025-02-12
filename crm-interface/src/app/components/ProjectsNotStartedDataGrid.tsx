@@ -11,33 +11,10 @@ import { GridRenderCellParams } from '@mui/x-data-grid';
 import serviceImageMap from '@/utils/serviceImageMap';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 
-
-const GET_PROJECTS_NOT_STARTED = gql`
-    query GetProjectsNotStarted {
-        projectsNotStarted {
-            projectNumber
-            projectId
-            phaseId
-            organizationName
-            organizationId
-            coreName
-            serviceName
-            serviceStartDate
-            followUpDate
-            completeDate
-            totalDurationMins
-            latestActivity
-            createdAt
-            totalRequired
-            filledCount
-        }
-    }
-`;
-
 interface Project {
     projectNumber: string;
     projectId: string;
-    phaseId: number;
+    phaseId: string;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -111,16 +88,13 @@ type ProjectsNotStartedDataGridProps = {
 
 };
 
-const ProjectsNotStartedDataGrid = ({ rows: initialRows }: ProjectsNotStartedDataGridProps) => {
-    const { loading, error, data } = useQuery(GET_PROJECTS_NOT_STARTED);
-    const [rows, setRows] = useState<Array<{ projectId: string;[key: string]: any }>>([]);
-
-    useEffect(() => {
-        if (rows) {
-            console.log(data.projectsNotStarted); // Log the data to inspect it
-            setRows(data.projectsNotStarted);
-        }
-    }, [data]);
+const ProjectsNotStartedDataGrid = ({ rows }: ProjectsNotStartedDataGridProps) => {
+    interface Column {
+        field: keyof Project;
+        headerName: string;
+        width: number;
+        renderCell?: (params: GridRenderCellParams<Project>) => React.ReactNode;
+    }
 
     const columns = [
         {
@@ -165,28 +139,10 @@ const ProjectsNotStartedDataGrid = ({ rows: initialRows }: ProjectsNotStartedDat
         },
     ];
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <Typography variant="h6" color="error">
-                    Error loading data
-                </Typography>
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                Services Not Started <span style={{ color: getStatusColor('Projects Not Started') }}>({rows.length})</span>
+                Services Not Started <span style={{ color: getStatusColor('Services Not Started') }}>({rows.length})</span>
             </Typography>
             <DataGrid
                 rows={rows}
@@ -226,7 +182,7 @@ const ProjectsNotStartedDataGrid = ({ rows: initialRows }: ProjectsNotStartedDat
                         alignItems: 'center',
                     },
                     '& .MuiDataGrid-row': {
-                        minHeight: '60px !important',
+                        minHeight: '40px !important',
                     }
                 }}
             />

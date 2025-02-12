@@ -1,12 +1,12 @@
 export default function getStatusColor(status: string): import("csstype").Property.Color | undefined {
     switch (status) {
-        case 'Projects Not Started':
+        case 'Services Not Started':
             return 'red';
         case 'Services Started':
             return 'orange';
-        case 'Overdue Follow Up Dates':
+        case 'Overdue Follow Ups':
             return 'blue';
-        case 'Completed Projects':
+        case 'Completed Services':
             return 'green';
         default:
             return undefined;
