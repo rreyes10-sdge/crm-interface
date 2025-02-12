@@ -252,14 +252,6 @@ def get_stats():
         """
         project_table_values = fetch_data(project_table_values_query, conn, params=(user_id, time_range)).to_dict(orient='records')
 
-        # # User projects promoted or demoted
-        # user_projects_promoted_demoted_query = """
-        #     SELECT project_id, project_name, status
-        #     FROM user_projects
-        #     WHERE user_id = %s AND status_change_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
-        # """
-        # user_projects_promoted_demoted = fetch_data(user_projects_promoted_demoted_query, conn, params=(user_id, time_range)).to_dict(orient='records')
-
         # User saved filters
         user_saved_filters_query = """
             SELECT *
@@ -283,7 +275,6 @@ def get_stats():
             "attributes_filled": attributes_filled,
             "project_table_values_count": project_table_values_count,
             "project_table_values": project_table_values,
-            # "user_projects_promoted_demoted": user_projects_promoted_demoted,
             "user_saved_filters": user_saved_filters,
             "user_favorited_projects": user_favorited_projects
         }
