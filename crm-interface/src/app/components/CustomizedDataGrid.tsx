@@ -10,7 +10,6 @@ import { ActiveFilterChip } from './ActiveFilterChips';
 import ProjectStatusFilter from './ProjectStatusFilter';
 import PendingActions from './PendingActions';
 import { calculateDaysBetween } from '@/utils/calculateDaysBetween';
-import ChartProjectSubmissions from './ChartProjectSubmissions';
 import ProjectService from './ProjectService';
 
 const CustomizedDataGrid = () => {
@@ -388,10 +387,6 @@ const CustomizedDataGrid = () => {
         <Box sx={{ flex: 1 }}>
           <ProjectService rows={filteredRows} />
         </Box>
-        <Box sx={{ flex: 1 }}>
-          <ChartProjectSubmissions />
-        </Box>
-        
       </Box>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Details

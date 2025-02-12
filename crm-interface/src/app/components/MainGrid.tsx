@@ -120,14 +120,14 @@ export default function MainGrid() {
                 columns={12}
                 sx={{ mb: (theme) => theme.spacing(2) }}
             >
+                <Grid item xs={12} sm={6} lg={2}>
+                          <ChartProjectSubmissions />
+                        </Grid>
                 {data.map((card, index) => (
                     <Grid key={index} item xs={12} sm={6} lg={2}>
                         <StatCard {...card} />
                     </Grid>
                 ))}
-                {/* <Grid item xs={12} sm={6} lg={3}>
-                    <ChartProjectSubmissions />
-                </Grid> */}
             </Grid>
             <Box sx={{ width: '100%', height: 5, backgroundColor: 'grey.300', mb: 4, mt: 4 }} />
             <Grid item xs={11} lg={13}>
