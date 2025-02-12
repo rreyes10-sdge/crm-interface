@@ -12,30 +12,6 @@ import serviceImageMap from '@/utils/serviceImageMap';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 
 
-
-
-const GET_SERVICES_STARTED = gql`
-    query GetServicesStarted {
-        servicesStarted {
-            projectNumber
-            projectId
-            phaseId
-            organizationName
-            organizationId
-            coreName
-            serviceName
-            serviceStartDate
-            followUpDate
-            completeDate
-            totalDurationMins
-            latestActivity
-            createdAt
-            totalRequired
-            filledCount
-        }
-    }
-`;
-
 interface Project {
     projectNumber: string;
     projectId: string;
@@ -108,21 +84,17 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
 };
 
 type ServicesStartedDataGridProps = {
-
-    rows: any;
-
+    rows: Project[];
 };
 
-const ServicesStartedDataGrid = ({ rows: initialRows }: ServicesStartedDataGridProps) => {
-    const { loading, error, data } = useQuery(GET_SERVICES_STARTED);
-    const [rows, setRows] = useState<Project[]>([]);
+const ServicesStartedDataGrid = ({ rows }: ServicesStartedDataGridProps) => {
+    interface Column {
+        field: keyof Project;
+        headerName: string;
+        width: number;
+        renderCell?: (params: GridRenderCellParams<Project>) => React.ReactNode;
+    }
 
-    useEffect(() => {
-        if (rows) {
-            console.log(data.servicesStarted); // Log the data to inspect it
-            setRows(data.servicesStarted);
-        }
-    }, [data]);
 
     const columns = [
         {
@@ -165,28 +137,10 @@ const ServicesStartedDataGrid = ({ rows: initialRows }: ServicesStartedDataGridP
         },
     ];
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <Typography variant="h6" color="error">
-                    Error loading data
-                </Typography>
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                Services Started <span style={{ color: getStatusColor('Services Started') }}>({rows.length})</span>
+                Services Started <span style={{ color: getStatusColor('Services Started') }}>({rows ? rows.length : 0})</span>
             </Typography>
             <DataGrid
                 rows={rows}

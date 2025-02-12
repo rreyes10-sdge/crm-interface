@@ -11,33 +11,10 @@ import { GridRenderCellParams } from '@mui/x-data-grid';
 import serviceImageMap from '@/utils/serviceImageMap';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 
-
-const GET_COMPLETED_PROJECTS = gql`
-    query GetCompletedProjects {
-        completedProjects {
-            projectNumber
-            projectId
-            phaseId
-            organizationName
-            organizationId
-            coreName
-            serviceName
-            serviceStartDate
-            followUpDate
-            completeDate
-            totalDurationMins
-            latestActivity
-            createdAt
-            totalRequired
-            filledCount
-        }
-    }
-`;
-
 interface Project {
     projectNumber: string;
     projectId: string;
-    phaseId: number;
+    phaseId: string;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -71,22 +48,6 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
     return serviceName;
 };
 
-// const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
-//     const dateValue = params.row[dateField];
-//     const parsedDate = parseISO(dateValue);
-//     const daysSince = differenceInDays(new Date(), parsedDate);
-
-//     return (
-//         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
-//             <Box display="flex" alignItems="center">
-//                 <Typography sx={{ marginRight: 1 }}>
-//                     {dateValue}
-//                 </Typography>
-//             </Box>
-//         </Tooltip>
-//     );
-// };
-
 const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
     const parsedDate = parseISO(dateValue);
@@ -106,21 +67,16 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
 };
 
 type CompletedProjectsDataGridProps = {
-
-    rows: any;
-
+    rows: Project[];
 };
 
-const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataGridProps) => {
-    const { loading, error, data } = useQuery(GET_COMPLETED_PROJECTS);
-    const [rows, setRows] = useState<Array<{ projectId: string;[key: string]: any }>>([]);
-
-    useEffect(() => {
-        if (rows) {
-            console.log(data.completedProjects); // Log the data to inspect it
-            setRows(data.completedProjects);
-        }
-    }, [data]);
+const CompletedProjectsDataGrid = ({ rows }: CompletedProjectsDataGridProps) => {
+    interface Column {
+        field: keyof Project;
+        headerName: string;
+        width: number;
+        renderCell?: (params: GridRenderCellParams<Project>) => React.ReactNode;
+    }
 
     const columns = [
         {
@@ -163,28 +119,10 @@ const CompletedProjectsDataGrid = ({ rows: initialRows }: CompletedProjectsDataG
         },
     ];
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-                <Typography variant="h6" color="error">
-                    Error loading data
-                </Typography>
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                Completed Services <span style={{ color: getStatusColor('Completed Projects') }}>({rows.length})</span>
+                Completed Services <span style={{ color: getStatusColor('Completed Services') }}>({rows ? rows.length : 0})</span>
             </Typography>
             <DataGrid
                 rows={rows}

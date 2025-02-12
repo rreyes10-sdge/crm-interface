@@ -48,9 +48,6 @@ const ProjectTableValues: React.FC<ProjectTableValuesProps> = ({ values }) => {
                                         <strong>Table:</strong> {value.TableName}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>Label:</strong> {value.Label}
-                                    </Typography>
-                                    <Typography variant="body2">
                                         <strong>Value:</strong> {value.Value}
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">

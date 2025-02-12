@@ -13,7 +13,7 @@ import ProjectAttributes from './ProjectAttributes';
 const statuses = ['Services Not Started', 'Services Started', 'Overdue Follow Ups', 'Completed Services'];
 
 interface Task {
-    id: number;
+    id: string;
     status: string;
     projectId: string;
     projectNumber: string;
