@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Box, Select, MenuItem, Typography, Grid } from '@mui/material';
 import UserStatsDisplay from './UserStatsDisplay';
+import FavoriteProjects from './FavoriteProjects';
+import SavedFilters from './SavedFilters';
 
 interface User {
   UserId: string;
@@ -64,7 +66,7 @@ const UserStats: React.FC = () => {
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '100%' }, mx: 'auto' }}>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        User Stats Overview
+        User Overview
       </Typography>
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         <Grid item xs={12} sm={6} lg={3}>
@@ -96,22 +98,29 @@ const UserStats: React.FC = () => {
           </Select>
         </Grid>
       </Grid>
-      <Box sx={{ width: '100%', height: 5, backgroundColor: 'grey.300', mb: 4, mt: 4 }} />
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-                Displaying stats for user: {selectedUser}
-              </Typography>
+      <Box sx={{ width: '100%', height: 5, backgroundColor: 'grey.300', mb: 0, mt: 4 }} />
+      {/* <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+                Displaying overview for user: {selectedUser}
+              </Typography> */}
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         {selectedUser ? (
           stats ? (
             <>
-              
-              <UserStatsDisplay stats={stats} />
+              <Grid item xs={12}>
+                <FavoriteProjects favoriteProjects={stats.user_favorited_projects} />
+              </Grid>
+              <Grid item xs={12}>
+                <SavedFilters savedFilters={stats.user_saved_filters} />
+              </Grid>
+              <Grid item xs={12}>
+                <UserStatsDisplay stats={stats} />
+              </Grid>
             </>
           ) : (
-            <Typography sx={{ mb: 2 }}>Loading stats...</Typography>
+            <Typography sx={{ mb: 2 }}>Loading overview...</Typography>
           )
         ) : (
-          <Typography>Please select a user to view their stats.</Typography>
+          <Typography>Please select a user to view their overview.</Typography>
         )}
       </Grid>
     </Box>

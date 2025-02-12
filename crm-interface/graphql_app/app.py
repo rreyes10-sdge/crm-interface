@@ -238,16 +238,20 @@ def get_stats():
                 , CASE 
                     WHEN tc.ControlType = 'select' THEN so.OptionText
                 ELSE ptv.Value END AS 'Value'
-                , ptv.`Row`, ptv.UpdatedAt , ptv.UpdatedBy, COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName' 
+                , ptv.`Row`
+                , ptv.UpdatedAt 
+                , ptv.UpdatedBy
+                , p.ProjectId
+                ,  p.ProjectNumber
+                , p.Name as 'ProjectName'
+                , o.Name as 'OrgName' 
             FROM cleantranscrm.ProjectTableValue ptv
             LEFT JOIN cleantranscrm.`Table` t on t.TableId = ptv.TableId 
             LEFT JOIN cleantranscrm.TableColumn tc on tc.TableColumnId = ptv.TableColumnId 
-            LEFT JOIN cleantranscrm.ProgramAttribute pa on pa.TableId = t.TableId 
-            LEFT JOIN cleantranscrm.SelectControl sc on sc.SelectControlId = tc.Source 
-            LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId 
             LEFT JOIN cleantranscrm.Project p on p.ProjectId = ptv.ProjectId 
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
-            LEFT JOIN cleantranscrm.ProgramPhase pp on pp.PhaseId = pa.PhaseId and pp.ProgramId = pa.ProgramId 
+            LEFT JOIN cleantranscrm.SelectControl sc on sc.SelectControlId = tc.Source 
+            LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId  
             WHERE ptv.UpdatedBy = %s AND ptv.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
         project_table_values = fetch_data(project_table_values_query, conn, params=(user_id, time_range)).to_dict(orient='records')
@@ -262,7 +266,10 @@ def get_stats():
 
         # User favorited projects
         user_favorited_projects_query = """
-            select * from cleantranscrm.FavoriteProject fp WHERE UserId = %s
+            select fp.*, p.ProjectNumber, o.Name as 'OrgName' from cleantranscrm.FavoriteProject fp
+            left join cleantranscrm.Project p on p.ProjectId = fp.ProjectId 
+            left join cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
+            WHERE fp.UserId = %s
         """
         user_favorited_projects = fetch_data(user_favorited_projects_query, conn, params=(user_id)).to_dict(orient='records')
 
