@@ -127,13 +127,12 @@ export default function ChartProjectSubmissions() {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         Project Submissions
-      </Typography>
+      </Typography> */}
 
       <Card
-        variant="outlined"
-        sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, width: '280px' }}
+        variant="outlined" sx={{ height: '100%', flexGrow: 1 }}
       >
         <CardContent>
           <br></br>
