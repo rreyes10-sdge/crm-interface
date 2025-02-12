@@ -49,13 +49,12 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
 
     const handleExpandClick = (taskId: number) => {
         console.log(`Clicked task ID: ${taskId}`);
-        setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
-        console.log(`Expanded task ID: ${expandedTaskId === taskId ? null : taskId}`);
+        setExpandedTaskId(prevExpandedTaskId => (prevExpandedTaskId === taskId ? null : taskId));
     };
 
     return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" sx={{ overflowX: 'auto' }}>
+        <Box sx={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
+            <Box display="flex" justifyContent="space-between" sx={{ width: '100%', maxWidth: '100%' }}>
                 {statuses.map((status) => {
                     const filteredTasks = tasks.filter((task) => task.status === status);
 
@@ -66,6 +65,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                                 backgroundColor: '#f4f5f7',
                                 padding: 2,
                                 width: '24%',
+                                minWidth: 450,
                                 minHeight: 500,
                                 marginRight: 2,
                             }}
