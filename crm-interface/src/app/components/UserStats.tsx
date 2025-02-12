@@ -54,7 +54,7 @@ const UserStats: React.FC = () => {
       // Fetch stats for selected user
       axios.get(`http://127.0.0.1:5000/api/stats?user_id=${selectedUser}&time_range=${timeRange}`)
         .then(response => {
-          console.log('API Response:', response.data); // Debugging
+        //   console.log('API Response:', response.data); // Debugging
           setStats(response.data.stats);
         })
         .catch(error => {

@@ -20,7 +20,7 @@ interface UserStatsDisplayProps {
 }
 
 const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
-  console.log('UserStatsDisplay Props:', stats); // Debugging
+//   console.log('UserStatsDisplay Props:', stats); // Debugging
 
   return (
     <Grid item xs={12} sm={12} lg={12} container spacing={2} >
