@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         destination: '/',
       },
       {
-        source: '/user-stats',
+        source: '/user-overview',
         destination: '/',
       },
       {

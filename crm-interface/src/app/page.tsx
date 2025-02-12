@@ -23,7 +23,7 @@ const Home = () => {
       setSelectedTab(1);
     } else if (location.pathname === '/project-summary') {
       setSelectedTab(2);
-    } else if (location.pathname === '/user-stats') {
+    } else if (location.pathname === '/user-overview') {
       setSelectedTab(3);
     } else if (location.pathname === '/ev-calculator') {
       setSelectedTab(4);
@@ -39,7 +39,7 @@ const Home = () => {
     } else if (newValue === 2) {
       navigate('/project-summary');
     } else if (newValue === 3) {
-      navigate('/user-stats');
+      navigate('/user-overview');
     } else if (newValue === 4) {
       navigate('/ev-calculator');
     } else {
@@ -60,7 +60,7 @@ const Home = () => {
             <Tab label="Project Status" />
             <Tab label="Project Tracker" />
             <Tab label="Project Summary" />
-            <Tab label="User Stats" />
+            <Tab label="User Overview" />
             <Tab label="EV Fuel Calculator" />
           </Tabs>
         </Box>
@@ -83,7 +83,7 @@ const App = () => (
         <Route path="/" element={<Home />} />
         <Route path="/project-tracker" element={<Home />} />
         <Route path="/project-summary" element={<Home />} />
-        <Route path="/user-stats" element={<Home />} />
+        <Route path="/user-overview" element={<Home />} />
         <Route path="*" element={<Home />} /> {/* Catch-all route */}
       </Routes>
     </Router>
