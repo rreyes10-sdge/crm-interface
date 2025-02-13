@@ -228,9 +228,9 @@ def get_stats():
         project_table_values_count_query = """
             SELECT COUNT(*) AS project_table_values_count
             FROM cleantranscrm.ProjectTableValue ptv
-            WHERE UpdatedBy = %s AND UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE (ptv.UpdatedBy = %s OR ptv.UpdatedBy = (SELECT ProperName FROM cleantranscrm.`User` u WHERE u.UserId = %s)) AND UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
-        project_table_values_count = int(fetch_data(project_table_values_count_query, conn, params=(user_id, time_range)).iloc[0]['project_table_values_count'])
+        project_table_values_count = int(fetch_data(project_table_values_count_query, conn, params=(user_id, user_id, time_range)).iloc[0]['project_table_values_count'])
 
         # Project table values
         project_table_values_query = """
@@ -252,9 +252,10 @@ def get_stats():
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             LEFT JOIN cleantranscrm.SelectControl sc on sc.SelectControlId = tc.Source 
             LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId  
-            WHERE ptv.UpdatedBy = %s AND ptv.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE (ptv.UpdatedBy = %s OR ptv.UpdatedBy = (SELECT ProperName FROM cleantranscrm.`User` u WHERE u.UserId = %s))
+            AND ptv.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
-        project_table_values = fetch_data(project_table_values_query, conn, params=(user_id, time_range)).to_dict(orient='records')
+        project_table_values = fetch_data(project_table_values_query, conn, params=(user_id, user_id, time_range)).to_dict(orient='records')
 
         # User saved filters
         user_saved_filters_query = """
