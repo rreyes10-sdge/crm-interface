@@ -41,6 +41,7 @@ const UserStats: React.FC = () => {
     axios.get('http://127.0.0.1:5000/api/active-users')
       .then(response => {
         setUsers(response.data.active_users);
+        setSelectedUser('RREYES10'); // Set default user after users are loaded
       })
       .catch(error => {
         console.error('Error fetching active users:', error);
@@ -95,6 +96,8 @@ const UserStats: React.FC = () => {
           >
             <MenuItem value={30}>Last 30 Days</MenuItem>
             <MenuItem value={60}>Last 60 Days</MenuItem>
+            <MenuItem value={180}>Last 180 Days</MenuItem>
+            <MenuItem value={360}>Last Year</MenuItem>
           </Select>
         </Grid>
       </Grid>
