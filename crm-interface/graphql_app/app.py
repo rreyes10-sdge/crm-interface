@@ -274,6 +274,40 @@ def get_stats():
         """
         user_favorited_projects = fetch_data(user_favorited_projects_query, conn, params=(user_id)).to_dict(orient='records')
 
+        cursor = conn.cursor()
+        cursor.execute("SELECT ProperName FROM cleantranscrm.`User` WHERE UserId = %s", (user_id,))
+        proper_name = cursor.fetchone()[0]
+        like_pattern = f"%@{proper_name}%"
+
+         # Activity count
+        user_mentions_count_query = """
+            SELECT COUNT(*) AS user_mention_count
+            FROM cleantranscrm.Activity a
+            LEFT JOIN cleantranscrm.ActivityType at2 ON at2.ActivityTypeId = a.ActivityTypeId
+            LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
+            LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = a.PhaseId AND pp.ProgramId = a.ProgramId
+            LEFT JOIN cleantranscrm.`User` u on u.UserId = a.UserId 
+            WHERE a.`Text` LIKE %s
+            AND a.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+        """
+        user_mention_count = int(fetch_data(user_mentions_count_query, conn, params=(like_pattern, time_range)).iloc[0]['user_mention_count'])
+
+        # User mentions query
+        user_mentions_query = """
+            SELECT a.UserId, u.ProperName, a.`Text`, a.CreatedAt, at2.Name as 'ActivityType', a.Duration, pp.Name as 'PhaseName', 
+                   p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName'
+            FROM cleantranscrm.Activity a
+            LEFT JOIN cleantranscrm.ActivityType at2 ON at2.ActivityTypeId = a.ActivityTypeId
+            LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
+            LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = a.PhaseId AND pp.ProgramId = a.ProgramId
+            LEFT JOIN cleantranscrm.`User` u ON u.UserId = a.UserId
+            WHERE a.`Text` LIKE %s
+            AND a.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+        """
+        user_mentions = fetch_data(user_mentions_query, conn, params=(like_pattern, time_range)).to_dict(orient='records')
+
         stats = {
             "activity_count": activity_count,
             "activity_logs": activity_logs,
@@ -284,7 +318,9 @@ def get_stats():
             "project_table_values_count": project_table_values_count,
             "project_table_values": project_table_values,
             "user_saved_filters": user_saved_filters,
-            "user_favorited_projects": user_favorited_projects
+            "user_favorited_projects": user_favorited_projects,
+            "user_mention_count": user_mention_count,
+            "user_mentions": user_mentions
         }
 
         return jsonify({"stats": stats})

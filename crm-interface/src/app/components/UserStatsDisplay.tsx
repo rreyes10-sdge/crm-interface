@@ -5,6 +5,7 @@ import ActivityLogs from './ActivityLogs';
 import UploadedFiles from './UploadedFiles';
 import AttributesFilled from './AttributesFilled';
 import ProjectTableValues from './ProjectTableValues';
+import UserMentions from './UserMentions';
 
 interface UserStatsDisplayProps {
   stats: {
@@ -16,6 +17,8 @@ interface UserStatsDisplayProps {
     attributes_filled: any[];
     project_table_values_count: number;
     project_table_values: any[];
+    user_mention_count: number;
+    user_mentions: any[];
   };
 }
 
@@ -24,6 +27,12 @@ const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
 
   return (
     <Grid item xs={12} sm={12} lg={12} container spacing={2} >
+      <Grid item xs={12} sm={6} md={3}>
+        <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
+          User Mentions ({stats.user_mention_count.toString()})
+        </Typography>
+        <UserMentions logs={stats.user_mentions} />
+      </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
           Activity Logs ({stats.activity_count.toString()})
