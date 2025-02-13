@@ -251,7 +251,7 @@ def get_stats():
             LEFT JOIN cleantranscrm.Project p on p.ProjectId = ptv.ProjectId 
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             LEFT JOIN cleantranscrm.SelectControl sc on sc.SelectControlId = tc.Source 
-            LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId  
+            LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId and so.OptionValue = ptv.Value 
             WHERE (ptv.UpdatedBy = %s OR ptv.UpdatedBy = (SELECT ProperName FROM cleantranscrm.`User` u WHERE u.UserId = %s))
             AND ptv.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """

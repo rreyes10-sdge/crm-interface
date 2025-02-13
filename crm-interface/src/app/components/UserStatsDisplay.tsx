@@ -1,6 +1,5 @@
 import React from 'react';
 import { Grid, Typography } from '@mui/material';
-import SimpleStatCard from './SimpleStatCard';
 import ActivityLogs from './ActivityLogs';
 import UploadedFiles from './UploadedFiles';
 import AttributesFilled from './AttributesFilled';
@@ -51,7 +50,7 @@ const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
         </Typography>
         <AttributesFilled attributes={stats.attributes_filled} />
       </Grid>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid item xs={12} sm={12} md={12} mt={4}>
         <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
           Project Table Values ({stats.project_table_values_count.toString()})
         </Typography>
