@@ -25,6 +25,8 @@ interface Project {
     createdAt: string;
     totalRequired: number;
     filledCount: number;
+    filledVsTotal: number;
+    actionButton: number;
 }
 
 const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
@@ -48,7 +50,7 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
 
 const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
-    const parsedDate = parseISO(dateValue);
+    const parsedDate = parseISO(dateValue.toString());
     const daysSince = differenceInDays(new Date(), parsedDate);
 
     return (
@@ -64,7 +66,7 @@ const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField:
 
 const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
-    const parsedDate = parseISO(dateValue);
+    const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
     const daysSince = differenceInDays(new Date(), parsedDate);
 

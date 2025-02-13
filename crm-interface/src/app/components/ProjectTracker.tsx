@@ -97,6 +97,8 @@ type Project = {
     createdAt: string;
     totalRequired: number;
     filledCount: number;
+    filledVsTotal: number;
+    actionButton: number;
 };
 
 type Task = Project & {

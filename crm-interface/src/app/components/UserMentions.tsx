@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, Typography, List, ListItem, ListItemText, Box } from '@mui/material';
 
-interface ActivityLog {
+interface ActivityMentionLog {
   UserId: string;
+  ProperName: string;
   Text: string;
   CreatedAt: string;
   ActivityType: string;
@@ -15,11 +16,11 @@ interface ActivityLog {
   PhaseId: number;
 }
 
-interface ActivityLogsProps {
-  logs: ActivityLog[];
+interface UserMentionsProps {
+  logs: ActivityMentionLog[];
 }
 
-const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
+const UserMentions: React.FC<UserMentionsProps> = ({ logs }) => {
   // Sort logs in descending order based on CreatedAt date
   const sortedLogs = logs.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
   
@@ -58,10 +59,10 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
                   secondary={
                     <>
                       <Typography component="span" variant="body2" color="text.primary">
-                      {new Date(log.CreatedAt).toLocaleDateString()}
+                      {new Date(log.CreatedAt).toLocaleDateString()} | Mentioned by: {log.ProperName}
                       </Typography>
                       <br />
-                      Phase: {log.PhaseName} {log.ActivityType && ` | Activity Type: ${log.ActivityType}`} {log.Duration > 0 && ` | Duration: ${log.Duration} mins`}
+                      Phase: {log.PhaseName} {log.ActivityType && ` | Activity Type: ${log.ActivityType}`}
                     </>
                   }
                 />
@@ -76,4 +77,4 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
   );
 };
 
-export default ActivityLogs;
+export default UserMentions;

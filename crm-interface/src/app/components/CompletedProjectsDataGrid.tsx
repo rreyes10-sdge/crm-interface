@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, CircularProgress, Typography, Tooltip } from '@mui/material';
-import { gql, useQuery } from '@apollo/client';
+import { Box, Typography, Tooltip } from '@mui/material';
 import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
@@ -27,6 +25,8 @@ interface Project {
     createdAt: string;
     totalRequired: number;
     filledCount: number;
+    filledVsTotal: number;
+    actionButton: number;
 }
 
 const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
@@ -50,7 +50,7 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
 
 const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
-    const parsedDate = parseISO(dateValue);
+    const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
     const daysSince = differenceInDays(new Date(), parsedDate);
 

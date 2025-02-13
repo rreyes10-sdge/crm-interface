@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, CircularProgress, Typography, Tooltip } from '@mui/material';
-import { gql, useQuery } from '@apollo/client';
+import { Box, Typography, Tooltip } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
 import { GridRenderCellParams } from '@mui/x-data-grid';
@@ -15,7 +13,7 @@ import AddCommentIcon from '@mui/icons-material/AddComment';
 interface Project {
     projectNumber: string;
     projectId: string;
-    phaseId: number;
+    phaseId: string;
     organizationName: string;
     organizationId: string;
     coreName: string;
@@ -28,6 +26,8 @@ interface Project {
     createdAt: string;
     totalRequired: number;
     filledCount: number;
+    filledVsTotal: number;
+    actionButton: number;
 }
 
 const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
@@ -51,7 +51,7 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
 
 const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
-    const parsedDate = parseISO(dateValue);
+    const parsedDate = parseISO(dateValue.toString());
     const daysSince = differenceInDays(new Date(), parsedDate);
 
     return (
@@ -67,7 +67,7 @@ const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField:
 
 const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
-    const parsedDate = parseISO(dateValue);
+    const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
     const daysSince = differenceInDays(new Date(), parsedDate);
 
@@ -119,7 +119,7 @@ const ServicesStartedDataGrid = ({ rows }: ServicesStartedDataGridProps) => {
         },
         { field: 'coreName', headerName: 'Core', width: 60, renderCell: renderCoreServiceCell },
         { field: 'serviceName', headerName: 'Service Name', width: 280 },
-        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params) => <AddCommentIcon /> },
+        { field: 'actionButton', headerName: 'Action', width: 60, renderCell: (params: any) => <AddCommentIcon /> },
         { field: 'serviceStartDate', headerName: 'Start Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderNoErrorDateCell(params, 'serviceStartDate') },
         { field: 'followUpDate', headerName: 'Follow Up Date', width: 160, renderCell: (params: GridRenderCellParams<Project>) => renderDateCell(params, 'followUpDate') },
         // { field: 'completeDate', headerName: 'Complete Date', width: 160 },
@@ -130,7 +130,7 @@ const ServicesStartedDataGrid = ({ rows }: ServicesStartedDataGridProps) => {
             field: 'filledVsTotal',
             headerName: 'Filled vs Total',
             width: 130,
-            renderCell: (params) => {
+            renderCell: (params: { row: { totalRequired: any; filledCount: any; }; }) => {
                 const { totalRequired, filledCount } = params.row;
                 return `${filledCount} / ${totalRequired}`;
             },

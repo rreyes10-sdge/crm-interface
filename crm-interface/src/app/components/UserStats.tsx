@@ -23,6 +23,8 @@ interface Stats {
   project_table_values: any[];
   user_saved_filters: any[];
   user_favorited_projects: any[];
+  user_mention_count: number;
+  user_mentions: any[];
 }
 
 const UserStats: React.FC = () => {
