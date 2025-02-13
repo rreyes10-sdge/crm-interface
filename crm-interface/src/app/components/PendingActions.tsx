@@ -1,7 +1,7 @@
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Typography, Chip, Box } from '@mui/material';
-import { calculateDaysBetween } from '@/utils/calculateDaysBetween';
 import { ProjectRow } from '../types';
+import { differenceInBusinessDays, parseISO } from 'date-fns';
 
 const PendingActions = ({ rows }: { rows: ProjectRow[] }) => {
     const pendingActions = rows.filter((row) => {
@@ -49,8 +49,25 @@ const PendingActions = ({ rows }: { rows: ProjectRow[] }) => {
                 : '';
 
         const daysElapsed = submissionPending
-            ? calculateDaysBetween(row.SubmissionDate, new Date().toISOString())
-            : calculateDaysBetween(row.VettingCall, new Date().toISOString());
+            ? (() => {
+                const submissionDate = row.SubmissionDate;
+                console.log('SubmissionDate:', submissionDate);
+                if (!submissionDate) {
+                    console.error('SubmissionDate is null');
+                    return 'Invalid date';
+                }
+                const parsedSubmissionDate = parseISO(submissionDate);
+                if (isNaN(parsedSubmissionDate.getTime())) {
+                    console.error('Invalid SubmissionDate:', submissionDate);
+                    return 'Invalid date';
+                }
+                return differenceInBusinessDays(new Date(), parsedSubmissionDate);
+            })()
+            : (() => {
+                const vettingCall = row.VettingCall;
+                const parsedVettingCall = vettingCall && vettingCall !== 'None' ? parseISO(vettingCall) : new Date();
+                return differenceInBusinessDays(new Date(), parsedVettingCall);
+            })();
 
         return {
             ...row,
