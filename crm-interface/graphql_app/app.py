@@ -234,7 +234,7 @@ def get_stats():
 
         # Project table values
         project_table_values_query = """
-            SELECT t.Name as 'TableName', tc.Label , tc.Description , tc.SortOrder
+            SELECT t.Name as 'TableName', tc.Label , tc.Description , tc.SortOrder, t.TableId, tc.TableColumnId
                 , CASE 
                     WHEN tc.ControlType = 'select' THEN so.OptionText
                 ELSE ptv.Value END AS 'Value'
