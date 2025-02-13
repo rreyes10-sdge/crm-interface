@@ -14,6 +14,8 @@ interface ProjectTableValue {
     OrgName: string;
     ProjectId: number;
     PhaseId: number;
+    TableId: number;
+    TableColumnId: number;
 }
 
 interface ProjectTableValuesProps {
