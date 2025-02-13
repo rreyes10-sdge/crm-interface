@@ -5,7 +5,7 @@ import { Box, Typography, Tooltip } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
 import { GridRenderCellParams } from '@mui/x-data-grid';
-import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
+import { parseISO, isBefore, isToday, differenceInBusinessDays  } from 'date-fns';
 import serviceImageMap from '@/utils/serviceImageMap';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 
@@ -51,8 +51,24 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
 
 const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
+    const isBlank = dateValue === "None" || dateValue === "" || dateValue === null;
+    const isValidFormat = /^\d{4}-\d{2}-\d{2}$/.test(dateValue.toString());
+
+    if (isBlank || !isValidFormat) {
+        return (
+            <Tooltip title="Invalid date">
+                <Box display="flex" alignItems="center">
+                    <Typography sx={{ marginRight: 1 }} color="error">
+                        Invalid date
+                    </Typography>
+                    <ErrorOutlineIcon color="error" />
+                </Box>
+            </Tooltip>
+        );
+    }
+
     const parsedDate = parseISO(dateValue.toString());
-    const daysSince = differenceInDays(new Date(), parsedDate);
+    const daysSince = differenceInBusinessDays(new Date(), parsedDate);
 
     return (
         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
@@ -69,7 +85,8 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
     const dateValue = params.row[dateField];
     const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
-    const daysSince = differenceInDays(new Date(), parsedDate);
+    const isBlank = dateValue === "None" || dateValue === "";
+    const daysSince = differenceInBusinessDays (new Date(), parsedDate);
 
     return (
         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
@@ -78,6 +95,7 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
                     {dateValue}
                 </Typography>
                 {isOverdue && <ErrorOutlineIcon color="error" />}
+                {isBlank && <ErrorOutlineIcon color="error" />}
             </Box>
         </Tooltip>
     );

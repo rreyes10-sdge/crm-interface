@@ -2,7 +2,7 @@
 
 import { DataGrid } from '@mui/x-data-grid';
 import { Box, Typography, Tooltip } from '@mui/material';
-import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
+import { parseISO, isBefore, isToday, differenceInBusinessDays  } from 'date-fns';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
 import { GridRenderCellParams } from '@mui/x-data-grid';
@@ -52,7 +52,7 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
     const dateValue = params.row[dateField];
     const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
-    const daysSince = differenceInDays(new Date(), parsedDate);
+    const daysSince = differenceInBusinessDays (new Date(), parsedDate);
 
     return (
         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>

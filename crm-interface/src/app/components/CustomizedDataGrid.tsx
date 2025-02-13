@@ -6,10 +6,9 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { MenuItem, Select, FormControl, InputLabel, Box, SelectChangeEvent, Chip, LinearProgress, Tooltip, Typography } from '@mui/material';
 import { ProjectRow } from '../types';
 import { projectData } from '../data/staticData';
-import { ActiveFilterChip } from './ActiveFilterChips';
 import ProjectStatusFilter from './ProjectStatusFilter';
 import PendingActions from './PendingActions';
-import { calculateDaysBetween } from '@/utils/calculateDaysBetween';
+import { differenceInBusinessDays, parseISO } from 'date-fns';
 import ProjectService from './ProjectService';
 
 const CustomizedDataGrid = () => {
@@ -90,7 +89,9 @@ const CustomizedDataGrid = () => {
       headerName: 'Submission to Vetting',
       width: 220,
       renderCell: (params: any) => {
-        const submissionToVettingDays = calculateDaysBetween(params.row.SubmissionDate, params.row.VettingCall);
+        const submissionDate = params.row.SubmissionDate;
+        const vettingCall = params.row.VettingCall;
+        const submissionToVettingDays = differenceInBusinessDays( vettingCall && vettingCall !== 'None' ? parseISO(vettingCall) : new Date(),parseISO(submissionDate));
         const submissionToVettingTarget = params.row.USC === 'True' || params.row.USC === true ? 1 : 2;
         const isPending = !params.row.VettingCall || params.row.VettingCall === 'None';
         const overTarget = submissionToVettingDays > submissionToVettingTarget;
@@ -120,7 +121,7 @@ const CustomizedDataGrid = () => {
               <Typography variant="caption" sx={{ mt: 0.5 }}>
                 {isPending
                   ? `${submissionToVettingDays} days elapsed (pending)`
-                  : `${submissionToVettingDays} days elapsed (${overTarget ? `${submissionToVettingDays - submissionToVettingTarget} overdue` : 'on target'})`}
+                  : `${submissionToVettingDays} days elapsed (${overTarget ? `${submissionToVettingDays - submissionToVettingTarget} days overdue` : 'on target'})`}
               </Typography>
             </Box>
           </Tooltip>
@@ -132,7 +133,9 @@ const CustomizedDataGrid = () => {
       headerName: 'Vetting to Consultation',
       width: 220,
       renderCell: (params: any) => {
-        const vettingToConsultationDays = calculateDaysBetween(params.row.VettingCall, params.row.ConsultationCall);
+        const vettingCall = params.row.VettingCall;
+        const consultationCall = params.row.ConsultationCall;
+        const vettingToConsultationDays = differenceInBusinessDays( consultationCall && consultationCall !== 'None' ? parseISO(consultationCall) : new Date(),parseISO(vettingCall));
         const vettingToConsultationTarget = 7;
         const isPending = !params.row.ConsultationCall || params.row.ConsultationCall === 'None';
         const overTarget = vettingToConsultationDays > vettingToConsultationTarget;
@@ -178,7 +181,7 @@ const CustomizedDataGrid = () => {
               <Typography variant="caption" sx={{ mt: 0.5 }}>
                 {isPending
                   ? `${vettingToConsultationDays} days elapsed (pending)`
-                  : `${vettingToConsultationDays} days elapsed (${overTarget ? `${vettingToConsultationDays - vettingToConsultationTarget} overdue` : 'on target'})`}
+                  : `${vettingToConsultationDays} days elapsed (${overTarget ? `${vettingToConsultationDays - vettingToConsultationTarget} days overdue` : 'on target'})`}
               </Typography>
             </Box>
           </Tooltip>

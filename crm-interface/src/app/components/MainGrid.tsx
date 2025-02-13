@@ -47,7 +47,7 @@ async function initializeData() {
 
         return [
             {
-                title: 'Projects',
+                title: 'New Projects',
                 value: calculateValue(projectsData, 'ProjectCount'),
                 interval: 'Last 30 days',
                 trend: projectsTrend.Trend,

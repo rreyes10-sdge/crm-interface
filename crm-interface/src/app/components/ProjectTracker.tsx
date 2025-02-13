@@ -102,7 +102,7 @@ type Project = {
 };
 
 type Task = Project & {
-    id: string;
+    id: number;
     status: string;
 };
 

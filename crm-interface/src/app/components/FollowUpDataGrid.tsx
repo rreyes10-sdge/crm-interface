@@ -3,7 +3,7 @@
 import React from 'react';
 import { DataGrid, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, Typography, Tooltip } from '@mui/material';
-import { parseISO, isBefore, isToday, differenceInDays } from 'date-fns';
+import { parseISO, isBefore, isToday, differenceInBusinessDays  } from 'date-fns';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import getStatusColor from '../../utils/statusColor';
 import serviceImageMap from '@/utils/serviceImageMap';
@@ -51,7 +51,8 @@ const renderCoreServiceCell = (params: GridRenderCellParams<Project>) => {
 const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField: keyof Project) => {
     const dateValue = params.row[dateField];
     const parsedDate = parseISO(dateValue.toString());
-    const daysSince = differenceInDays(new Date(), parsedDate);
+    const daysSince = differenceInBusinessDays (new Date(), parsedDate);
+    const isBlank = dateValue === "None" || dateValue === "" || dateValue === null;
 
     return (
         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
@@ -59,6 +60,7 @@ const renderNoErrorDateCell = (params: GridRenderCellParams<Project>, dateField:
                 <Typography sx={{ marginRight: 1 }}>
                     {dateValue}
                 </Typography>
+                {isBlank && <ErrorOutlineIcon color="error" />}
             </Box>
         </Tooltip>
     );
@@ -68,7 +70,7 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
     const dateValue = params.row[dateField];
     const parsedDate = parseISO(dateValue.toString());
     const isOverdue = isBefore(parsedDate, new Date()) && !isToday(parsedDate);
-    const daysSince = differenceInDays(new Date(), parsedDate);
+    const daysSince = differenceInBusinessDays (new Date(), parsedDate);
 
     return (
         <Tooltip title={`${dateValue} (${daysSince} days ago)`}>
@@ -83,7 +85,7 @@ const renderDateCell = (params: GridRenderCellParams<Project>, dateField: keyof 
 };
 
 type FollowUpDataGridProps = {
-    rows: Project[];
+    rows: any;
 };
 
 const FollowUpDataGrid = ({ rows }: FollowUpDataGridProps) => {
