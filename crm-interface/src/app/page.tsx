@@ -8,10 +8,11 @@ import client from '../apollo-client';
 import styles from "./page.module.css";
 import MainGrid from "./components/MainGrid";
 import ProjectTracker from "./components/ProjectTracker";
-import Timeline from "./components/Timeline"
+import Timeline from "./components/TimelineOld"
 import Head from 'next/head';
 import UserStats from './components/UserStats';
 import EvCalculator from './components/EvCalculator';
+import ProjectSummary from './components/ProjectSummary';
 
 const Home = () => {
   const location = useLocation();
@@ -67,7 +68,7 @@ const Home = () => {
         <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
           {selectedTab === 0 && <MainGrid />}
           {selectedTab === 1 && <ProjectTracker />}
-          {selectedTab === 2 && <Timeline projectId={'30'} />}
+          {selectedTab === 2 && <ProjectSummary />}
           {selectedTab === 3 && <UserStats />}
           {selectedTab === 4 && <EvCalculator />}
         </Box>

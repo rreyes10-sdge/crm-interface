@@ -134,6 +134,33 @@ def get_active_users():
         if conn:
             conn.close()
 
+@app.route('/api/projects', methods=['GET'])
+def get_projects():
+    try:
+        conn = get_connection()
+        active_projects_query = """
+            select
+            	p.ProjectId, p.ProjectNumber , p.Name as 'ProjectName', ps.LongName as 'ProjectStatus', p2.Name as 'ProgramName', o.Name as 'OrgName', u.ProperName as 'ProjectLead'
+            from cleantranscrm.Project p 
+            left join cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = p.Status 
+            left join cleantranscrm.Program p2 on p2.ProgramId = p.ProgramId 
+            left JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
+            left join cleantranscrm.ProjectRole pr on pr.ProjectId = p.ProjectId 
+            left join cleantranscrm.`Role` r on r.RoleId = pr.RoleId 
+            left join cleantranscrm.`User` u on u.UserId = pr.UserId 
+            where p.Deleted = 0 and pr.RoleId = 1;
+        """
+        active_projects = fetch_data(active_projects_query, conn).to_dict(orient='records')
+
+        return jsonify({"projects": active_projects})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+            
+
 @app.route('/api/data/project-service-attributes', methods=['GET'])
 def project_service_attributes():
     projectId = request.args.get('projectId')
@@ -213,13 +240,18 @@ def get_stats():
 
         # Attributes filled details
         attributes_filled_query = """
-            SELECT pav.*, u.UserId , COALESCE(pp.PhaseId,0) AS 'PhaseId', pa.Label, pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName' 
+            SELECT pav.id, pav.ProjectId , pav.ProgramAttributeId , pav.UpdatedAt , pav.UpdatedBy
+				, CASE 
+                    WHEN pa.ControlType = 'select' THEN so.OptionText
+                ELSE pav.Value END AS 'Value', u.UserId , COALESCE(pp.PhaseId,0) AS 'PhaseId', pa.Label, pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName'
             FROM cleantranscrm.ProjectAttributeValue pav
             LEFT JOIN cleantranscrm.ProgramAttribute pa on pa.ProgramAttributeId = pav.ProgramAttributeId 
             LEFT JOIN cleantranscrm.`User` u on u.ProperName = pav.UpdatedBy
             LEFT JOIN cleantranscrm.Project p on p.ProjectId = pav.ProjectId 
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             LEFT JOIN cleantranscrm.ProgramPhase pp on pp.PhaseId = pa.PhaseId and pp.ProgramId = pa.ProgramId 
+            LEFT JOIN cleantranscrm.SelectControl sc on sc.SelectControlId = pa.Source 
+            LEFT JOIN cleantranscrm.SelectOption so on so.SelectControlId = sc.SelectControlId and so.OptionValue = pav.Value 
             WHERE u.UserId = %s AND pav.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
         attributes_filled = fetch_data(attributes_filled_query, conn, params=(user_id, time_range)).to_dict(orient='records')
@@ -324,6 +356,106 @@ def get_stats():
         }
 
         return jsonify({"stats": stats})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/project-overview', methods=['GET'])
+def get_overview():
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'error': 'Missing project_id parameter'}), 400
+
+    try:
+        conn = get_connection()
+        # Attributes filled details
+        project_info_query = """
+            SELECT COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName', pi.Name as 'ProgramName', ps.LongName AS ProjectStatus
+            FROM cleantranscrm.Project p
+            LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
+            LEFT JOIN cleantranscrm.Program pi on pi.ProgramId = p.ProgramId
+            LEFT JOIN cleantranscrm.ProgramPhase pp on pp.PhaseId = p.CurrentPhaseId and pp.ProgramId = p.ProgramId 
+            JOIN cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = p.Status
+            WHERE p.ProjectId = %s;
+        """
+        project_info = fetch_data(project_info_query, conn, params=(project_id)).to_dict(orient='records')
+
+        project_overview_query = """
+            SELECT 
+                pn.PhaseName,
+                pn.SortOrder,
+                pa.PromotionDate,
+                pa.PromotedByUser AS PromotedByUser,
+                CASE 
+                    WHEN pa.PhaseId = pi.CurrentPhaseId THEN NULL
+                    ELSE LEAD(pa.PromotionDate) OVER (PARTITION BY pa.ProjectId ORDER BY pa.PromotionDate)
+                END AS NextPromotionDate,
+                CASE 
+                    WHEN pa.PhaseId = pi.CurrentPhaseId THEN DATEDIFF(CURDATE(), pa.PromotionDate)
+                    ELSE DATEDIFF(COALESCE(LEAD(pa.PromotionDate) OVER (PARTITION BY pa.ProjectId ORDER BY pa.PromotionDate), CURDATE()), pa.PromotionDate)
+                END AS DaysInPhase,
+                pa.ActionType,
+                    CASE 
+                        WHEN pn.SortOrder = (
+                            SELECT MAX(pp.SortOrder)
+                            FROM cleantranscrm.ProgramPhase pp
+                            WHERE pp.ProgramId = pn.ProgramId
+                        ) THEN 1
+                    ELSE 0
+                END AS FinalPhase
+            FROM 
+                (SELECT 
+                    p.ProjectId,
+                    p.ProjectNumber,
+                    p.Name,
+                    p.CurrentPhaseId,
+                    p.Status,
+                    p.AddressId,
+                    p.OrganizationId,
+                    p.ProgramId,
+                    p.CreatedAt
+                FROM cleantranscrm.Project p) pi
+                JOIN (SELECT 
+                    a.ProjectId,
+                    a.PhaseId,
+                    a.CreatedAt AS PromotionDate,
+                    SUBSTRING_INDEX(SUBSTRING_INDEX(a.Text, ' this project', 1), '>', -1) AS PromotedByUser,
+                    CASE 
+                        WHEN a.Text LIKE '%%promoted this project%%' THEN 'Promotion'
+                        WHEN a.Text LIKE '%%demoted this project%%' THEN 'Demotion'
+                    END AS ActionType,
+                    ROW_NUMBER() OVER (PARTITION BY a.ProjectId ORDER BY a.CreatedAt) AS PhaseOrder
+                FROM cleantranscrm.Activity a
+                WHERE a.Text LIKE '%%promoted this project%%' OR a.Text LIKE '%%demoted this project%%') pa ON pi.ProjectId = pa.ProjectId
+                JOIN (SELECT 
+                    pp.ProgramId,
+                    pp.PhaseId,
+                    pp.Name AS PhaseName,
+                    pp.SortOrder
+                FROM cleantranscrm.ProgramPhase pp
+                ) pn ON pa.PhaseId = pn.PhaseId AND pi.ProgramId = pn.ProgramId
+                JOIN cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = pi.status
+                JOIN cleantranscrm.Program p on p.ProgramId = pi.ProgramId
+            WHERE pi.ProjectId = %s
+            ORDER BY 
+                pi.ProjectId, pa.PromotionDate;
+        """
+        project_overview = fetch_data(project_overview_query, conn, params=(project_id,)).to_dict(orient='records')
+        # Handle NaT values in the result
+        for record in project_overview:
+            if pd.isnull(record['NextPromotionDate']):
+                record['NextPromotionDate'] = None
+
+        overview = {
+            "project_info": project_info,
+            "promotion": project_overview
+        }
+
+        return jsonify({"overview": overview})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

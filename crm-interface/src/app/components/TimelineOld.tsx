@@ -20,7 +20,7 @@ const GET_PROJECT_TIMELINES = gql`
 `;
 
 interface TimelineProps {
-    projectId: string; // Accepts projectId as a prop
+    projectId: string;
 }
 
 interface TimelineEvent {
@@ -34,50 +34,55 @@ interface TimelineEvent {
     labelSortOrder: number;
 }
 
-function getPhaseClass(phaseName: string): string {
-    const classMap: { [key: string]: string } = {
-        'Interest List': 'phase-interest-list',
-        'Initiation': 'phase-initiation',
-        'Preliminary Eng & Design': 'phase-preliminary',
-        'Final Design': 'phase-final-design',
-        'Pre-Construction': 'phase-pre-construction',
-        'Construction': 'phase-construction',
-        'Close Out': 'phase-close-out'
-    };
-    return classMap[phaseName] || '';
+const baseColors = ['#001689', '#58B947', '#FED600', '#009BDA'];
+const colorCache: { [key: string]: { dotColor: string, bgColor: string } } = {};
+
+
+function generateClassFromPhase(phaseName: string): string {
+    // Generate a class name based on the phase name
+    return `phase-${phaseName.toLowerCase().replace(/\s+/g, '-')}`;
+}
+
+function generateColorsFromPhase(phaseName: string): { dotColor: string, bgColor: string } {
+    const hash = Array.from(phaseName).reduce((acc, char) => {
+        return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    const baseColor = baseColors[Math.abs(hash) % baseColors.length];
+    const dotColor = baseColor;
+    const bgColor = hexToRgba(baseColor, 0.15);
+    return { dotColor, bgColor };
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+    const bigint = parseInt(hex.slice(1), 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function getDotColor(phaseName: string): string {
-    const colorMap: { [key: string]: string } = {
-      'Interest List': '#2563EB',
-      'Initiation': '#7C3AED',
-      'Preliminary Eng & Design': '#4F46E5',
-      'Final Design': '#0891B2',
-      'Pre-Construction': '#0D9488',
-      'Construction': '#16A34A',
-      'Close Out': '#059669'
-    };
-    return colorMap[phaseName] || '#2563EB';
-  }
+    if (!colorCache[phaseName]) {
+        const { dotColor, bgColor } = generateColorsFromPhase(phaseName);
+        colorCache[phaseName] = { dotColor, bgColor };
+    }
+    return colorCache[phaseName].dotColor;
+}
 
-const Timeline: React.FC<TimelineProps> = ({ projectId }) => {
+function getBackgroundColor(phaseName: string): string {
+    if (!colorCache[phaseName]) {
+        const { dotColor, bgColor } = generateColorsFromPhase(phaseName);
+        colorCache[phaseName] = { dotColor, bgColor };
+    }
+    return colorCache[phaseName].bgColor;
+}
+
+const TimelineOld: React.FC<TimelineProps> = ({ projectId }) => {
     const projectIdInt = parseInt(projectId, 10);
-    console.log('Converted projectId:', projectIdInt); // Log the converted projectId
 
-    // Fetch timeline data based on projectId
     const { loading, error, data } = useQuery(GET_PROJECT_TIMELINES, {
-        variables: { projectId: projectIdInt || 30 } // Default to 0 if projectIdInt is not set
+        variables: { projectId: projectIdInt || 30 } // Default to 30 if projectIdInt is not set
     });
-
-    const phaseColors: { [key: string]: string } = {
-        'Interest List': 'blue',
-        'Initiation': 'purple',
-        'Preliminary Eng & Design': 'indigo',
-        'Final Design': 'cyan',
-        'Pre-Construction': 'teal',
-        'Construction': 'green',
-        'Close Out': 'emerald',
-    };
 
     // Handle loading state
     if (loading) return <p>Loading timeline...</p>;
@@ -87,21 +92,20 @@ const Timeline: React.FC<TimelineProps> = ({ projectId }) => {
 
     // Sort the fetched data
     const timelineData: TimelineEvent[] = [...data.projectTimeline].sort(
-        (a: TimelineEvent, b: TimelineEvent) =>
+        (b: TimelineEvent, a: TimelineEvent) =>
             b.phaseSortOrder - a.phaseSortOrder || b.labelSortOrder - a.labelSortOrder
     );
 
     return (
         <div className="timeline-container">
             <div className="container">
-                <h1 className="title">Project Timeline</h1>
+                <h1 className="title">Project Summary</h1>
 
                 <div className="timeline">
                     <div className="timeline-item" />
 
                     {timelineData.map((event, index) => {
                         const isEven = index % 2 === 0;
-                        const phaseColor = phaseColors[event.phaseName] || 'gray';
 
                         return (
                             <div key={event.id} className="timeline-item">
@@ -123,7 +127,10 @@ const Timeline: React.FC<TimelineProps> = ({ projectId }) => {
                                                     <span>{event.updatedBy}</span>
                                                 </div>
                                             </div>
-                                            <span className={`phase-tag ${getPhaseClass(event.phaseName)}`}>
+                                            <span
+                                                className={`phase-tag ${generateClassFromPhase(event.phaseName)}`}
+                                                style={{ backgroundColor: getBackgroundColor(event.phaseName) }}
+                                            >
                                                 {event.phaseName}
                                             </span>
                                         </div>
@@ -138,4 +145,4 @@ const Timeline: React.FC<TimelineProps> = ({ projectId }) => {
     );
 };
 
-export default Timeline;
+export default TimelineOld;

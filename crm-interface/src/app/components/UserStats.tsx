@@ -104,9 +104,6 @@ const UserStats: React.FC = () => {
         </Grid>
       </Grid>
       <Box sx={{ width: '100%', height: 5, backgroundColor: 'grey.300', mb: 0, mt: 4 }} />
-      {/* <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-                Displaying overview for user: {selectedUser}
-              </Typography> */}
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         {selectedUser ? (
           stats ? (
