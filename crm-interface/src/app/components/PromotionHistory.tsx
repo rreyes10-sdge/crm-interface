@@ -10,6 +10,7 @@ interface Promotion {
   PromotionDate: string;
   SortOrder: number;
   FinalPhase: number;
+  DaysBeforeFirstPromotion: number;
 }
 
 interface PromotionHistoryProps {
@@ -34,6 +35,9 @@ const PromotionHistory: React.FC<PromotionHistoryProps> = ({ promotions }) => {
               <Typography sx={{ color: 'blue', fontWeight: 'bold' }}><strong>Days in Phase:</strong> {promo.DaysInPhase}</Typography>
               <Typography><strong>Promotion Date:</strong> {new Date(promo.PromotionDate).toLocaleDateString()}</Typography>
               <Typography><strong>Promoted By:</strong> {promo.PromotedByUser}</Typography>
+              {promo.DaysBeforeFirstPromotion !== undefined && promo.DaysBeforeFirstPromotion > 0 && (
+                <Typography sx={{ color: 'green', fontWeight: 'bold' }}>Days Before First Promotion: {promo.DaysBeforeFirstPromotion}</Typography>
+              )}
               {promo.FinalPhase ? (
                 <Typography sx={{ color: 'red', fontWeight: 'bold' }}>Final Phase</Typography>
               ) : (

@@ -15,6 +15,8 @@ interface SavedFiltersProps {
 const SavedFilters: React.FC<SavedFiltersProps> = ({ savedFilters }) => {
   const rootUrl = 'https://ctsolutions.sempra.com/projects?';
 
+  console.log('Saved Filters:', savedFilters); // Debugging
+
   return (
     <Box>
       <Typography component="h2" variant="h6" sx={{ mt: 4 }}>
@@ -35,7 +37,10 @@ const SavedFilters: React.FC<SavedFiltersProps> = ({ savedFilters }) => {
                 textTransform: 'none',
                 padding: '8px 16px',
               }}
-              onClick={() => window.open(`${rootUrl}${filter.Url}`, '_blank')}
+              onClick={() => {
+                console.log('Opening URL:', `${rootUrl}${filter.Url}`); // Debugging
+                window.open(`${rootUrl}${filter.Url}`, '_blank');
+              }}
             >
               {filter.Name}
             </Button>

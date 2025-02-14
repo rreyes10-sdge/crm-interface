@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, Typography, TextField, Box } from '@mui/material';
 import ActivityLogs from './ActivityLogs';
 import UploadedFiles from './UploadedFiles';
@@ -24,12 +24,18 @@ interface UserStatsDisplayProps {
 const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  useEffect(() => {
+    console.log('Stats:', stats);
+  }, [stats]);
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
   const filterData = (data: any[]) => {
-    return data.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
+    const filteredData = data.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
+    console.log('Filtered Data:', filteredData);
+    return filteredData;
   };
 
   return (
