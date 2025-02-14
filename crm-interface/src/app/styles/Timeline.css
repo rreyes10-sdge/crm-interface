@@ -92,38 +92,13 @@ body {
     margin-top: 0.5rem;
 }
 
-/* Phase colors */
-.phase-interest-list {
-    background: #EFF6FF;
-    color: #2563EB;
-}
-
-.phase-initiation {
-    background: #F5F3FF;
-    color: #7C3AED;
-}
-
-.phase-preliminary {
-    background: #EEF2FF;
-    color: #4F46E5;
-}
-
-.phase-final-design {
-    background: #ECFEFF;
-    color: #0891B2;
-}
-
-.phase-pre-construction {
-    background: #F0FDFA;
-    color: #0D9488;
-}
-
-.phase-construction {
-    background: #F0FDF4;
-    color: #16A34A;
-}
-
-.phase-close-out {
-    background: #ECFDF5;
-    color: #059669;
+/* Add a generic style for dynamically generated phase classes */
+[class^="phase-"] {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    color: #212121; /* Default text color */
 }
