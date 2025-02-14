@@ -12,6 +12,7 @@ interface Project {
   OrgName: string;
   ProjectLead: string;
   ProjectNumber: string;
+  ProjectCreationDate: string;
 }
 
 interface Promotion {
@@ -23,6 +24,7 @@ interface Promotion {
   PromotionDate: string;
   SortOrder: number;
   FinalPhase: number;
+  DaysBeforeFirstPromotion: number;
 }
 
 interface Overview {
@@ -170,6 +172,9 @@ const ProjectSummary: React.FC = () => {
                 <Typography><strong>Program Name:</strong> {info.ProgramName}</Typography>
                 <Typography><strong>Project Name:</strong> {info.ProjectName}</Typography>
                 <Typography><strong>Project Status:</strong> {info.ProjectStatus}</Typography>
+                <Typography>
+                    <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
+                </Typography>
               </Box>
             ))}
           </Paper>

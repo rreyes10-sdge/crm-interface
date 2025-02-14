@@ -196,7 +196,7 @@ def get_stats():
 
         # Activity logs
         activity_logs_query = """
-            SELECT a.UserId, a.`Text`, a.CreatedAt, at2.Name as 'ActivityType', COALESCE(a.Duration, 0) as 'Duration', COALESCE(pp.PhaseId,0) AS 'PhaseId', 
+            SELECT a.UserId, a.`Text`, a.CreatedAt, COALESCE(at2.Name, 'Note') as 'ActivityType', COALESCE(a.Duration, 0) as 'Duration', COALESCE(pp.PhaseId,0) AS 'PhaseId', 
                    pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName'
             FROM cleantranscrm.Activity a
             LEFT JOIN cleantranscrm.ActivityType at2 on at2.ActivityTypeId = a.ActivityTypeId 
@@ -211,21 +211,37 @@ def get_stats():
         uploaded_files_count_query = """
             SELECT COUNT(*) AS uploaded_files_count
             FROM cleantranscrm.Attachment a 
-            WHERE StoredByUserId = %s AND TimeStored >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE StoredByUserId = %s AND TimeStored >= DATE_SUB(CURDATE(), INTERVAL %s DAY) AND a.ProjectId is not null;
         """
         uploaded_files_count = int(fetch_data(uploaded_files_count_query, conn, params=(user_id, time_range)).iloc[0]['uploaded_files_count'])
 
         # Uploaded files details
         uploaded_files_query = """
-            SELECT B.Label ,a.AttachmentId , a.Title , a.TimeStored , a.StoredByUserId, a.Filename, a.Description , COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId, p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName'
+            SELECT B.Label ,a.AttachmentId , a.Title , a.TimeStored , a.StoredByUserId, a.Filename, a.Description 
+                , COALESCE(pp.PhaseId,0) AS 'PhaseId'
+                , pp.Name as 'PhaseName'
+                , CASE 
+                    when p.ProjectId is not null then p.ProjectId 
+                    ELSE (select p.ProjectId from cleantranscrm.Project p where p.ProjectId = a2.Projectid)
+                END as 'ProjectId'
+                , CASE 
+                    when p.ProjectNumber is not null then p.ProjectNumber 
+                    ELSE (select p.ProjectNumber from cleantranscrm.Project p where p.ProjectId = a2.Projectid)
+                END as 'ProjectNumber'
+                , CASE 
+                    when p.Name is not null then p.Name 
+                    ELSE (select p.Name from cleantranscrm.Project p where p.ProjectId = a2.Projectid)
+                END as 'ProjectName'
+                , o.Name as 'OrgName'
             FROM cleantranscrm.Attachment a 
             left join cleantranscrm.Project p on p.ProjectId = a.ProjectId 
             left join cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             left join cleantranscrm.ProgramPhase pp on pp.PhaseId = a.PhaseId and pp.ProgramId = a.ProgramId 
+            left join cleantranscrm.Activity a2 on a2.AttachmentId = a.AttachmentId 
             left join (select pav.ProjectId, pav.UpdatedAt, pav.UpdatedBy, pav.Value, pa.Label from cleantranscrm.ProjectAttributeValue pav 
                 left join cleantranscrm.ProgramAttribute pa on pa.ProgramAttributeId = pav.ProgramAttributeId 
                 where pa.ControlType = 'doc') B on B.Value = a.AttachmentId 
-            WHERE a.StoredByUserId = %s AND a.TimeStored >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE a.StoredByUserId = %s AND a.TimeStored >= DATE_SUB(CURDATE(), INTERVAL %s DAY) AND a.ProjectId is not null;
         """
         uploaded_files = fetch_data(uploaded_files_query, conn, params=(user_id, time_range)).to_dict(orient='records')
 
@@ -374,7 +390,7 @@ def get_overview():
         conn = get_connection()
         # Attributes filled details
         project_info_query = """
-            SELECT COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName', pi.Name as 'ProgramName', ps.LongName AS ProjectStatus
+            SELECT COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName', pi.Name as 'ProgramName', ps.LongName AS ProjectStatus, p.CreatedAt as 'ProjectCreationDate'
             FROM cleantranscrm.Project p
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             LEFT JOIN cleantranscrm.Program pi on pi.ProgramId = p.ProgramId
@@ -406,7 +422,11 @@ def get_overview():
                             WHERE pp.ProgramId = pn.ProgramId
                         ) THEN 1
                     ELSE 0
-                END AS FinalPhase
+                END AS FinalPhase,
+                CASE 
+                    WHEN pa.PhaseOrder = 1 THEN DATEDIFF(pa.PromotionDate, pi.CreatedAt)
+                    ELSE 0
+                END AS DaysBeforeFirstPromotion
             FROM 
                 (SELECT 
                     p.ProjectId,

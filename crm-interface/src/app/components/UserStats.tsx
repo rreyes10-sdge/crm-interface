@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Select, MenuItem, Typography, Grid } from '@mui/material';
+import { Box, Select, MenuItem, Typography, Grid, CircularProgress } from '@mui/material';
 import UserStatsDisplay from './UserStatsDisplay';
 import FavoriteProjects from './FavoriteProjects';
 import SavedFilters from './SavedFilters';
@@ -30,8 +30,9 @@ interface Stats {
 const UserStats: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<number>(30);
+  const [timeRange, setTimeRange] = useState<number>(7);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const sortedUsers = users.sort((a, b) => {
     if (a.RoleName && !b.RoleName) return -1;
     if (!a.RoleName && b.RoleName) return 1;
@@ -42,6 +43,7 @@ const UserStats: React.FC = () => {
     // Fetch active users
     axios.get('http://127.0.0.1:5000/api/active-users')
       .then(response => {
+        // console.log('Active Users Response:', response.data); // Debugging
         setUsers(response.data.active_users);
         setSelectedUser('RREYES10'); // Set default user after users are loaded
       })
@@ -54,17 +56,35 @@ const UserStats: React.FC = () => {
     if (selectedUser) {
       console.log('Selected User:', selectedUser); // Debugging
       console.log('Time Range:', timeRange); // Debugging
+      setLoading(true);
       // Fetch stats for selected user
       axios.get(`http://127.0.0.1:5000/api/stats?user_id=${selectedUser}&time_range=${timeRange}`)
         .then(response => {
         //   console.log('API Response:', response.data); // Debugging
           setStats(response.data.stats);
+          setLoading(false);
         })
         .catch(error => {
           console.error('Error fetching user stats:', error);
+          setLoading(false);
         });
     }
   }, [selectedUser, timeRange]);
+
+  useEffect(() => {
+    if (stats) {
+      console.log('Stats:', stats); // Debugging
+      console.log('Saved Filters:', stats.user_saved_filters); // Debugging
+    }
+  }, [stats]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '100%' }, mx: 'auto' }}>
@@ -85,7 +105,7 @@ const UserStats: React.FC = () => {
                 {user.ProperName}
                 {user.RoleName && ` - (${user.RoleName})`}
                 {user.LastLoginAt !== 'Never logged in' ? ` | ${new Date(user.LastLoginAt).toLocaleDateString()}` : ' | N/A'}
-            </MenuItem>
+              </MenuItem>
             ))}
           </Select>
         </Grid>
@@ -96,6 +116,7 @@ const UserStats: React.FC = () => {
             displayEmpty
             fullWidth
           >
+            <MenuItem value={7}>Last 7 Days</MenuItem>
             <MenuItem value={30}>Last 30 Days</MenuItem>
             <MenuItem value={60}>Last 60 Days</MenuItem>
             <MenuItem value={180}>Last 180 Days</MenuItem>
