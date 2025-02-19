@@ -175,6 +175,7 @@ const ProjectSummary: React.FC = () => {
                 <Typography>
                     <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
                 </Typography>
+                <Typography><strong>Project Lead:</strong> {info.ProjectLead}</Typography>
               </Box>
             ))}
           </Paper>

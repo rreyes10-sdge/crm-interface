@@ -469,13 +469,15 @@ def get_overview():
         conn = get_connection()
         # Attributes filled details
         project_info_query = """
-            SELECT COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName', pi.Name as 'ProgramName', ps.LongName AS ProjectStatus, p.CreatedAt as 'ProjectCreationDate'
+            SELECT COALESCE(pp.PhaseId,0) AS 'PhaseId', pp.Name as 'PhaseName', p.ProjectId,  p.ProjectNumber, p.Name as 'ProjectName', o.Name as 'OrgName', pi.Name as 'ProgramName', ps.LongName AS ProjectStatus, u.ProperName as 'ProjectLead', p.CreatedAt as 'ProjectCreationDate'
             FROM cleantranscrm.Project p
             LEFT JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             LEFT JOIN cleantranscrm.Program pi on pi.ProgramId = p.ProgramId
-            LEFT JOIN cleantranscrm.ProgramPhase pp on pp.PhaseId = p.CurrentPhaseId and pp.ProgramId = p.ProgramId 
+            LEFT JOIN cleantranscrm.ProgramPhase pp on pp.PhaseId = p.CurrentPhaseId and pp.ProgramId = p.ProgramId
+            LEFT JOIN cleantranscrm.ProjectRole pr on pr.ProjectId = p.ProjectId
+            LEFT JOIN cleantranscrm.`User` u on u.UserId = pr.UserId
             JOIN cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = p.Status
-            WHERE p.ProjectId = %s;
+            WHERE pr.RoleId = 1 AND p.ProjectId = %s;
         """
         project_info = fetch_data(project_info_query, conn, params=(project_id)).to_dict(orient='records')
 
