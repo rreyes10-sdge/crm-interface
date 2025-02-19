@@ -54,6 +54,7 @@ const UserStats: React.FC = () => {
         console.log('Active Users and Overall Stats Response:', response.data); // Debugging
         if (response.data && response.data.active_users) {
           setUsers(response.data.active_users);
+          setSelectedUser('RREYES10');
           setOverallLoading(false);
         } else {
           console.error('Unexpected response structure:', response.data);
