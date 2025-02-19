@@ -4,12 +4,18 @@ import { Box, Select, MenuItem, Typography, Grid, CircularProgress } from '@mui/
 import UserStatsDisplay from './UserStatsDisplay';
 import FavoriteProjects from './FavoriteProjects';
 import SavedFilters from './SavedFilters';
+import UserStatsOverview from './UserStatsOverview';
 
 interface User {
   UserId: string;
   ProperName: string;
   RoleName: string;
   LastLoginAt: string;
+  activity_count: number;
+  uploaded_files_count: number;
+  attributes_filled_count: number;
+  project_table_values_count: number;
+  user_mention_count: number;
 }
 
 interface Stats {
@@ -33,6 +39,7 @@ const UserStats: React.FC = () => {
   const [timeRange, setTimeRange] = useState<number>(7);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [overallLoading, setOverallLoading] = useState<boolean>(true);
   const sortedUsers = users.sort((a, b) => {
     if (a.RoleName && !b.RoleName) return -1;
     if (!a.RoleName && b.RoleName) return 1;
@@ -40,17 +47,24 @@ const UserStats: React.FC = () => {
   });
 
   useEffect(() => {
-    // Fetch active users
-    axios.get('http://127.0.0.1:5000/api/active-users')
+    // Fetch active users and overall stats
+    setOverallLoading(true);
+    axios.get(`http://127.0.0.1:5000/api/active-users?time_range=${timeRange}`)
       .then(response => {
-        // console.log('Active Users Response:', response.data); // Debugging
-        setUsers(response.data.active_users);
-        setSelectedUser('RREYES10'); // Set default user after users are loaded
+        console.log('Active Users and Overall Stats Response:', response.data); // Debugging
+        if (response.data && response.data.active_users) {
+          setUsers(response.data.active_users);
+          setOverallLoading(false);
+        } else {
+          console.error('Unexpected response structure:', response.data);
+          setOverallLoading(false);
+        }
       })
       .catch(error => {
-        console.error('Error fetching active users:', error);
+        console.error('Error fetching active users and overall stats:', error);
+        setOverallLoading(false);
       });
-  }, []);
+  }, [timeRange]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -60,7 +74,6 @@ const UserStats: React.FC = () => {
       // Fetch stats for selected user
       axios.get(`http://127.0.0.1:5000/api/stats?user_id=${selectedUser}&time_range=${timeRange}`)
         .then(response => {
-        //   console.log('API Response:', response.data); // Debugging
           setStats(response.data.stats);
           setLoading(false);
         })
@@ -91,6 +104,17 @@ const UserStats: React.FC = () => {
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         User Overview
       </Typography>
+      {overallLoading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+          <CircularProgress />
+        </Box>
+      ) : users.length > 0 ? (
+        <UserStatsOverview users={users} />
+      ) : (
+        <Typography sx={{ mb: 2 }}>Failed to load overall stats.</Typography>
+      )}
+      <br></br>
+      <br></br>
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         <Grid item xs={12} sm={6} lg={3}>
           <Select

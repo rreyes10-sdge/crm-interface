@@ -1,125 +1,205 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Container, Grid, Box, IconButton } from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import EvResults from './EvResults';
 
 const EvCalculator: React.FC = () => {
-    const [chargerIndex, setChargerIndex] = useState(1);
+    const [vehicleGroups, setVehicleGroups] = useState([{ id: 1, vehicleClass: 'Heavy Duty Pickup & Van - Class 3', numVehicles: 5, avgDailyMileage: 80 }]);
+    const [chargerGroups, setChargerGroups] = useState([{ id: 1, numChargers: 5, chargerKW: 100 }]);
+    const [results, setResults] = useState(null);
 
-    useEffect(() => {
-        addCharger(); // Pre-populate the first charger entry on page load
-    }, []);
-
-    const addCharger = () => {
-        setChargerIndex(prevIndex => prevIndex + 1);
-    };
-
-    const checkInputsValidity = (fieldsetId: string, nextButtonId: string) => {
-        const inputs = document.querySelectorAll(`#${fieldsetId} input, #${fieldsetId} select`);
-        const nextButton = document.getElementById(nextButtonId) as HTMLInputElement;
-
-        let allValid = true;
-        inputs.forEach(input => {
-            const element = input as HTMLInputElement | HTMLSelectElement;
-            if (!element.checkValidity()) {
-                allValid = false;
-            }
-        });
-
-        if (nextButton) {
-            nextButton.disabled = !allValid;
+    const addVehicleGroup = () => {
+        if (vehicleGroups.length < 5) {
+            setVehicleGroups([...vehicleGroups, { id: vehicleGroups.length + 1, vehicleClass: '', numVehicles: '', avgDailyMileage: '' }]);
         }
     };
 
-    const validateFieldset = (fieldset: HTMLElement) => {
-        const inputs = fieldset.querySelectorAll('input, select');
-        let allValid = true;
-        inputs.forEach(input => {
-            const element = input as HTMLInputElement | HTMLSelectElement;
-            if (!element.checkValidity()) {
-                allValid = false;
-            }
-        });
+    const removeVehicleGroup = (id: number) => {
+        setVehicleGroups(vehicleGroups.filter(group => group.id !== id));
+    };
 
-        const nextButton = fieldset.querySelector('.next.action-button') as HTMLInputElement;
-        if (nextButton) {
-            nextButton.disabled = !allValid;
+    const handleVehicleGroupChange = (id: number, field: string, value: any) => {
+        setVehicleGroups(vehicleGroups.map(group => group.id === id ? { ...group, [field]: value } : group));
+    };
 
-            if (!allValid) {
-                nextButton.style.backgroundColor = '#ccc';
-                nextButton.style.cursor = 'not-allowed';
-            } else {
-                nextButton.style.backgroundColor = '';
-                nextButton.style.cursor = '';
-            }
+    const addChargerGroup = () => {
+        if (chargerGroups.length < 5) {
+            setChargerGroups([...chargerGroups, { id: chargerGroups.length + 1, numChargers: '', chargerKW: '' }]);
         }
     };
 
-    useEffect(() => {
-        document.querySelectorAll('fieldset').forEach(fieldset => {
-            const inputs = fieldset.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.addEventListener('input', () => validateFieldset(fieldset));
-            });
-        });
+    const removeChargerGroup = (id: number) => {
+        setChargerGroups(chargerGroups.filter(group => group.id !== id));
+    };
 
-        document.querySelectorAll('fieldset').forEach(fieldset => {
-            validateFieldset(fieldset);
-        });
-    }, []);
+    const handleChargerGroupChange = (id: number, field: string, value: any) => {
+        setChargerGroups(chargerGroups.map(group => group.id === id ? { ...group, [field]: value } : group));
+    };
+
+    const handleSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
+        const formData = new FormData(event.target as HTMLFormElement);
+        const data = Object.fromEntries(formData.entries());
+
+        // Filter out removed vehicle and charger groups
+        const filteredVehicleGroups = vehicleGroups.filter(group => formData.has(`vehicle_class_${group.id}`));
+        const filteredChargerGroups = chargerGroups.filter(group => formData.has(`num_chargers_${group.id}`));
+
+        // Perform calculations with filtered groups
+        const resultsData = {
+            vehicleGroups: filteredVehicleGroups,
+            chargerGroups: filteredChargerGroups,
+            formData: data
+        };
+
+        setResults(resultsData);
+    };
 
     return (
-        <div>
-            <h1 className="fs-header">EV Cost Calculator</h1>
-            <form id="msform" action="/" method="post">
-                <ul id="progressbar">
-                    <li className="active">Vehicle Selection</li>
-                    <li>Charging Behavior</li>
-                    <li>Charger Selection</li>
-                    <li>Time of Year</li>
-                </ul>
-                <button type="button" id="clearButton" onClick={() => {}} style={{ display: 'none' }}>Clear</button>
-                <fieldset id="vehicleSelection">
-                    <h2 className="fs-title">Vehicle Selection</h2>
-                    <h3 className="fs-subtitle">Set vehicle parameters</h3>
-                    <input type="number" name="num_vehicles" placeholder="Number of Vehicles" min="1" required />
-                    <input type="number" name="miles_driven_per_day" placeholder="Miles Driven Per Day" min="1" step="any" required />
-                    <input type="number" name="battery_size" step="any" placeholder="Vehicle Battery Size" min="1" required />
-                    <input type="number" name="vehicle_efficiency" step="any" placeholder="Vehicle Efficiency" min="0.01" required />
-                    <input type="button" id="nextVehicleSelection" className="next action-button" value="Next" disabled />
-                    <div id="errorBanner" style={{ display: 'none', color: 'red' }}></div>
-                </fieldset>
-                <fieldset id="chargingBehavior">
-                    <h2 className="fs-title">Charging Behavior</h2>
-                    <h3 className="fs-subtitle">Specify charger information</h3>
-                    <input type="number" name="charging_hours_per_day" min="1" max="24" placeholder="Charging Hours Per Day" required />
-                    <input type="number" name="charging_days_per_week" step="any" min="1" max="7" placeholder="Charging Days Per Week" required />
-                    <input type="button" name="previous" className="previous action-button" value="Back" />
-                    <input type="button" id="nextChargingBehavior" className="next action-button" value="Next" disabled />
-                </fieldset>
-                <fieldset id="chargerSelection">
-                    <h2 className="fs-title">Charger Selection</h2>
-                    <h3 className="fs-subtitle">Select Charger Type and specify the count for each type</h3>
-                    <div className="charger-selection-container" id="charger-container">
-                        {/* Charger entries will be dynamically added here */}
-                    </div>
-                    <button type="button" className="secondary-button" onClick={addCharger}>Add Another Charger</button><br />
-                    <input type="button" name="previous" className="previous action-button" value="Back" />
-                    <input type="button" name="nextChargerSelection" className="next action-button" value="Next" />
-                </fieldset>
-                <fieldset id="timeOfYear">
-                    Season: <select name="season">
-                        <option value="Summer">Summer: June 1 - October 31</option>
-                        <option value="Winter (March and April)">Winter: March 1 - April 30)</option>
-                        <option value="Winter (excluding March and April)">Winter: Nov 1 - Feb 29, May 1 - May 30</option>
-                    </select><br />
-                    Time of Day: <select name="time_of_day">
-                        <option value="SOP">Super Off-Peak</option>
-                        <option value="Off-Peak">Off-Peak</option>
-                        <option value="On-Peak">On-Peak</option>
-                    </select><br />
-                    <input type="button" name="previous" className="previous action-button" value="Back" />
-                    <button type="submit" className="submit action-button">Calculate</button>
-                </fieldset>
+        <Container>
+            <Typography variant="h4" gutterBottom>EV Fuel Savings Calculator</Typography>
+            <form id="evForm" onSubmit={handleSubmit}>
+                <Box mb={4}>
+                    <Typography variant="h5">Vehicle Groups</Typography>
+                    {vehicleGroups.map(group => (
+                        <Box key={group.id} mb={2}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item>
+                                    <Typography variant="h6">Group {group.id}</Typography>
+                                </Grid>
+                                {group.id > 1 && (
+                                    <Grid item>
+                                        <IconButton color="secondary" onClick={() => removeVehicleGroup(group.id)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Grid>
+                                )}
+                            </Grid>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <FormControl fullWidth required>
+                                        <InputLabel>Vehicle Class</InputLabel>
+                                        <Select
+                                            name={`vehicle_class_${group.id}`}
+                                            value={group.vehicleClass}
+                                            onChange={(e) => handleVehicleGroupChange(group.id, 'vehicleClass', e.target.value)}
+                                        >
+                                            <MenuItem value="">Select Vehicle Class</MenuItem>
+                                            <MenuItem value="Heavy Duty Pickup & Van - Class 2B">Heavy Duty Pickup & Van - Class 2B</MenuItem>
+                                            <MenuItem value="Heavy Duty Pickup & Van - Class 3">Heavy Duty Pickup & Van - Class 3</MenuItem>
+                                            <MenuItem value="Shuttle Bus - Class 3-5">Shuttle Bus - Class 3-5</MenuItem>
+                                            <MenuItem value="Delivery Van - Class 3-5">Delivery Van - Class 3-5</MenuItem>
+                                            <MenuItem value="Service Van - Class 3-5">Service Van - Class 3-5</MenuItem>
+                                            <MenuItem value="Box Truck (Freight) - Class 3-5">Box Truck (Freight) - Class 3-5</MenuItem>
+                                            <MenuItem value="Stake Truck - Class 3-5">Stake Truck - Class 3-5</MenuItem>
+                                            <MenuItem value="Stake Truck - Class 6-7">Stake Truck - Class 6-7</MenuItem>
+                                            <MenuItem value="Box Truck (Freight) - Class 6-7">Box Truck (Freight) - Class 6-7</MenuItem>
+                                            <MenuItem value="Delivery Truck - Class 6-7">Delivery Truck - Class 6-7</MenuItem>
+                                            <MenuItem value="Service Truck - Class 6-7">Service Truck - Class 6-7</MenuItem>
+                                            <MenuItem value="School Bus - Class 7">School Bus - Class 7</MenuItem>
+                                            <MenuItem value="Regional Haul Tractor - Class 7-8">Regional Haul Tractor - Class 7-8</MenuItem>
+                                            <MenuItem value="Box Truck (Freight) - Class 8">Box Truck (Freight) - Class 8</MenuItem>
+                                            <MenuItem value="Long Haul Tractor - Class 8">Long Haul Tractor - Class 8</MenuItem>
+                                            <MenuItem value="Transit Bus - Class 8">Transit Bus - Class 8</MenuItem>
+                                            <MenuItem value="Refuse Hauler - Class 8">Refuse Hauler - Class 8</MenuItem>
+                                            <MenuItem value="Dump Truck - Class 8">Dump Truck - Class 8</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name={`num_vehicles_${group.id}`}
+                                        label="Number of Vehicles"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={group.numVehicles}
+                                        onChange={(e) => handleVehicleGroupChange(group.id, 'numVehicles', e.target.value)}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name={`avg_daily_mileage_${group.id}`}
+                                        label="Average Daily Mileage"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={group.avgDailyMileage}
+                                        onChange={(e) => handleVehicleGroupChange(group.id, 'avgDailyMileage', e.target.value)}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                    <Button variant="contained" onClick={addVehicleGroup}>Add Vehicle Group</Button>
+                </Box>
+
+                <Box mb={4}>
+                    <Typography variant="h5">Charging Behavior</Typography>
+                    <TextField name="charging_days" label="What days will you charge your vehicle(s)?" fullWidth required />
+                    <TextField name="charging_time" label="What time of day will you charge your vehicle(s)?" fullWidth required />
+                </Box>
+                {/* // add recommended box here somewhere */}
+                <Box mb={4}>
+                    <Typography variant="h5">Charger Groups</Typography>
+                    {chargerGroups.map(group => (
+                        <Box key={group.id} mb={2}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item>
+                                    <Typography variant="h6">Group {group.id}</Typography>
+                                </Grid>
+                                {group.id > 1 && (
+                                    <Grid item>
+                                        <IconButton color="secondary" onClick={() => removeChargerGroup(group.id)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Grid>
+                                )}
+                            </Grid>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name={`num_chargers_${group.id}`}
+                                        label="Number of Chargers"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={group.numChargers}
+                                        onChange={(e) => handleChargerGroupChange(group.id, 'numChargers', e.target.value)}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        name={`charger_kw_${group.id}`}
+                                        label="Charger kW"
+                                        type="number"
+                                        fullWidth
+                                        required
+                                        value={group.chargerKW}
+                                        onChange={(e) => handleChargerGroupChange(group.id, 'chargerKW', e.target.value)}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                    <Button variant="contained" onClick={addChargerGroup}>Add Charger Group</Button>
+                </Box>
+
+                
+
+                <Box mb={4}>
+                    <Typography variant="h5">Optional Settings</Typography>
+                    <TextField name="fossil_fuel_price" label="Fossil Fuel Price ($/gal)" type="number" fullWidth />
+                    <TextField name="fossil_fuel_multiplier" label="Fossil Fuel Price Increase Multiplier YoY" type="number" fullWidth />
+                    <TextField name="fossil_fuel_efficiency" label="Fossil Fuel Vehicle Efficiency Override (mpg)" type="number" fullWidth />
+                    <TextField name="transformer_capacity" label="Available Capacity for Existing Transformer (kW)" type="number" fullWidth />
+                </Box>
+
+                <Button variant="contained" type="submit">Calculate</Button>
             </form>
-        </div>
+
+            {results && <EvResults results={results} />}
+        </Container>
     );
 };
 

@@ -117,17 +117,96 @@ def get_specific_data(query_name: str):
 
 @app.route('/api/active-users', methods=['GET'])
 def get_active_users():
+    time_range = request.args.get('time_range', default=7, type=int)
+    if not time_range:
+        return jsonify({'error': 'Missing time_range parameter'}), 400
+    
     try:
         conn = get_connection()
         active_users_query = """
-            select u.UserId, u.ProperName, r.Name as 'RoleName', COALESCE(u.LastLoginAt, 'Never logged in') AS LastLoginAt  from cleantranscrm.`User` u 
-            left join cleantranscrm.UserRole ur on ur.UserId = u.UserId 
-            left join cleantranscrm.`Role` r on r.RoleId = ur.RoleId 
+            SELECT u.UserId, u.ProperName, r.Name as 'RoleName', COALESCE(u.LastLoginAt, 'Never logged in') AS LastLoginAt
+            FROM cleantranscrm.`User` u 
+            LEFT JOIN cleantranscrm.UserRole ur ON ur.UserId = u.UserId 
+            LEFT JOIN cleantranscrm.`Role` r ON r.RoleId = ur.RoleId 
             WHERE u.Active = 1
-            Order by r.RoleId ASC, u.ProperName ASC;
+            ORDER BY r.RoleId ASC, u.ProperName ASC;
         """
         active_users = fetch_data(active_users_query, conn).to_dict(orient='records')
-        return jsonify({"active_users": active_users})
+
+        user_activity_count_query = """
+            SELECT UserId, COUNT(*) AS activity_count
+            FROM cleantranscrm.Activity A
+            WHERE CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+            GROUP BY UserId;
+        """
+        activity_count = fetch_data(user_activity_count_query, conn, params=(time_range,)).to_dict(orient='records')
+
+        user_uploaded_files_count_query = """
+            SELECT StoredByUserId as 'UserId', COUNT(*) AS uploaded_files_count
+            FROM cleantranscrm.Attachment a 
+            WHERE TimeStored >= DATE_SUB(CURDATE(), INTERVAL %s DAY) AND a.ProjectId is not null
+            GROUP BY UserId;
+        """
+        uploaded_files_count = fetch_data(user_uploaded_files_count_query, conn, params=(time_range,)).to_dict(orient='records')
+
+        attributes_filled_count_query = """
+            SELECT u.UserId, COUNT(*) AS attributes_filled_count
+            FROM cleantranscrm.ProjectAttributeValue pav
+            LEFT JOIN cleantranscrm.`User` u ON u.ProperName = pav.UpdatedBy 
+            WHERE pav.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+            GROUP BY u.UserId;
+        """
+        attributes_filled_count = fetch_data(attributes_filled_count_query, conn, params=(time_range,)).to_dict(orient='records')
+
+        project_table_values_count_query = """
+            SELECT u.UserId, COUNT(*) AS project_table_values_count
+            FROM cleantranscrm.ProjectTableValue ptv
+            LEFT JOIN cleantranscrm.`User` u ON u.ProperName = ptv.UpdatedBy
+            WHERE ptv.UpdatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+            GROUP BY u.UserId;
+        """
+        project_table_values_count = fetch_data(project_table_values_count_query, conn, params=(time_range,)).to_dict(orient='records')
+
+        cursor = conn.cursor()
+        cursor.execute("SELECT ProperName FROM cleantranscrm.`User`")
+        proper_names = cursor.fetchall()
+        user_mentions_count = []
+
+        for proper_name in proper_names:
+            like_pattern = f"%@{proper_name[0]}%"
+            user_mentions_count_query = """
+                SELECT u.UserId, COUNT(*) AS user_mention_count
+                FROM cleantranscrm.Activity a
+                LEFT JOIN cleantranscrm.ActivityType at2 ON at2.ActivityTypeId = a.ActivityTypeId
+                LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
+                LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId
+                LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = a.PhaseId AND pp.ProgramId = a.ProgramId
+                LEFT JOIN cleantranscrm.`User` u ON u.UserId = a.UserId 
+                WHERE a.`Text` LIKE %s
+                AND a.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+                GROUP BY u.UserId;
+            """
+            mention_count = fetch_data(user_mentions_count_query, conn, params=(like_pattern, time_range)).to_dict(orient='records')
+            user_mentions_count.extend(mention_count)
+
+        # Convert all counts to dictionaries for easy lookup
+        activity_count_dict = {item['UserId']: item['activity_count'] for item in activity_count}
+        uploaded_files_count_dict = {item['UserId']: item['uploaded_files_count'] for item in uploaded_files_count}
+        attributes_filled_count_dict = {item['UserId']: item['attributes_filled_count'] for item in attributes_filled_count}
+        project_table_values_count_dict = {item['UserId']: item['project_table_values_count'] for item in project_table_values_count}
+        user_mentions_count_dict = {item['UserId']: item['user_mention_count'] for item in user_mentions_count}
+
+        # Merge all counts into active users
+        for user in active_users:
+            user['activity_count'] = activity_count_dict.get(user['UserId'], 0)
+            user['uploaded_files_count'] = uploaded_files_count_dict.get(user['UserId'], 0)
+            user['attributes_filled_count'] = attributes_filled_count_dict.get(user['UserId'], 0)
+            user['project_table_values_count'] = project_table_values_count_dict.get(user['UserId'], 0)
+            user['user_mention_count'] = user_mentions_count_dict.get(user['UserId'], 0)
+
+        return jsonify({
+            "active_users": active_users
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
