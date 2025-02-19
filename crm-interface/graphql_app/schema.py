@@ -21,6 +21,7 @@ type_defs = """
         projectNumber: String
         projectId: Int
         phaseId: Int
+        projectName: String
         organizationName: String
         organizationId: Int
         coreName: String
@@ -54,12 +55,16 @@ type_defs = """
             projectNumber: String
             projectStatus: String
             organizationName: String
+            projectId: Int
         ): [ProjectOverview]
 
         projectsWithFollowUpDates: [ProjectDetails]
         servicesStarted: [ProjectDetails]
         projectsNotStarted: [ProjectDetails]
         completedProjects: [ProjectDetails]
+        projectServices(
+            projectId: Int
+        ): [ProjectDetails]
         
         projectTimeline(
             projectId: Int

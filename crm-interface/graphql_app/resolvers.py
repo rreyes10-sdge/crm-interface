@@ -2,7 +2,7 @@ from graphql_app.database import fetch_data, format_dates
 
 class Resolvers:
     @staticmethod
-    def resolve_project_overview(root, info, programId=None, projectName=None, projectNumber=None, projectStatus=None, organizationName=None):
+    def resolve_project_overview(root, info, programId=None, projectName=None, projectNumber=None, projectStatus=None, organizationName=None, projectId=None):
         conditions = []
         params = {}
 
@@ -21,6 +21,9 @@ class Resolvers:
         if organizationName:
             conditions.append("o.Name LIKE %(organizationName)s")
             params['organizationName'] = f"%{organizationName}%"
+        if projectId:
+            conditions.append("p.ProjectId = %(projectId)s")
+            params['projectId'] = projectId
 
         conditions.append("p.projectid NOT IN (3467)")
         conditions.append("p.deleted = 0")
@@ -123,6 +126,171 @@ class Resolvers:
                 'openServices': row['OpenServices'],
                 'servicesNotReady': row['ServicesNotReady'],
                 'percentCompleted': row['PercentCompleted']
+            })
+        return result
+    
+    @staticmethod
+    def resolve_all_project_services(root, info, projectId=None):
+        conditions = []
+        params = {}
+
+        if projectId:
+            conditions.append("p.ProjectId = %(projectId)s")
+            params['projectId'] = projectId
+
+        conditions.append("p.projectid NOT IN (3467)")
+        conditions.append("p.deleted = 0")
+
+        where_clause = " AND ".join(conditions)
+        where_clause = f"WHERE {where_clause}" if where_clause else ""
+
+        query = """SELECT
+            p.ProjectNumber,
+            p.ProjectId,
+            tst.PhaseId,
+            p.Name as 'ProjectName',
+            o.Name AS 'OrganizationName',
+            o.OrganizationId,
+            tst2.Name AS 'CoreName',
+            pa.Label AS 'ServiceName',
+            A.Value AS 'ServiceStartDate',
+            B.Value AS 'FollowUpDate',
+            C.Value AS 'CompleteDate',
+            COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
+            COALESCE(activity.LatestActivity, 'No recorded activity yet') as 'LatestActivity',
+            activity.CreatedAt,
+            ac.TotalRequired,
+            ac.FilledCount
+            FROM cleantranscrm.TeasSupportType tst
+            LEFT JOIN cleantranscrm.TeasServiceType tst2 ON CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
+            LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
+            LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramAttributeId = pal.ProgramAttributeId
+            LEFT JOIN cleantranscrm.`Project` p ON p.ProjectId = pal.ProjectId
+            LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId 
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = pa.PhaseId AND pp.ProgramId = pa.ProgramId
+            LEFT JOIN cleantranscrm.SelectOption so ON pa.Source = so.SelectControlId
+            AND pa.ControlType = 'select'
+            AND CAST(pal.Value AS UNSIGNED) = so.OptionValue
+            LEFT JOIN (
+            SELECT 
+                pav.projectid,
+                tst.ProgramAttributeId,
+                pa.Label,
+                pav.Value
+            FROM cleantranscrm.ProgramAttribute pa
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+            LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+            LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+            WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Service Start Date' AND pav.Value IS NOT NULL AND pav.Value REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z$'
+            ) A ON A.projectid = pal.ProjectId AND A.programattributeid = tst.programattributeid
+            LEFT JOIN (
+            SELECT 
+                pav.projectid,
+                tst.ProgramAttributeId,
+                pa.Label,
+                pav.Value
+            FROM cleantranscrm.ProgramAttribute pa
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+            LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+            LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+            WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Follow Up' AND pav.Value IS NOT NULL
+            ) B ON B.projectid = pal.ProjectId AND B.programattributeid = tst.programattributeid
+            LEFT JOIN (
+            SELECT 
+                pav.projectid,
+                tst.ProgramAttributeId,
+                pa.Label,
+                pav.Value
+            FROM cleantranscrm.ProgramAttribute pa
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pa.PhaseId = pp.PhaseId
+            LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId
+            LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
+            WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete' AND pav.Value IS NOT NULL
+            ) C ON C.projectid = pal.ProjectId AND C.programattributeid = tst.programattributeid
+            LEFT JOIN (
+            SELECT 
+                projectid,
+                phaseid,
+                MAX(a.ActivityId) as 'MaxId' ,
+                SUM(a.Duration) as 'TotalDurationMins',
+                MAX(a.`Text`) as 'LatestActivity',
+                MAX(a.CreatedAt) as 'CreatedAt'
+            FROM cleantranscrm.Activity a
+            GROUP BY projectid, phaseid
+            ) activity on activity.projectid = pal.ProjectId AND activity.phaseid = tst.PhaseId
+            LEFT JOIN
+        (SELECT p.ProjectNumber,
+                p.ProjectId,
+                pp.Name AS ServiceName,
+                COUNT(DISTINCT pal.ProgramAttributeId) AS TotalRequired,
+                SUM(CASE
+                        WHEN pal.Value IS NOT NULL THEN 1
+                        ELSE 0
+                    END) AS FilledCount
+        FROM cleantranscrm.Project p
+        INNER JOIN
+            (SELECT p.ProjectId,
+                    p.CurrentPhaseId AS CurrentProjectPhase,
+                    a.ProgramAttributeId,
+                    a.ProgramId,
+                    a.PhaseId,
+                    a.SortOrder,
+                    a.ControlName,
+                    a.ControlType,
+                    a.ValueType,
+                    a.ReadOnly,
+                    a.Source,
+                    a.Required,
+                    a.Label,
+                    a.Description,
+                    a.IsGatingItem,
+                    a.IsDocument,
+                    a.AssignedUserUserId,
+                    a.TableId,
+                    v.Value,
+                    v.UpdatedAt,
+                    v.UpdatedBy
+            FROM cleantranscrm.ProgramAttribute AS a
+            INNER JOIN cleantranscrm.Project AS p ON a.ProgramId = p.ProgramId
+            LEFT OUTER JOIN cleantranscrm.ProjectAttributeValue AS v ON v.ProgramAttributeId = a.ProgramAttributeId
+            AND v.ProjectId = p.ProjectId) pal ON pal.ProjectId = p.ProjectId
+        LEFT JOIN cleantranscrm.ProgramPhase pp ON pal.PhaseId = pp.PhaseId
+        AND pal.ProgramId = pp.ProgramId
+        WHERE pal.ProgramId = 16
+            AND p.Deleted = 0
+            AND pal.Required = 1
+        GROUP BY p.ProjectNumber,
+                    p.ProjectId,
+                    pp.Name) ac ON ac.projectid = pal.ProjectId
+        AND ac.ServiceName = pa.Label
+            WHERE
+            pal.ProjectId IN (SELECT ProjectId FROM cleantranscrm.`Project` WHERE ProgramId = 16)
+            AND pa.PhaseId = 2 AND pa.ProgramId = 16
+            GROUP BY p.ProjectNumber, tst2.Name, pa.Label
+            ORDER BY B.value ASC;"""
+        
+        df = fetch_data(query)
+        date_columns = ['ServiceStartDate', 'FollowUpDate', 'CompleteDate', 'CreatedAt']
+        df = format_dates(df, date_columns)
+        result = []
+        for _, row in df.iterrows():
+            result.append({
+            'projectNumber': row['ProjectNumber'],
+            'projectId': row['ProjectId'],
+            'phaseId': row['PhaseId'],
+            'projectName': row['ProjectName'],
+            'organizationName': row['OrganizationName'],
+            'organizationId': row['OrganizationId'],
+            'coreName': row['CoreName'],
+            'serviceName': row['ServiceName'],
+            'serviceStartDate': row['ServiceStartDate'],
+            'followUpDate': row['FollowUpDate'],
+            'completeDate': row['CompleteDate'],
+            'totalDurationMins': row['TotalDurationMins'],
+            'latestActivity': row['LatestActivity'],
+            'createdAt': row['CreatedAt'],
+            'totalRequired': row['TotalRequired'],
+            'filledCount': row['FilledCount']
             })
         return result
     
@@ -266,6 +434,7 @@ class Resolvers:
             'projectNumber': row['ProjectNumber'],
             'projectId': row['ProjectId'],
             'phaseId': row['PhaseId'],
+            'projectName': row['ProjectName'],
             'organizationName': row['OrganizationName'],
             'organizationId': row['OrganizationId'],
             'coreName': row['CoreName'],
@@ -417,6 +586,7 @@ class Resolvers:
             'projectNumber': row['ProjectNumber'],
             'projectId': row['ProjectId'],
             'phaseId': row['PhaseId'],
+            'projectName': row['ProjectName'],
             'organizationName': row['OrganizationName'],
             'organizationId': row['OrganizationId'],
             'coreName': row['CoreName'],
@@ -570,6 +740,7 @@ class Resolvers:
             'projectNumber': row['ProjectNumber'],
             'projectId': row['ProjectId'],
             'phaseId': row['PhaseId'],
+            'projectName': row['ProjectName'],
             'organizationName': row['OrganizationName'],
             'organizationId': row['OrganizationId'],
             'coreName': row['CoreName'],
