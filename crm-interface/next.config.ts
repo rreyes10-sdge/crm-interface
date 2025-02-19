@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         source: '/ev-calculator',
         destination: '/',
       },
+      {
+        source: '/user-dashboard/:userId',
+        destination: '/user-dashboard/:userId',
+      },
     ];
   },
 };

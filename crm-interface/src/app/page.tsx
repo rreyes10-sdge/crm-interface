@@ -13,6 +13,7 @@ import Head from 'next/head';
 import UserStats from './components/UserStats';
 import EvCalculator from './components/EvCalculator';
 import ProjectSummary from './components/ProjectSummary';
+import UserDashboard from './components/UserDashboard';
 
 const Home = () => {
   const location = useLocation();
@@ -46,6 +47,10 @@ const Home = () => {
     } else {
       navigate('/');
     }
+  };
+
+  const handleRowClick = (userId: string) => {
+    window.open(`/user-dashboard/${userId}`, '_blank');
   };
 
   return (
@@ -85,7 +90,8 @@ const App = () => (
         <Route path="/project-tracker" element={<Home />} />
         <Route path="/project-summary" element={<Home />} />
         <Route path="/user-overview" element={<Home />} />
-        <Route path="*" element={<Home />} /> {/* Catch-all route */}
+        <Route path="/ev-calculator" element={<Home />} />
+        <Route path="*" element={<Home />} />
       </Routes>
     </Router>
   </ApolloProvider>

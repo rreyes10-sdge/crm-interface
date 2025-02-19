@@ -106,7 +106,7 @@ const UserStats: React.FC = () => {
         User Overview
       </Typography>
       {overallLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+        <Box display="flex" width="100%" justifyContent="center" alignItems="center" height="auto">
           <CircularProgress />
         </Box>
       ) : users.length > 0 ? (
@@ -116,7 +116,7 @@ const UserStats: React.FC = () => {
       )}
       <br></br>
       <br></br>
-      <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
+      {/* <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         <Grid item xs={12} sm={6} lg={3}>
           <Select
             value={selectedUser || ''}
@@ -170,7 +170,7 @@ const UserStats: React.FC = () => {
         ) : (
           <Typography>Please select a user to view their overview.</Typography>
         )}
-      </Grid>
+      </Grid> */}
     </Box>
   );
 };
