@@ -14,6 +14,7 @@ import UserStats from './components/UserStats';
 import EvCalculator from './components/EvCalculator';
 import ProjectSummary from './components/ProjectSummary';
 import UserDashboard from './components/UserDashboard';
+import PageTitle from './components/PageTitle';
 
 const Home = () => {
   const location = useLocation();
@@ -53,13 +54,26 @@ const Home = () => {
     window.open(`/user-dashboard/${userId}`, '_blank');
   };
 
+  const getPageTitle = () => {
+    switch (selectedTab) {
+      case 0:
+        return 'Project Status';
+      case 1:
+        return 'Project Tracker';
+      case 2:
+        return 'Project Summary';
+      case 3:
+        return 'User Overview';
+      case 4:
+        return 'EV Fuel Calculator';
+      default:
+        return 'Project Status';
+    }
+  };
+
   return (
     <>
-      <Head>
-        <title>My Local Development Project</title>
-        <meta name="description" content="This is my local project built with Next.js to quickly prototype solutions for our Clean Transportation business department." />
-      </Head>
-
+      <PageTitle title={getPageTitle()} />
       <div className={styles.page}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
