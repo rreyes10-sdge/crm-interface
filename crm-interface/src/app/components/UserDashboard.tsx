@@ -7,6 +7,8 @@ import { Box, Typography, Select, MenuItem, Grid, CircularProgress } from '@mui/
 import UserStatsDisplay from './UserStatsDisplay';
 import FavoriteProjects from './FavoriteProjects';
 import SavedFilters from './SavedFilters';
+import UserActivityStats from './UserActivityStats';
+import PageTitle from './PageTitle';
 
 interface Stats {
   activity_count: number;
@@ -55,6 +57,7 @@ const UserDashboard: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '100%' }, mx: 'auto', p: 3 }}>
+      <PageTitle title="User Dashboard" selectedUser={userId} />
       <Typography variant="h4" sx={{ mb: 3 }}>
         User Dashboard - {userId}
       </Typography>
@@ -78,10 +81,13 @@ const UserDashboard: React.FC = () => {
       {stats && (
         <>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={4}>
+              <UserActivityStats stats={stats} />
+            </Grid>
+            <Grid item xs={12} md={4}>
               <FavoriteProjects favoriteProjects={stats.user_favorited_projects} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={4}>
               <SavedFilters savedFilters={stats.user_saved_filters} />
             </Grid>
             <Grid item xs={12}>

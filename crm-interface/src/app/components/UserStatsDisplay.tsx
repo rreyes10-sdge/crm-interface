@@ -33,9 +33,7 @@ const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
   };
 
   const filterData = (data: any[]) => {
-    const filteredData = data.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
-    console.log('Filtered Data:', filteredData);
-    return filteredData;
+    return data.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
   };
 
   return (
@@ -50,33 +48,18 @@ const UserStatsDisplay: React.FC<UserStatsDisplayProps> = ({ stats }) => {
       />
       <Grid item xs={12} sm={12} lg={12} container spacing={2}>
         <Grid item xs={12} sm={6} md={3}>
-          <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
-            User Mentions ({stats.user_mention_count.toString()})
-          </Typography>
           <UserMentions logs={filterData(stats.user_mentions)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
-            Activity Logs ({stats.activity_count.toString()})
-          </Typography>
           <ActivityLogs logs={filterData(stats.activity_logs)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
-            Uploaded Files ({stats.uploaded_files_count.toString()})
-          </Typography>
           <UploadedFiles files={filterData(stats.uploaded_files)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
-            Attributes Entered ({stats.attributes_filled_count.toString()})
-          </Typography>
           <AttributesFilled attributes={filterData(stats.attributes_filled)} />
         </Grid>
         <Grid item xs={12} sm={12} md={12} mt={4}>
-          <Typography component="h2" variant="h6" sx={{ mt: 4 }} gutterBottom>
-            Project Table Values ({stats.project_table_values_count.toString()})
-          </Typography>
           <ProjectTableValues values={filterData(stats.project_table_values)} />
         </Grid>
       </Grid>

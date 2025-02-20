@@ -1,4 +1,5 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import ExpandableCard from './ExpandableCard';
 
 interface SavedFilter {
   CreatedAt: string;
@@ -15,39 +16,29 @@ interface SavedFiltersProps {
 const SavedFilters: React.FC<SavedFiltersProps> = ({ savedFilters }) => {
   const rootUrl = 'https://ctsolutions.sempra.com/projects?';
 
-  console.log('Saved Filters:', savedFilters); // Debugging
-
   return (
-    <Box>
-      <Typography component="h2" variant="h6" sx={{ mt: 4 }}>
-        Saved Filters
-      </Typography>
-      {savedFilters.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          No filters have been saved.
-        </Typography>
-      ) : (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-          {savedFilters.map((filter) => (
-            <Button
-              key={filter.SavedFilterId}
-              variant="contained"
-              sx={{
-                borderRadius: '50px',
-                textTransform: 'none',
-                padding: '8px 16px',
-              }}
-              onClick={() => {
-                console.log('Opening URL:', `${rootUrl}${filter.Url}`); // Debugging
-                window.open(`${rootUrl}${filter.Url}`, '_blank');
-              }}
-            >
-              {filter.Name}
-            </Button>
-          ))}
-        </Box>
-      )}
-    </Box>
+    <ExpandableCard 
+      title="Saved Filters" 
+      count={savedFilters.length}
+      emptyMessage="No filters have been saved."
+    >
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {savedFilters.map((filter) => (
+          <Button
+            key={filter.SavedFilterId}
+            variant="contained"
+            sx={{
+              borderRadius: '50px',
+              textTransform: 'none',
+              padding: '8px 16px',
+            }}
+            onClick={() => window.open(`${rootUrl}${filter.Url}`, '_blank')}
+          >
+            {filter.Name}
+          </Button>
+        ))}
+      </Box>
+    </ExpandableCard>
   );
 };
 
