@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
         source: '/user-dashboard/:userId',
         destination: '/user-dashboard/:userId',
       },
+      {
+        source: '/program-summary',
+        destination: '/',
+      },
     ];
   },
 };

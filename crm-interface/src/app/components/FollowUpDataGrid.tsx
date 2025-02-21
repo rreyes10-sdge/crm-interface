@@ -11,10 +11,11 @@ import AddCommentIcon from '@mui/icons-material/AddComment';
 
 interface Project {
     projectNumber: string;
-    projectId: string;
-    phaseId: string;
+    projectId: number;
+    phaseId: number;
+    projectName: string;
     organizationName: string;
-    organizationId: string;
+    organizationId: number;
     coreName: string;
     serviceName: string;
     serviceStartDate: string;

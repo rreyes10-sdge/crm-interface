@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 
 interface ProjectAttributesProps {
-    projectId: string;
+    projectId: number;
     projectNumber: string;
     organizationName: string;
     coreName: string;
