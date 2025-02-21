@@ -32,10 +32,14 @@ interface Overview {
   promotion: Promotion[];
 }
 
-const ProjectSummary: React.FC = () => {
+interface ProjectSummaryProps {
+  projectId?: number;
+}
+
+const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(projectId?.toString() ?? null);
   const [selectedProgramName, setSelectedProgramName] = useState<string | null>('Any');
   const [selectedProjectStatus, setSelectedProjectStatus] = useState<string | null>('Any');
   const [selectedProjectLead, setSelectedProjectLead] = useState<string | null>('Any');

@@ -582,6 +582,7 @@ def get_project_phase():
             pa.ProjectId,
             pn.PhaseId,
             pn.PhaseName,
+            pn.SortOrder,
             pa.PromotionDate,
             CASE 
                 WHEN pa.PhaseId = pi.CurrentPhaseId THEN NULL
@@ -594,7 +595,8 @@ def get_project_phase():
                 p.ProjectId,
                 p.CurrentPhaseId,
                 p.ProgramId,
-                p.Status
+                p.Status,
+                p.Deleted
             FROM cleantranscrm.Project p) pi
             JOIN (SELECT 
                 a.ProjectId,
@@ -605,8 +607,10 @@ def get_project_phase():
             JOIN (SELECT 
                 pp.PhaseId,
                 pp.Name AS PhaseName,
-                pp.ProgramId
+                pp.ProgramId,
+                pp.SortOrder
             FROM cleantranscrm.ProgramPhase pp) pn ON pa.PhaseId = pn.PhaseId and pi.ProgramId = pn.Programid
+        WHERE pi.Deleted = 0
     ),
     TimeIncrements AS (
         SELECT 
@@ -631,7 +635,7 @@ def get_project_phase():
     GROUP BY 
         ti.StartDate, ti.EndDate, pt.ProgramId, pt.PhaseName
     ORDER BY 
-        ti.StartDate, pt.ProgramId, pt.PhaseName;
+        ti.StartDate, pt.ProgramId, pt.SortOrder;
     """
     try:
         conn = get_connection()
@@ -668,6 +672,68 @@ def get_project_phase():
             except Exception:
                 pass  # Ignore errors when closing an already-closed connection
 
+@app.route('/api/phase-transitions', methods=['GET'])
+def get_phase_transitions():
+    program_id = request.args.get('program_id')
+    project_status = request.args.get('project_status')
+    
+    query = """
+    WITH PhaseTransitions AS (
+        SELECT 
+            p.ProjectId,
+            p.ProjectNumber,
+            a.PhaseId,
+            pp.Name as PhaseName,
+            pp.SortOrder,
+            a.CreatedAt as TransitionDate,
+            LEAD(a.CreatedAt) OVER (PARTITION BY p.ProjectId ORDER BY a.CreatedAt) as NextTransitionDate,
+            p.ProgramId,
+            p.Status
+        FROM cleantranscrm.Project p
+        JOIN cleantranscrm.Activity a ON a.ProjectId = p.ProjectId
+        JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = a.PhaseId AND pp.ProgramId = p.ProgramId
+        WHERE (a.Text LIKE '%%promoted this project%%' OR a.Text LIKE '%%demoted this project%%')
+        AND p.Deleted = 0
+        AND (%s IS NULL OR p.ProgramId = %s)
+        AND (%s IS NULL OR p.Status = %s)
+    )
+    SELECT 
+        PhaseId,
+        PhaseName,
+        SortOrder,
+        COUNT(DISTINCT ProjectId) as ProjectCount,
+        AVG(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as AvgDaysInPhase,
+        MIN(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as MinDaysInPhase,
+        MAX(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as MaxDaysInPhase
+    FROM PhaseTransitions
+    GROUP BY PhaseId, PhaseName, SortOrder
+    ORDER BY SortOrder;
+    """
+    
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, (program_id, program_id, project_status, project_status))
+        
+        columns = [desc[0] for desc in cursor.description]
+        rows = cursor.fetchall()
+        results = []
+        for row in rows:
+            result_dict = {}
+            for i, value in enumerate(row):
+                result_dict[columns[i]] = value
+            results.append(result_dict)
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 # Optional: Add a health check endpoint
 @app.route("/health", methods=["GET"])
