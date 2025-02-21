@@ -61,34 +61,68 @@ function hexToRgba(hex: string, alpha: number): string {
   }
 
 const TimelineChart: React.FC<TimelineChartProps> = ({ projectInfo = [], promotions }) => {
+  const getPhaseColor = (index: number): string => {
+    const colors = [
+      '#FF5733', '#33FF57', '#3357FF', 
+      '#FF33A1', '#A133FF', '#33FFF5'
+    ];
+    return colors[index % colors.length];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>Project Timeline</Typography>
-      <Box sx={{ display: 'flex', overflowX: 'auto' }}>
-        <Timeline
-          position="right"
-          sx={{
-            [`& .${timelineOppositeContentClasses.root}`]: {
-              flex: 0.2,
-            },
-          }}
-        >
-          {promotions.map((promo, index) => (
+      <Box sx={{ display: 'flex', overflowX: 'auto', pb: 2 }}>
+        <Timeline position="alternate">
+          {promotions.map((promotion, index) => (
             <TimelineItem key={index}>
-              <TimelineOppositeContent color="text.secondary">
-                <Typography>{new Date(promo.PromotionDate).toLocaleDateString()}</Typography>
-                <Typography>Days in Phase: {promo.DaysInPhase}</Typography>
+              <TimelineOppositeContent color="textSecondary">
+                <Typography variant="body2">
+                  {formatDate(promotion.PromotionDate)}
+                </Typography>
+                {promotion.NextPromotionDate && (
+                  <Typography variant="body2" color="text.secondary">
+                    to {formatDate(promotion.NextPromotionDate)}
+                  </Typography>
+                )}
+                <Typography variant="caption">
+                  {promotion.DaysInPhase} days
+                </Typography>
               </TimelineOppositeContent>
+              
               <TimelineSeparator>
-                <TimelineDot style={{ backgroundColor: getDotColor(promo.PhaseName) }} />
+                <TimelineDot sx={{ bgcolor: getPhaseColor(index) }} />
                 {index < promotions.length - 1 && <TimelineConnector />}
               </TimelineSeparator>
+              
               <TimelineContent>
-                <Typography variant="h6">{promo.PhaseName}</Typography>
-                <Typography>{promo.ActionType}</Typography>
-                {promo.DaysBeforeFirstPromotion !== undefined && promo.DaysBeforeFirstPromotion > 0 && (
-                  <Typography>Days Before First Promotion: {promo.DaysBeforeFirstPromotion}</Typography>
-                )}
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'background.paper', 
+                  borderRadius: 1,
+                  boxShadow: 1,
+                  '&:hover': {
+                    boxShadow: 2,
+                  }
+                }}>
+                  <Typography variant="h6" component="span">
+                    {promotion.PhaseName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {promotion.ActionType}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    Promoted by: {promotion.PromotedByUser}
+                  </Typography>
+                </Box>
               </TimelineContent>
             </TimelineItem>
           ))}
