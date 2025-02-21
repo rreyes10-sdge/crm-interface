@@ -484,6 +484,7 @@ def get_overview():
 
         project_overview_query = """
             SELECT 
+                pn.PhaseId,
                 pn.PhaseName,
                 pn.SortOrder,
                 pa.PromotionDate,

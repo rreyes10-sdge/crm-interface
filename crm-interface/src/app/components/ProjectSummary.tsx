@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Typography, Select, MenuItem, Box, Grid, Paper } from '@mui/material';
 import PromotionHistory from './PromotionHistory';
-import TimelineChart from './TimelineChart';
+import ProjectTimelineView from './ProjectTimelineView';
 
 interface Project {
   ProjectId: string;
@@ -179,7 +179,7 @@ const ProjectSummary: React.FC = () => {
               </Box>
             ))}
           </Paper>
-          <TimelineChart promotions={overview.promotion} />
+          <ProjectTimelineView promotions={overview.promotion} />
           <PromotionHistory promotions={overview.promotion} />
         </Box>
       )}
