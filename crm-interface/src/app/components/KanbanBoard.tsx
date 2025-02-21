@@ -15,7 +15,7 @@ const statuses = ['Services Not Started', 'Services Started', 'Overdue Follow Up
 interface Task {
     id: number;
     status: string;
-    projectId: string;
+    projectId: number;
     projectNumber: string;
     organizationName: string;
     coreName: string;

@@ -7,6 +7,7 @@ from .db_logic import get_connection, fetch_data, format_dates, get_project_serv
 import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
+import datetime
 
 # Set up resolvers
 query = QueryType()
@@ -566,6 +567,107 @@ def get_overview():
     finally:
         if conn:
             conn.close()
+
+
+@app.route('/api/project-phase', methods=['GET'])
+def get_project_phase():
+    program_id = request.args.get('program_id')
+    project_status = request.args.get('project_status')
+    conn = None
+    cursor = None
+
+    query = """
+    WITH PhaseTransitions AS (
+        SELECT 
+            pa.ProjectId,
+            pn.PhaseId,
+            pn.PhaseName,
+            pa.PromotionDate,
+            CASE 
+                WHEN pa.PhaseId = pi.CurrentPhaseId THEN NULL
+                ELSE LEAD(pa.PromotionDate) OVER (PARTITION BY pa.ProjectId ORDER BY pa.PromotionDate)
+            END AS NextPromotionDate,
+            pi.ProgramId,
+            pi.Status
+        FROM 
+            (SELECT 
+                p.ProjectId,
+                p.CurrentPhaseId,
+                p.ProgramId,
+                p.Status
+            FROM cleantranscrm.Project p) pi
+            JOIN (SELECT 
+                a.ProjectId,
+                a.PhaseId,
+                a.CreatedAt AS PromotionDate
+            FROM cleantranscrm.Activity a
+            WHERE a.Text LIKE '%%promoted this project%%' OR a.Text LIKE '%%demoted this project%%') pa ON pi.ProjectId = pa.ProjectId
+            JOIN (SELECT 
+                pp.PhaseId,
+                pp.Name AS PhaseName,
+                pp.ProgramId
+            FROM cleantranscrm.ProgramPhase pp) pn ON pa.PhaseId = pn.PhaseId and pi.ProgramId = pn.Programid
+    ),
+    TimeIncrements AS (
+        SELECT 
+            DATE_ADD('2020-01-01', INTERVAL (n * 14) DAY) AS StartDate,
+            DATE_ADD('2020-01-01', INTERVAL ((n + 1) * 14) DAY) AS EndDate
+        FROM (
+            SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24 UNION ALL SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27 UNION ALL SELECT 28 UNION ALL SELECT 29 UNION ALL SELECT 30 UNION ALL SELECT 31 UNION ALL SELECT 32 UNION ALL SELECT 33 UNION ALL SELECT 34 UNION ALL SELECT 35 UNION ALL SELECT 36 UNION ALL SELECT 37 UNION ALL SELECT 38 UNION ALL SELECT 39 UNION ALL SELECT 40 UNION ALL SELECT 41 UNION ALL SELECT 42 UNION ALL SELECT 43 UNION ALL SELECT 44 UNION ALL SELECT 45 UNION ALL SELECT 46 UNION ALL SELECT 47 UNION ALL SELECT 48 UNION ALL SELECT 49 UNION ALL SELECT 50 UNION ALL SELECT 51 UNION ALL SELECT 52 UNION ALL SELECT 53 UNION ALL SELECT 54 UNION ALL SELECT 55 UNION ALL SELECT 56 UNION ALL SELECT 57 UNION ALL SELECT 58 UNION ALL SELECT 59 UNION ALL SELECT 60 UNION ALL SELECT 61 UNION ALL SELECT 62 UNION ALL SELECT 63 UNION ALL SELECT 64 UNION ALL SELECT 65 UNION ALL SELECT 66 UNION ALL SELECT 67 UNION ALL SELECT 68 UNION ALL SELECT 69 UNION ALL SELECT 70 UNION ALL SELECT 71 UNION ALL SELECT 72 UNION ALL SELECT 73 UNION ALL SELECT 74 UNION ALL SELECT 75 UNION ALL SELECT 76 UNION ALL SELECT 77 UNION ALL SELECT 78 UNION ALL SELECT 79 UNION ALL SELECT 80 UNION ALL SELECT 81 UNION ALL SELECT 82 UNION ALL SELECT 83 UNION ALL SELECT 84 UNION ALL SELECT 85 UNION ALL SELECT 86 UNION ALL SELECT 87 UNION ALL SELECT 88 UNION ALL SELECT 89 UNION ALL SELECT 90 UNION ALL SELECT 91 UNION ALL SELECT 92 UNION ALL SELECT 93 UNION ALL SELECT 94 UNION ALL SELECT 95 UNION ALL SELECT 96 UNION ALL SELECT 97 UNION ALL SELECT 98 UNION ALL SELECT 99 UNION ALL SELECT 100 UNION ALL SELECT 101 UNION ALL SELECT 102 UNION ALL SELECT 103 UNION ALL SELECT 104 UNION ALL SELECT 105 UNION ALL SELECT 106 UNION ALL SELECT 107 UNION ALL SELECT 108 UNION ALL SELECT 109 UNION ALL SELECT 110 UNION ALL SELECT 111 UNION ALL SELECT 112 UNION ALL SELECT 113 UNION ALL SELECT 114 UNION ALL SELECT 115 UNION ALL SELECT 116 UNION ALL SELECT 117 UNION ALL SELECT 118 UNION ALL SELECT 119 UNION ALL SELECT 120 UNION ALL SELECT 121 UNION ALL SELECT 122 UNION ALL SELECT 123 UNION ALL SELECT 124 UNION ALL SELECT 125 UNION ALL SELECT 126 UNION ALL SELECT 127 UNION ALL SELECT 128 UNION ALL SELECT 129 UNION ALL SELECT 130 UNION ALL SELECT 131 UNION ALL SELECT 132 UNION ALL SELECT 133 
+        ) numbers
+    )
+    SELECT 
+        ti.StartDate,
+        ti.EndDate,
+        pt.ProgramId,
+        pt.PhaseName,
+        COUNT(DISTINCT pt.ProjectId) AS ProjectCount
+    FROM 
+        TimeIncrements ti
+        LEFT JOIN PhaseTransitions pt ON pt.PromotionDate < ti.EndDate AND (pt.NextPromotionDate IS NULL OR pt.NextPromotionDate >= ti.StartDate)
+    WHERE 
+        (%s IS NULL OR pt.ProgramId = %s) AND
+        (%s IS NULL OR pt.Status = %s)
+    GROUP BY 
+        ti.StartDate, ti.EndDate, pt.ProgramId, pt.PhaseName
+    ORDER BY 
+        ti.StartDate, pt.ProgramId, pt.PhaseName;
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, (program_id, program_id, project_status, project_status))
+        
+        # Fetch column names
+        columns = [desc[0] for desc in cursor.description]
+        
+        # Fetch all rows and convert to list of dictionaries
+        rows = cursor.fetchall()
+        results = []
+        for row in rows:
+            result_dict = {}
+            for i, value in enumerate(row):
+                # Convert datetime objects to string format
+                if isinstance(value, (datetime.date, datetime.datetime)):
+                    value = value.isoformat()
+                result_dict[columns[i]] = value
+            results.append(result_dict)
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        print("Error:", e)  # Log the error
+        return jsonify({'error': str(e)}), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass  # Ignore errors when closing an already-closed connection
+
 
 # Optional: Add a health check endpoint
 @app.route("/health", methods=["GET"])

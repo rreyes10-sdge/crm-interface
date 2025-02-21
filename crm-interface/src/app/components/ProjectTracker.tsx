@@ -9,11 +9,12 @@ import KanbanBoard from './KanbanBoard';
 import hashStringToNumber from '../../utils/hashStringToNumber';
 
 const GET_ALL_PROJECTS = gql`
-    query GetAllProjects {
+    query {
         projectsWithFollowUpDates {
             projectNumber
             projectId
             phaseId
+            projectName
             organizationName
             organizationId
             coreName
@@ -31,6 +32,7 @@ const GET_ALL_PROJECTS = gql`
             projectNumber
             projectId
             phaseId
+            projectName
             organizationName
             organizationId
             coreName
@@ -48,6 +50,7 @@ const GET_ALL_PROJECTS = gql`
             projectNumber
             projectId
             phaseId
+            projectName
             organizationName
             organizationId
             coreName
@@ -65,6 +68,7 @@ const GET_ALL_PROJECTS = gql`
             projectNumber
             projectId
             phaseId
+            projectName
             organizationName
             organizationId
             coreName
@@ -81,12 +85,13 @@ const GET_ALL_PROJECTS = gql`
     }
 `;
 
-type Project = {
+export interface Project {
     projectNumber: string;
-    projectId: string;
-    phaseId: string;
+    projectId: number;
+    phaseId: number;
+    projectName: string;
     organizationName: string;
-    organizationId: string;
+    organizationId: number;
     coreName: string;
     serviceName: string;
     serviceStartDate: string;
@@ -99,7 +104,7 @@ type Project = {
     filledCount: number;
     filledVsTotal: number;
     actionButton: number;
-};
+}
 
 type Task = Project & {
     id: number;
@@ -138,6 +143,7 @@ const ProjectTracker = () => {
     };
 
     if (loading) {
+        console.log('Loading state active');
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="400px">
                 <CircularProgress />
@@ -146,10 +152,11 @@ const ProjectTracker = () => {
     }
 
     if (error) {
+        console.log('GraphQL Error:', error);
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="400px">
                 <Typography variant="h6" color="error">
-                    Error loading data
+                    Error loading data: {error.message}
                 </Typography>
             </Box>
         );

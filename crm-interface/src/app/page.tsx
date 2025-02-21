@@ -15,6 +15,7 @@ import EvCalculator from './components/EvCalculator';
 import ProjectSummary from './components/ProjectSummary';
 import UserDashboard from './components/UserDashboard';
 import PageTitle from './components/PageTitle';
+import ProgramSummary from './components/ProgramSummary';
 
 const Home = () => {
   const location = useLocation();
@@ -30,6 +31,8 @@ const Home = () => {
       setSelectedTab(3);
     } else if (location.pathname === '/ev-calculator') {
       setSelectedTab(4);
+    } else if (location.pathname === '/program-summary') {
+      setSelectedTab(5);
     } else {
       setSelectedTab(0);
     }
@@ -45,6 +48,8 @@ const Home = () => {
       navigate('/user-overview');
     } else if (newValue === 4) {
       navigate('/ev-calculator');
+    } else if (newValue === 5) {
+      navigate('/program-summary');
     } else {
       navigate('/');
     }
@@ -66,6 +71,8 @@ const Home = () => {
         return 'User Overview';
       case 4:
         return 'EV Fuel Calculator';
+      case 5:
+        return 'Program Summary';
       default:
         return 'Project Status';
     }
@@ -82,14 +89,16 @@ const Home = () => {
             <Tab label="Project Summary" />
             <Tab label="User Overview" />
             <Tab label="EV Fuel Calculator" />
+            <Tab label="Program Summary" />
           </Tabs>
         </Box>
-        <Box sx={{ p: 0, marginLeft: 0, marginRight: 0 }}>
+        <Box sx={{ p: 0, marginLeft: 0, marginRight: 0, width: '100%' }}>
           {selectedTab === 0 && <MainGrid />}
           {selectedTab === 1 && <ProjectTracker />}
           {selectedTab === 2 && <ProjectSummary />}
           {selectedTab === 3 && <UserStats />}
           {selectedTab === 4 && <EvCalculator />}
+          {selectedTab === 5 && <ProgramSummary />}
         </Box>
       </div>
     </>
