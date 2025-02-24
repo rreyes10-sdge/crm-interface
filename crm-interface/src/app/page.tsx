@@ -11,7 +11,7 @@ import ProjectTracker from "./components/ProjectTracker";
 import Timeline from "./components/TimelineOld"
 import Head from 'next/head';
 import UserStats from './components/UserStats';
-import EvCalculator from './components/EvCalculator';
+import EvPage from './components/EvPage';
 import ProjectSummary from './components/ProjectSummary';
 import UserDashboard from './components/UserDashboard';
 import PageTitle from './components/PageTitle';
@@ -97,7 +97,7 @@ const Home = () => {
           {selectedTab === 1 && <ProjectTracker />}
           {selectedTab === 2 && <ProjectSummary />}
           {selectedTab === 3 && <UserStats />}
-          {selectedTab === 4 && <EvCalculator />}
+          {selectedTab === 4 && <EvPage />}
           {selectedTab === 5 && <ProgramSummary />}
         </Box>
       </div>
