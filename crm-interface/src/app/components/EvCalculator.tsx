@@ -1,16 +1,70 @@
 import React, { useState } from 'react';
-import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Container, Grid, Box, IconButton } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
-import EvResults from './EvResults';
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
 
-const EvCalculator: React.FC = () => {
-    const [vehicleGroups, setVehicleGroups] = useState([{ id: 1, vehicleClass: 'Heavy Duty Pickup & Van - Class 3', numVehicles: 5, avgDailyMileage: 80 }]);
-    const [chargerGroups, setChargerGroups] = useState([{ id: 1, numChargers: 5, chargerKW: 100 }]);
-    const [results, setResults] = useState(null);
+interface EvCalculatorProps {
+    onCalculate: (formData: FormData) => Promise<void>;
+    isLoading: boolean;
+}
+
+const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) => {
+    const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([{ id: 1, vehicleClass: 'Heavy Duty Pickup & Van - Class 3', numVehicles: 5, avgDailyMileage: 80 }]);
+    const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([{ id: 1, numChargers: 5, chargerKW: 100 }]);
+    const [results, setResults] = useState<Results | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [chargingBehavior, setChargingBehavior] = useState<ChargingBehavior>({
+        days: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+        startTime: '22:00',
+        endTime: '06:00'
+    });
+
+    const sectionStyle = {
+        backgroundColor: '#f8f9fa',
+        borderRadius: '12px',
+        padding: '24px',
+        marginBottom: '32px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+    };
+
+    const sectionHeaderStyle = {
+        borderBottom: '2px solid #1976d2',
+        paddingBottom: '12px',
+        marginBottom: '24px',
+        color: '#1976d2',
+        fontSize: '1.5rem',
+        fontWeight: 500
+    };
+
+    const vehicleClassOptions = [
+        "Heavy Duty Pickup & Van - Class 2B",
+        "Heavy Duty Pickup & Van - Class 3",
+        "Shuttle Bus - Class 3-5",
+        "Delivery Van - Class 3-5",
+        "Service Van - Class 3-5",
+        "Box Truck (Freight) - Class 3-5",
+        "Stake Truck - Class 3-5",
+        "Stake Truck - Class 6-7",
+        "Box Truck (Freight) - Class 6-7",
+        "Delivery Truck - Class 6-7",
+        "Service Truck - Class 6-7",
+        "School Bus - Class 7",
+        "Regional Haul Tractor - Class 7-8",
+        "Box Truck (Freight) - Class 8",
+        "Long Haul Tractor - Class 8",
+        "Transit Bus - Class 8",
+        "Refuse Hauler - Class 8",
+        "Dump Truck - Class 8"
+    ];
 
     const addVehicleGroup = () => {
         if (vehicleGroups.length < 5) {
-            setVehicleGroups([...vehicleGroups, { id: vehicleGroups.length + 1, vehicleClass: '', numVehicles: '', avgDailyMileage: '' }]);
+            setVehicleGroups([...vehicleGroups, { 
+                id: vehicleGroups.length + 1, 
+                vehicleClass: '', 
+                numVehicles: 0, 
+                avgDailyMileage: 0 
+            }]);
         }
     };
 
@@ -18,13 +72,23 @@ const EvCalculator: React.FC = () => {
         setVehicleGroups(vehicleGroups.filter(group => group.id !== id));
     };
 
-    const handleVehicleGroupChange = (id: number, field: string, value: any) => {
-        setVehicleGroups(vehicleGroups.map(group => group.id === id ? { ...group, [field]: value } : group));
+    const handleVehicleGroupChange = (id: number, field: string, value: string | number) => {
+        setVehicleGroups(vehicleGroups.map(group => {
+            if (group.id === id) {
+                const updatedValue = field === 'vehicleClass' ? value : Number(value);
+                return { ...group, [field]: updatedValue };
+            }
+            return group;
+        }));
     };
 
     const addChargerGroup = () => {
         if (chargerGroups.length < 5) {
-            setChargerGroups([...chargerGroups, { id: chargerGroups.length + 1, numChargers: '', chargerKW: '' }]);
+            setChargerGroups([...chargerGroups, { 
+                id: chargerGroups.length + 1, 
+                numChargers: 0, 
+                chargerKW: 0 
+            }]);
         }
     };
 
@@ -32,174 +96,411 @@ const EvCalculator: React.FC = () => {
         setChargerGroups(chargerGroups.filter(group => group.id !== id));
     };
 
-    const handleChargerGroupChange = (id: number, field: string, value: any) => {
-        setChargerGroups(chargerGroups.map(group => group.id === id ? { ...group, [field]: value } : group));
+    const handleChargerGroupChange = (id: number, field: string, value: string | number) => {
+        setChargerGroups(chargerGroups.map(group => {
+            if (group.id === id) {
+                return { ...group, [field]: Number(value) };
+            }
+            return group;
+        }));
     };
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleDayChange = (day: string) => {
+        setChargingBehavior(prev => ({
+            ...prev,
+            days: prev.days.includes(day) 
+                ? prev.days.filter(d => d !== day)
+                : [...prev.days, day]
+        }));
+    };
+
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         const formData = new FormData(event.target as HTMLFormElement);
-        const data = Object.fromEntries(formData.entries());
-
-        // Filter out removed vehicle and charger groups
-        const filteredVehicleGroups = vehicleGroups.filter(group => formData.has(`vehicle_class_${group.id}`));
-        const filteredChargerGroups = chargerGroups.filter(group => formData.has(`num_chargers_${group.id}`));
-
-        // Perform calculations with filtered groups
-        const resultsData = {
-            vehicleGroups: filteredVehicleGroups,
-            chargerGroups: filteredChargerGroups,
-            formData: data
-        };
-
-        setResults(resultsData);
+        await onCalculate(formData);
     };
 
     return (
-        <Container>
-            <Typography variant="h4" gutterBottom>EV Fuel Savings Calculator</Typography>
-            <form id="evForm" onSubmit={handleSubmit}>
-                <Box mb={4}>
-                    <Typography variant="h5">Vehicle Groups</Typography>
-                    {vehicleGroups.map(group => (
-                        <Box key={group.id} mb={2}>
-                            <Grid container alignItems="center" spacing={2}>
-                                <Grid item>
-                                    <Typography variant="h6">Group {group.id}</Typography>
-                                </Grid>
-                                {group.id > 1 && (
-                                    <Grid item>
-                                        <IconButton color="secondary" onClick={() => removeVehicleGroup(group.id)}>
-                                            <DeleteIcon />
-                                        </IconButton>
+        <Paper sx={{ p: 4 }}>
+            <form onSubmit={handleSubmit}>
+                <Accordion 
+                    defaultExpanded 
+                    sx={{ 
+                        ...sectionStyle,
+                        '&.MuiAccordion-root': {
+                            '&:before': {
+                                display: 'none',
+                            },
+                        },
+                    }}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                            borderBottom: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '& .MuiAccordionSummary-content': {
+                                margin: '12px 0',
+                            },
+                        }}
+                    >
+                        <Typography variant="h5">Vehicle Groups</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {vehicleGroups.map(group => (
+                            <Box key={group.id} mb={3}>
+                                <Grid container alignItems="center" spacing={2}>
+                                    <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Typography variant="h6" sx={{ color: '#555' }}>Group {group.id}</Typography>
+                                        {group.id > 1 && (
+                                            <IconButton 
+                                                color="error" 
+                                                onClick={() => removeVehicleGroup(group.id)}
+                                                size="small"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        )}
                                     </Grid>
-                                )}
-                            </Grid>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <FormControl fullWidth required>
-                                        <InputLabel>Vehicle Class</InputLabel>
-                                        <Select
-                                            name={`vehicle_class_${group.id}`}
-                                            value={group.vehicleClass}
-                                            onChange={(e) => handleVehicleGroupChange(group.id, 'vehicleClass', e.target.value)}
-                                        >
-                                            <MenuItem value="">Select Vehicle Class</MenuItem>
-                                            <MenuItem value="Heavy Duty Pickup & Van - Class 2B">Heavy Duty Pickup & Van - Class 2B</MenuItem>
-                                            <MenuItem value="Heavy Duty Pickup & Van - Class 3">Heavy Duty Pickup & Van - Class 3</MenuItem>
-                                            <MenuItem value="Shuttle Bus - Class 3-5">Shuttle Bus - Class 3-5</MenuItem>
-                                            <MenuItem value="Delivery Van - Class 3-5">Delivery Van - Class 3-5</MenuItem>
-                                            <MenuItem value="Service Van - Class 3-5">Service Van - Class 3-5</MenuItem>
-                                            <MenuItem value="Box Truck (Freight) - Class 3-5">Box Truck (Freight) - Class 3-5</MenuItem>
-                                            <MenuItem value="Stake Truck - Class 3-5">Stake Truck - Class 3-5</MenuItem>
-                                            <MenuItem value="Stake Truck - Class 6-7">Stake Truck - Class 6-7</MenuItem>
-                                            <MenuItem value="Box Truck (Freight) - Class 6-7">Box Truck (Freight) - Class 6-7</MenuItem>
-                                            <MenuItem value="Delivery Truck - Class 6-7">Delivery Truck - Class 6-7</MenuItem>
-                                            <MenuItem value="Service Truck - Class 6-7">Service Truck - Class 6-7</MenuItem>
-                                            <MenuItem value="School Bus - Class 7">School Bus - Class 7</MenuItem>
-                                            <MenuItem value="Regional Haul Tractor - Class 7-8">Regional Haul Tractor - Class 7-8</MenuItem>
-                                            <MenuItem value="Box Truck (Freight) - Class 8">Box Truck (Freight) - Class 8</MenuItem>
-                                            <MenuItem value="Long Haul Tractor - Class 8">Long Haul Tractor - Class 8</MenuItem>
-                                            <MenuItem value="Transit Bus - Class 8">Transit Bus - Class 8</MenuItem>
-                                            <MenuItem value="Refuse Hauler - Class 8">Refuse Hauler - Class 8</MenuItem>
-                                            <MenuItem value="Dump Truck - Class 8">Dump Truck - Class 8</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        name={`num_vehicles_${group.id}`}
-                                        label="Number of Vehicles"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={group.numVehicles}
-                                        onChange={(e) => handleVehicleGroupChange(group.id, 'numVehicles', e.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        name={`avg_daily_mileage_${group.id}`}
-                                        label="Average Daily Mileage"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={group.avgDailyMileage}
-                                        onChange={(e) => handleVehicleGroupChange(group.id, 'avgDailyMileage', e.target.value)}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                    ))}
-                    <Button variant="contained" onClick={addVehicleGroup}>Add Vehicle Group</Button>
-                </Box>
-
-                <Box mb={4}>
-                    <Typography variant="h5">Charging Behavior</Typography>
-                    <TextField name="charging_days" label="What days will you charge your vehicle(s)?" fullWidth required />
-                    <TextField name="charging_time" label="What time of day will you charge your vehicle(s)?" fullWidth required />
-                </Box>
-                {/* // add recommended box here somewhere */}
-                <Box mb={4}>
-                    <Typography variant="h5">Charger Groups</Typography>
-                    {chargerGroups.map(group => (
-                        <Box key={group.id} mb={2}>
-                            <Grid container alignItems="center" spacing={2}>
-                                <Grid item>
-                                    <Typography variant="h6">Group {group.id}</Typography>
-                                </Grid>
-                                {group.id > 1 && (
-                                    <Grid item>
-                                        <IconButton color="secondary" onClick={() => removeChargerGroup(group.id)}>
-                                            <DeleteIcon />
-                                        </IconButton>
+                                    <Grid item xs={12}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Vehicle Class</InputLabel>
+                                            <Select
+                                                name={`vehicle_class_${group.id}`}
+                                                value={group.vehicleClass}
+                                                onChange={(e) => handleVehicleGroupChange(group.id, 'vehicleClass', e.target.value)}
+                                                sx={{ backgroundColor: 'white' }}
+                                            >
+                                                <MenuItem value="">Select Vehicle Class</MenuItem>
+                                                {vehicleClassOptions.map(option => (
+                                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                     </Grid>
-                                )}
-                            </Grid>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        name={`num_chargers_${group.id}`}
-                                        label="Number of Chargers"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={group.numChargers}
-                                        onChange={(e) => handleChargerGroupChange(group.id, 'numChargers', e.target.value)}
-                                    />
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            name={`num_vehicles_${group.id}`}
+                                            label="Number of Vehicles"
+                                            type="number"
+                                            fullWidth
+                                            required
+                                            value={group.numVehicles}
+                                            onChange={(e) => handleVehicleGroupChange(group.id, 'numVehicles', e.target.value)}
+                                            sx={{ backgroundColor: 'white' }}
+                                            InputProps={{
+                                                inputProps: { min: 0 }
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            name={`avg_daily_mileage_${group.id}`}
+                                            label="Average Daily Mileage"
+                                            type="number"
+                                            fullWidth
+                                            required
+                                            value={group.avgDailyMileage}
+                                            onChange={(e) => handleVehicleGroupChange(group.id, 'avgDailyMileage', e.target.value)}
+                                            sx={{ backgroundColor: 'white' }}
+                                            InputProps={{
+                                                inputProps: { min: 0 }
+                                            }}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        name={`charger_kw_${group.id}`}
-                                        label="Charger kW"
-                                        type="number"
-                                        fullWidth
-                                        required
-                                        value={group.chargerKW}
-                                        onChange={(e) => handleChargerGroupChange(group.id, 'chargerKW', e.target.value)}
-                                    />
+                            </Box>
+                        ))}
+                        <Button 
+                            variant="contained" 
+                            onClick={addVehicleGroup}
+                            startIcon={<AddIcon />}
+                            disabled={vehicleGroups.length >= 5}
+                            sx={{ 
+                                mt: 2,
+                                backgroundColor: vehicleGroups.length >= 5 ? 'grey.400' : undefined,
+                                '&:hover': {
+                                    backgroundColor: vehicleGroups.length >= 5 ? 'grey.500' : undefined
+                                }
+                            }}
+                        >
+                            Add Vehicle Group
+                        </Button>
+                    </AccordionDetails>
+                </Accordion>
+
+                <Accordion 
+                    defaultExpanded 
+                    sx={{ 
+                        ...sectionStyle,
+                        '&.MuiAccordion-root': {
+                            '&:before': {
+                                display: 'none',
+                            },
+                        },
+                    }}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                            borderBottom: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '& .MuiAccordionSummary-content': {
+                                margin: '12px 0',
+                            },
+                        }}
+                    >
+                        <Typography variant="h5">Charging Behavior</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <FormGroup>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#555' }}>Days for Charging</Typography>
+                                    <Box sx={{ 
+                                        display: 'flex',
+                                        gap: 1,
+                                        width: '100%',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
+                                            <Box
+                                                key={day}
+                                                onClick={() => handleDayChange(day)}
+                                                sx={{
+                                                    backgroundColor: chargingBehavior.days.includes(day) ? '#ffc107' : 'transparent',
+                                                    border: '1px solid #e0e0e0',
+                                                    borderRadius: '8px',
+                                                    padding: '12px',
+                                                    flex: 1,
+                                                    textAlign: 'center',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': {
+                                                        backgroundColor: chargingBehavior.days.includes(day) 
+                                                            ? '#ffc107' 
+                                                            : 'rgba(0, 0, 0, 0.04)'
+                                                    }
+                                                }}
+                                            >
+                                                <Typography 
+                                                    variant="body1" 
+                                                    sx={{ 
+                                                        fontWeight: chargingBehavior.days.includes(day) ? 500 : 400
+                                                    }}
+                                                >
+                                                    {day}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#555' }}>Charging Time Window</Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Start Time"
+                                                type="time"
+                                                value={chargingBehavior.startTime}
+                                                onChange={(e) => setChargingBehavior(prev => ({
+                                                    ...prev,
+                                                    startTime: e.target.value
+                                                }))}
+                                                InputLabelProps={{ shrink: true }}
+                                                inputProps={{ step: 300 }}
+                                                fullWidth
+                                                sx={{ backgroundColor: 'white' }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="End Time"
+                                                type="time"
+                                                value={chargingBehavior.endTime}
+                                                onChange={(e) => setChargingBehavior(prev => ({
+                                                    ...prev,
+                                                    endTime: e.target.value
+                                                }))}
+                                                InputLabelProps={{ shrink: true }}
+                                                inputProps={{ step: 300 }}
+                                                fullWidth
+                                                sx={{ backgroundColor: 'white' }}
+                                            />
+                                        </Grid>
+                                    </Grid>
                                 </Grid>
                             </Grid>
-                        </Box>
-                    ))}
-                    <Button variant="contained" onClick={addChargerGroup}>Add Charger Group</Button>
-                </Box>
+                        </FormGroup>
+                    </AccordionDetails>
+                </Accordion>
 
-                
+                <Accordion 
+                    defaultExpanded 
+                    sx={{ 
+                        ...sectionStyle,
+                        '&.MuiAccordion-root': {
+                            '&:before': {
+                                display: 'none',
+                            },
+                        },
+                    }}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                            borderBottom: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '& .MuiAccordionSummary-content': {
+                                margin: '12px 0',
+                            },
+                        }}
+                    >
+                        <Typography variant="h5">Charger Groups</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {chargerGroups.map(group => (
+                            <Box key={group.id} mb={3}>
+                                <Grid container alignItems="center" spacing={2}>
+                                    <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Typography variant="h6" sx={{ color: '#555' }}>Group {group.id}</Typography>
+                                        {group.id > 1 && (
+                                            <IconButton 
+                                                color="error" 
+                                                onClick={() => removeChargerGroup(group.id)}
+                                                size="small"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        )}
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            name={`num_chargers_${group.id}`}
+                                            label="Number of Chargers"
+                                            type="number"
+                                            fullWidth
+                                            required
+                                            value={group.numChargers}
+                                            onChange={(e) => handleChargerGroupChange(group.id, 'numChargers', e.target.value)}
+                                            sx={{ backgroundColor: 'white' }}
+                                            InputProps={{
+                                                inputProps: { min: 0 }
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            name={`charger_kw_${group.id}`}
+                                            label="Charger kW"
+                                            type="number"
+                                            fullWidth
+                                            required
+                                            value={group.chargerKW}
+                                            onChange={(e) => handleChargerGroupChange(group.id, 'chargerKW', e.target.value)}
+                                            sx={{ backgroundColor: 'white' }}
+                                            InputProps={{
+                                                inputProps: { min: 0 }
+                                            }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        ))}
+                        <Button 
+                            variant="contained" 
+                            onClick={addChargerGroup}
+                            startIcon={<AddIcon />}
+                            disabled={chargerGroups.length >= 5}
+                            sx={{ 
+                                mt: 2,
+                                backgroundColor: chargerGroups.length >= 5 ? 'grey.400' : undefined,
+                                '&:hover': {
+                                    backgroundColor: chargerGroups.length >= 5 ? 'grey.500' : undefined
+                                }
+                            }}
+                        >
+                            Add Charger Group
+                        </Button>
+                    </AccordionDetails>
+                </Accordion>
 
-                <Box mb={4}>
-                    <Typography variant="h5">Optional Settings</Typography>
-                    <TextField name="fossil_fuel_price" label="Fossil Fuel Price ($/gal)" type="number" fullWidth />
-                    <TextField name="fossil_fuel_multiplier" label="Fossil Fuel Price Increase Multiplier YoY" type="number" fullWidth />
-                    <TextField name="fossil_fuel_efficiency" label="Fossil Fuel Vehicle Efficiency Override (mpg)" type="number" fullWidth />
-                    <TextField name="transformer_capacity" label="Available Capacity for Existing Transformer (kW)" type="number" fullWidth />
-                </Box>
+                <Accordion 
+                    sx={{ 
+                        ...sectionStyle,
+                        '&.MuiAccordion-root': {
+                            '&:before': {
+                                display: 'none',
+                            },
+                        },
+                    }}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                            borderBottom: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '& .MuiAccordionSummary-content': {
+                                margin: '12px 0',
+                            },
+                        }}
+                    >
+                        <Typography variant="h5">Optional Settings</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <TextField 
+                                    name="fossil_fuel_price" 
+                                    label="Fossil Fuel Price ($/gal)" 
+                                    type="number" 
+                                    fullWidth 
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField 
+                                    name="fossil_fuel_multiplier" 
+                                    label="Fossil Fuel Price Increase Multiplier YoY" 
+                                    type="number" 
+                                    fullWidth 
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField 
+                                    name="fossil_fuel_efficiency" 
+                                    label="Fossil Fuel Vehicle Efficiency Override (mpg)" 
+                                    type="number" 
+                                    fullWidth 
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField 
+                                    name="transformer_capacity" 
+                                    label="Available Capacity for Existing Transformer (kW)" 
+                                    type="number" 
+                                    fullWidth 
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </AccordionDetails>
+                </Accordion>
 
-                <Button variant="contained" type="submit">Calculate</Button>
+                <Button 
+                    variant="contained" 
+                    type="submit" 
+                    disabled={isLoading}
+                    fullWidth
+                    size="large"
+                    sx={{ mt: 2 }}
+                >
+                    {isLoading ? 'Calculating...' : 'Calculate'}
+                </Button>
             </form>
-
-            {results && <EvResults results={results} />}
-        </Container>
+        </Paper>
     );
 };
 
