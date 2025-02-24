@@ -221,10 +221,11 @@ def get_projects():
         conn = get_connection()
         active_projects_query = """
             select
-            	p.ProjectId, p.ProjectNumber , p.Name as 'ProjectName', ps.LongName as 'ProjectStatus', p2.Name as 'ProgramName', o.Name as 'OrgName', u.ProperName as 'ProjectLead'
+            	p.ProjectId, p.ProjectNumber , p.Name as 'ProjectName', ps.LongName as 'ProjectStatus', p2.Name as 'ProgramName', o.Name as 'OrgName', u.ProperName as 'ProjectLead', pp.Name as 'PhaseName'
             from cleantranscrm.Project p 
             left join cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = p.Status 
             left join cleantranscrm.Program p2 on p2.ProgramId = p.ProgramId 
+            LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = p.CurrentPhaseId and pp.ProgramId = p.ProgramId 
             left JOIN cleantranscrm.Organization o on o.OrganizationId = p.OrganizationId 
             left join cleantranscrm.ProjectRole pr on pr.ProjectId = p.ProjectId 
             left join cleantranscrm.`Role` r on r.RoleId = pr.RoleId 
@@ -271,7 +272,7 @@ def get_stats():
         activity_count_query = """
             SELECT COUNT(*) AS activity_count
             FROM cleantranscrm.Activity A
-            WHERE UserId = %s AND CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE ProjectId IS NOT NULL AND UserId = %s AND CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
         activity_count = int(fetch_data(activity_count_query, conn, params=(user_id, time_range)).iloc[0]['activity_count'])
 
@@ -284,7 +285,7 @@ def get_stats():
             LEFT JOIN cleantranscrm.Project p ON p.ProjectId = a.ProjectId
             LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId
             LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = a.PhaseId AND pp.ProgramId = a.ProgramId
-            WHERE a.UserId = %s AND a.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+            WHERE a.ProjectId IS NOT NULL AND a.UserId = %s AND a.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """
         activity_logs = fetch_data(activity_logs_query, conn, params=(user_id, time_range)).to_dict(orient='records')
 

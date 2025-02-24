@@ -910,7 +910,7 @@ const ProgramSummary: React.FC = () => {
           ProjectId: parseInt(p.ProjectId),
           ProjectName: p.ProjectName || '',
           ProgramName: p.ProgramName || '',
-          CurrentPhase: p.CurrentPhase || 'Unknown',
+          CurrentPhase: p.PhaseName || 'Unknown',
           DaysInPhase: p.DaysInPhase || 0,
           Status: p.ProjectStatus || 'Unknown'
         })));
@@ -936,7 +936,6 @@ const ProgramSummary: React.FC = () => {
                 <TableCell>Project Name</TableCell>
                 <TableCell>Program</TableCell>
                 <TableCell>Current Phase</TableCell>
-                <TableCell align="right">Days in Phase</TableCell>
                 <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
@@ -970,7 +969,6 @@ const ProgramSummary: React.FC = () => {
                       {project.CurrentPhase}
                     </Box>
                   </TableCell>
-                  <TableCell align="right">{project.DaysInPhase}</TableCell>
                   <TableCell>{project.Status}</TableCell>
                 </TableRow>
               ))}
