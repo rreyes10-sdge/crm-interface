@@ -87,7 +87,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
     if (selectedProjectStatus && selectedProjectStatus !== 'Any') {
       filtered = filtered.filter(project => project.ProjectStatus === selectedProjectStatus);
     }
-
+  
     if (selectedProjectLead && selectedProjectLead !== 'Any') {
       filtered = filtered.filter(project => project.ProjectLead === selectedProjectLead);
     }
