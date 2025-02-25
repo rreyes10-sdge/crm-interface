@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import EvStationIcon from '@mui/icons-material/EvStation';
 import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
 
 interface EvCalculatorProps {
@@ -18,6 +19,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         startTime: '22:00',
         endTime: '06:00'
     });
+    
+    // State for modal
+    const [openHelpModal, setOpenHelpModal] = useState(false);
 
     const sectionStyle = {
         backgroundColor: '#f8f9fa',
@@ -118,6 +122,14 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         event.preventDefault();
         const formData = new FormData(event.target as HTMLFormElement);
         await onCalculate(formData);
+    };
+
+    const handleOpenHelpModal = () => {
+        setOpenHelpModal(true);
+    };
+
+    const handleCloseHelpModal = () => {
+        setOpenHelpModal(false);
     };
 
     return (
@@ -357,6 +369,21 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         }}
                     >
                         <Typography variant="h5">Charger Groups</Typography>
+                        <span 
+                            onClick={() => window.open('https://insitetool.org/equipment_catalog', '_blank')}
+                            style={{ cursor: 'pointer', marginLeft: '8px' }}
+                        >
+                            <EvStationIcon />
+                        </span>
+                        <span 
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenHelpModal();
+                            }}
+                            style={{ cursor: 'pointer', marginLeft: '8px' }}
+                        >
+                            <HelpOutlineIcon />
+                        </span>
                     </AccordionSummary>
                     <AccordionDetails>
                         {chargerGroups.map(group => (
@@ -488,6 +515,30 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         </Grid>
                     </AccordionDetails>
                 </Accordion>
+
+                {/* Modal for Help */}
+                <Dialog open={openHelpModal} onClose={handleCloseHelpModal}>
+                    <DialogTitle>Charger Help Information</DialogTitle>
+                    <DialogContent>
+                        <Typography variant="body1">
+                            Vehicle to Charge-Port Ratios<br></br><br></br>
+                            <strong>1 to 1</strong>: Ideal for ensuring each vehicle has a dedicated charge port.<br></br>
+                            <strong>1.25 to 1</strong>: Slightly more vehicles than charge ports, suitable for fleets with staggered charging schedules.<br></br>
+                            <strong>1.5 to 1</strong>: Balanced approach for moderate usage and shared charging.<br></br>
+                            <strong>1.75 to 1</strong>: Efficient for fleets with predictable charging patterns.<br></br>
+                            <strong>2 to 1</strong>: Cost-effective for larger fleets with flexible charging needs.<br></br>
+                            <strong>2.25 to 1</strong>: Optimized for high utilization of charge ports.<br></br>
+                            <strong>2.5 to 1</strong>: Suitable for fleets with well-managed charging schedules.<br></br>
+                            <strong>2.75 to 1</strong>: Best for fleets with minimal downtime and high charge port turnover.<br></br>
+                            <strong>3 to 1</strong>: Maximum efficiency for fleets with highly coordinated charging.<br></br>
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseHelpModal} color="primary">
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
                 <Button 
                     variant="contained" 
