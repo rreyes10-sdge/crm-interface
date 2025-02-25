@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Tabs, Tab, Typography } from '@mui/material';
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Collapse, Typography } from '@mui/material';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import client from '../apollo-client';
@@ -16,11 +16,25 @@ import ProjectSummary from './components/ProjectSummary';
 import UserDashboard from './components/UserDashboard';
 import PageTitle from './components/PageTitle';
 import ProgramSummary from './components/ProgramSummary';
+import {
+    Home as HomeIcon,
+    Description as DescriptionIcon,
+    Person as PersonIcon,
+    EvStation as EvStationIcon,
+    Assessment as AssessmentIcon,
+    ExpandLess,
+    ExpandMore,
+    Timeline as TimelineIcon,
+    TableChart as TableChartIcon
+} from '@mui/icons-material';
+
+const DRAWER_WIDTH = 240;
 
 const Home = () => {
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [homeMenuOpen, setHomeMenuOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
     if (location.pathname === '/project-tracker') {
@@ -38,25 +52,8 @@ const Home = () => {
     }
   }, [location.pathname]);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-    if (newValue === 1) {
-      navigate('/project-tracker');
-    } else if (newValue === 2) {
-      navigate('/project-summary');
-    } else if (newValue === 3) {
-      navigate('/user-overview');
-    } else if (newValue === 4) {
-      navigate('/ev-calculator');
-    } else if (newValue === 5) {
-      navigate('/program-summary');
-    } else {
-      navigate('/');
-    }
-  };
-
-  const handleRowClick = (userId: string) => {
-    window.open(`/user-dashboard/${userId}`, '_blank');
+  const handleHomeClick = () => {
+    setHomeMenuOpen(!homeMenuOpen);
   };
 
   const getPageTitle = () => {
@@ -79,19 +76,102 @@ const Home = () => {
   };
 
   return (
-    <>
-      <PageTitle title={getPageTitle()} />
-      <div className={styles.page}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={selectedTab} onChange={handleChange} aria-label="navigation tabs">
-            <Tab label="Project Status" />
-            <Tab label="Project Tracker" />
-            <Tab label="Project Summary" />
-            <Tab label="User Overview" />
-            <Tab label="EV Fuel Calculator" />
-            <Tab label="Program Summary" />
-          </Tabs>
-        </Box>
+    <Box sx={{ display: 'flex' }}>
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            backgroundColor: '#2c323f',
+            color: 'white'
+          },
+        }}
+      >
+        <List component="nav" sx={{ pt: 2 }}>
+          {/* Home with sub-menu */}
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleHomeClick}>
+              <ListItemIcon>
+                <HomeIcon sx={{ color: 'white' }} />
+              </ListItemIcon>
+              <ListItemText primary="Home" />
+              {homeMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={homeMenuOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItemButton 
+                sx={{ pl: 4 }}
+                selected={selectedTab === 0}
+                onClick={() => navigate('/')}
+              >
+                <ListItemIcon>
+                  <TimelineIcon sx={{ color: 'white' }} />
+                </ListItemIcon>
+                <ListItemText primary="Project Status" />
+              </ListItemButton>
+              <ListItemButton 
+                sx={{ pl: 4 }}
+                selected={selectedTab === 1}
+                onClick={() => navigate('/project-tracker')}
+              >
+                <ListItemIcon>
+                  <TableChartIcon sx={{ color: 'white' }} />
+                </ListItemIcon>
+                <ListItemText primary="Project Tracker" />
+              </ListItemButton>
+            </List>
+          </Collapse>
+
+          {/* Other main menu items */}
+          <ListItemButton 
+            selected={selectedTab === 2}
+            onClick={() => navigate('/project-summary')}
+          >
+            <ListItemIcon>
+              <DescriptionIcon sx={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="Project Summary" />
+          </ListItemButton>
+
+          <ListItemButton 
+            selected={selectedTab === 3}
+            onClick={() => navigate('/user-overview')}
+          >
+            <ListItemIcon>
+              <PersonIcon sx={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="User Overview" />
+          </ListItemButton>
+
+          <ListItemButton 
+            selected={selectedTab === 4}
+            onClick={() => navigate('/ev-calculator')}
+          >
+            <ListItemIcon>
+              <EvStationIcon sx={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="EV Fuel Calculator" />
+          </ListItemButton>
+
+          <ListItemButton 
+            selected={selectedTab === 5}
+            onClick={() => navigate('/program-summary')}
+          >
+            <ListItemIcon>
+              <AssessmentIcon sx={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="Program Summary" />
+          </ListItemButton>
+        </List>
+      </Drawer>
+
+      {/* Main content */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <PageTitle title={getPageTitle()} />
         <Box sx={{ p: 0, marginLeft: 0, marginRight: 0, width: '100%' }}>
           {selectedTab === 0 && <MainGrid />}
           {selectedTab === 1 && <ProjectTracker />}
@@ -100,8 +180,8 @@ const Home = () => {
           {selectedTab === 4 && <EvPage />}
           {selectedTab === 5 && <ProgramSummary />}
         </Box>
-      </div>
-    </>
+      </Box>
+    </Box>
   );
 };
 
