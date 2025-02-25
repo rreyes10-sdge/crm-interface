@@ -325,7 +325,7 @@ const TEASServiceSummary: React.FC = () => {
                                             title={
                                                 <Box sx={{ p: 0.5 }}>
                                                     <Typography variant="body2" gutterBottom>
-                                                        {phaseId} Phase Statistics:
+                                                        {serviceName} <br></br>Phase Statistics:
                                                     </Typography>
                                                     <Typography variant="caption" component="div">
                                                         • Average Duration: {String(average)} days
