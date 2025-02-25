@@ -204,7 +204,7 @@ const TEASServiceSummary: React.FC = () => {
             max: stats.max === -Infinity ? 'N/A' : stats.max,
             count: stats.count,
         };
-    });
+    }).sort((a, b) => (parseFloat(a.average) || 0) - (parseFloat(b.average) || 0)); // Sort by average days in ascending order
 
     return (
         <Grid container spacing={3}>
@@ -309,7 +309,7 @@ const TEASServiceSummary: React.FC = () => {
                 <Card>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>
-                            Project Service Duration Details
+                            Completed Project Service Duration Details
                         </Typography>
                         <Grid container spacing={1}>
                             {phaseStats.map(({ phaseId, serviceName, average, min, max, count }) => (
@@ -318,8 +318,11 @@ const TEASServiceSummary: React.FC = () => {
                                         <Typography variant="body2" sx={{ width: 310 }} noWrap>
                                             {serviceName}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ width: 120, color: 'text.secondary' }}>
-                                            {String(min)} - {String(max)} days
+                                        <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }} noWrap>
+                                            Project Count: {count} | 
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ width: 160, color: 'text.secondary', pl: 1}} noWrap>
+                                            Min/Max: {String(min)} - {String(max)} days
                                         </Typography>
                                         <Tooltip
                                             title={
@@ -348,7 +351,7 @@ const TEASServiceSummary: React.FC = () => {
                                                 />
                                             </Box>
                                         </Tooltip>
-                                        <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }} noWrap>
                                             Avg: {String(average)} days
                                         </Typography>
                                     </Box>
