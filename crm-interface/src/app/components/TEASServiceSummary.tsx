@@ -309,7 +309,7 @@ const TEASServiceSummary: React.FC = () => {
                 <Card>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>
-                            Completed Project Service Duration Details
+                            Project Complete Services Duration Details
                         </Typography>
                         <Grid container spacing={1}>
                             {phaseStats.map(({ phaseId, serviceName, average, min, max, count }) => (
