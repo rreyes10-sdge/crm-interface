@@ -7,6 +7,8 @@ import { formatDate } from '../utils/dateUtils';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { Tooltip as RechartsTooltip } from 'recharts';
 import ProjectSummary from './ProjectSummary';
+import TEASServiceSummary from './TEASServiceSummary';
+import { gql, useQuery } from '@apollo/client';
 
 interface ProgramMapping {
   id: number;
@@ -248,6 +250,11 @@ const ProgramSummary: React.FC = () => {
 
   // Fetch phase data when selections change
   useEffect(() => {
+    if (selectedProgramId === "16") {
+      // Skip fetching phase data if TEAS is selected
+      return;
+    }
+
     // Only fetch if at least one filter is selected
     if (selectedProgramId === "Any" && selectedStatusId === "Any") {
       setPhaseData([]);
@@ -1029,7 +1036,11 @@ const ProgramSummary: React.FC = () => {
         <Typography>Loading...</Typography>
       )}
 
-      {!loading && chartData.length > 0 && (
+      {!loading && selectedProgramId === "16" && (
+        <TEASServiceSummary />
+      )}
+
+      {!loading && selectedProgramId !== "Any" && selectedProgramId !== "16" && chartData.length > 0 && (
         <>
           <Box sx={{ 
             width: '100%',
