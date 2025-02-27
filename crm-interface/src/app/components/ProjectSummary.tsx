@@ -172,9 +172,11 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
             <Typography variant="h6">Project Information</Typography>
             {overview.project_info.map(info => (
               <Box key={info.ProjectId} sx={{ mt: 2 }}>
+                <a href={`https://ctsolutions.sempra.com/projects/${info.ProjectId}`} target="_blank" rel="noopener noreferrer">
+                  <Typography><strong>Project Name:</strong> {info.ProjectName}</Typography>
+                </a>
                 <Typography><strong>Organization:</strong> {info.OrgName}</Typography>
                 <Typography><strong>Program Name:</strong> {info.ProgramName}</Typography>
-                <Typography><strong>Project Name:</strong> {info.ProjectName}</Typography>
                 <Typography><strong>Project Status:</strong> {info.ProjectStatus}</Typography>
                 <Typography>
                     <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}

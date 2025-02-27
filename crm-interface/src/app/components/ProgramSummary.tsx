@@ -120,7 +120,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, p
         boxShadow: 1
       }}>
         <Typography variant="caption" color="text.secondary">
-          {formatDate(label as string)}
+          {new Date(label as string).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </Typography>
         {sortedPayload.map((entry) => (
           <Box 
