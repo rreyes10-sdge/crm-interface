@@ -67,3 +67,7 @@ def format_dates(df, date_columns):
 def get_project_service_attributes(connection, projectId, serviceName):
     df = fetch_data(QUERIES['project-service-attributes'], connection, params={'projectId': projectId, 'serviceName': f"%{serviceName}%"})
     return df
+
+def get_project_milestone_dates(connection, projectId):
+    df = fetch_data(QUERIES['project-milestone-dates'], connection, params={'projectId': projectId})
+    return df

@@ -20,7 +20,6 @@ interface PromotionHistoryProps {
 const PromotionHistory: React.FC<PromotionHistoryProps> = ({ promotions }) => {
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Promotion History</Typography>
       <Grid container spacing={2}>
         {promotions.map((promo, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
