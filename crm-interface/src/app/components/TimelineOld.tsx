@@ -1,26 +1,24 @@
 import React from 'react';
 import { Calendar, User } from 'lucide-react';
-import { gql, useQuery } from '@apollo/client';
 import '../styles/Timeline.css';
+import { Typography } from '@mui/material';
 
-// GraphQL Query to fetch project timeline based on projectId
-const GET_PROJECT_TIMELINES = gql`
-    query GetProjectTimelines($projectId: Int!) {
-        projectTimeline(projectId: $projectId) {
-            id
-            projectId
-            updatedAt
-            label
-            updatedBy
-            phaseName
-            phaseSortOrder
-            labelSortOrder
-        }
-    }
-`;
+interface ProjectMilestones {
+    ProjectNumber: string;
+    ProjectId: string;
+    ProjectName: string;
+    OrganizationName: string;
+    OrganizationId: string;
+    PhaseId: string;
+    PhaseName: string;
+    DateName: string;
+    Value: string;
+    UpdatedBy: string;
+    UpdatedAt: string;
+}
 
 interface TimelineProps {
-    projectId: string;
+    milestones: ProjectMilestones[];
 }
 
 interface TimelineEvent {
@@ -77,62 +75,38 @@ function getBackgroundColor(phaseName: string): string {
     return colorCache[phaseName].bgColor;
 }
 
-const TimelineOld: React.FC<TimelineProps> = ({ projectId }) => {
-    const projectIdInt = parseInt(projectId, 10);
-
-    const { loading, error, data } = useQuery(GET_PROJECT_TIMELINES, {
-        variables: { projectId: projectIdInt || 30 } // Default to 30 if projectIdInt is not set
-    });
-
-    // Handle loading state
-    if (loading) return <p>Loading timeline...</p>;
-
-    // Handle error state
-    if (error) return <p>Error loading timeline: {error.message}</p>;
-
-    // Sort the fetched data
-    const timelineData: TimelineEvent[] = [...data.projectTimeline].sort(
-        (b: TimelineEvent, a: TimelineEvent) =>
-            b.phaseSortOrder - a.phaseSortOrder || b.labelSortOrder - a.labelSortOrder
-    );
+const TimelineOld: React.FC<TimelineProps> = ({ milestones }) => {
+    // Sort the milestones based on a relevant property, e.g., DateName
+    const sortedMilestones = [...milestones].sort((a, b) => new Date(a.Value).getTime() - new Date(b.Value).getTime());
 
     return (
         <div className="timeline-container">
             <div className="container">
-                <h1 className="title">Project Summary</h1>
-
                 <div className="timeline">
-                    <div className="timeline-item" />
-
-                    {timelineData.map((event, index) => {
+                    {sortedMilestones.map((milestone, index) => {
                         const isEven = index % 2 === 0;
 
                         return (
-                            <div key={event.id} className="timeline-item">
+                            <div key={`${milestone.ProjectId}-${milestone.DateName}`} className="timeline-item">
                                 <div
                                     className="timeline-dot"
-                                    style={{ backgroundColor: getDotColor(event.phaseName) }}
+                                    style={{ backgroundColor: getDotColor(milestone.PhaseName) }}
                                 />
 
                                 <div className={`timeline-content ${isEven ? 'even' : ''}`}>
                                     <div className="timeline-card">
                                         <div className="timeline-header">
                                             <div>
-                                                <h3 className="card-title">{event.label}</h3>
+                                                <div className="attribute-name">
+                                                    <strong>{milestone.DateName}</strong> 
+                                                </div>
+                                                <h3 className="card-title">{milestone.PhaseName}</h3>
                                                 <div className="card-meta">
                                                     <Calendar size={14} />
-                                                    <span>{new Date(event.updatedAt).toLocaleDateString()}</span>
-                                                    <span>•</span>
-                                                    <User size={14} />
-                                                    <span>{event.updatedBy}</span>
+                                                    <span>{new Date(milestone.Value).toLocaleDateString()}</span>
+                                                    - {milestone.UpdatedBy}
                                                 </div>
                                             </div>
-                                            <span
-                                                className={`phase-tag ${generateClassFromPhase(event.phaseName)}`}
-                                                style={{ backgroundColor: getBackgroundColor(event.phaseName) }}
-                                            >
-                                                {event.phaseName}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>

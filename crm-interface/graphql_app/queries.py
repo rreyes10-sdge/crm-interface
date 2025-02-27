@@ -645,6 +645,30 @@ WHERE ptv.projectid = 30
                                  FROM cleantranscrm.ProgramAttribute 
                                  WHERE ControlType = 'date');"""
 
+QUERY_MILESTONE_DATES = """
+    SELECT
+        p.ProjectNumber,
+        p.ProjectId,
+        p.Name as 'ProjectName',
+        o.Name AS 'OrganizationName',
+        o.OrganizationId,
+        pa.PhaseId,
+        pp.Name as 'PhaseName',
+        pa.Label AS 'DateName',
+        pal.Value,
+        pal.UpdatedBy,
+        pal.UpdatedAt 
+    FROM cleantranscrm.ProjectAttributeValue pal
+    LEFT JOIN cleantranscrm.ProgramAttribute pa ON pa.ProgramAttributeId = pal.ProgramAttributeId
+    LEFT JOIN cleantranscrm.`Project` p ON p.ProjectId = pal.ProjectId
+    LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId 
+    LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.PhaseId = pa.PhaseId AND pp.ProgramId = pa.ProgramId
+    WHERE pa.ControlType = 'date'
+    and p.ProjectId = %(projectId)s
+    GROUP BY p.ProjectNumber, pa.Label
+    Order by p.ProjectId asc, pal.UpdatedAt asc;
+"""
+
 
 
 # Dictionary mapping query names to their SQL strings
@@ -664,5 +688,6 @@ QUERIES = {
     'project-timeline': QUERY_PROJECT_TIMELINE,
     'logged-time': QUERY_LOGGED_TIME,
     'logged-time-trend': QUERY_LOGGED_TIME_TREND,
+    'project-milestone-dates': QUERY_MILESTONE_DATES,
     # ... add other queries with descriptive names
 }

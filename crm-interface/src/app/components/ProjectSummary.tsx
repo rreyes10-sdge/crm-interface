@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Typography, Select, MenuItem, Box, Grid, Paper } from '@mui/material';
+import { Typography, Select, MenuItem, Box, Grid, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PromotionHistory from './PromotionHistory';
 import ProjectTimelineView from './ProjectTimelineView';
+import TimelineOld from './TimelineOld';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 interface Project {
   ProjectId: string;
@@ -27,6 +29,20 @@ interface Promotion {
   DaysBeforeFirstPromotion: number;
 }
 
+interface ProjectMilestones {
+  ProjectNumber: string;
+  ProjectId: string;
+  ProjectName: string;
+  OrganizationName: string;
+  OrganizationId: string;
+  PhaseId: string;
+  PhaseName: string;
+  DateName: string;
+  Value: string;
+  UpdatedBy: string;
+  UpdatedAt: string;
+}
+
 interface Overview {
   project_info: Project[];
   promotion: Promotion[];
@@ -44,6 +60,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [selectedProjectStatus, setSelectedProjectStatus] = useState<string | null>('Any');
   const [selectedProjectLead, setSelectedProjectLead] = useState<string | null>('Any');
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [projectMilestones, setProjectMilestones] = useState<ProjectMilestones[]>([]);
 
   useEffect(() => {
     axios.get('http://127.0.0.1:5000/api/projects')
@@ -64,6 +81,20 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
         console.error('Error fetching projects:', error);
       });
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/api/data/project-milestone-dates?projectId=${projectId}`);
+            if (!response.ok) throw new Error(`Error: ${response.status}`);
+            const data = await response.json();
+            setProjectMilestones(data);
+        } catch (error) {
+            console.error('Error fetching project milestones:', error);
+        }
+    };
+    fetchData();
+}, [projectId]);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -100,7 +131,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const uniqueProjectLeads = [...Array.from(new Set(projects.map(project => project.ProjectLead)))];
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '100%' }, mx: 'auto' }}>
+    <Box sx={{ width: '100%', maxWidth: '1600px', mx: 'auto' }}>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Project Overview
       </Typography>
@@ -167,27 +198,48 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
         </Grid>
       </Grid>
       {overview && overview.project_info && overview.promotion && (
-        <Box>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6">Project Information</Typography>
-            {overview.project_info.map(info => (
-              <Box key={info.ProjectId} sx={{ mt: 2 }}>
-                <a href={`https://ctsolutions.sempra.com/projects/${info.ProjectId}`} target="_blank" rel="noopener noreferrer">
-                  <Typography><strong>Project Name:</strong> {info.ProjectName}</Typography>
-                </a>
-                <Typography><strong>Organization:</strong> {info.OrgName}</Typography>
-                <Typography><strong>Program Name:</strong> {info.ProgramName}</Typography>
-                <Typography><strong>Project Status:</strong> {info.ProjectStatus}</Typography>
-                <Typography>
-                    <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
-                </Typography>
-                <Typography><strong>Project Lead:</strong> {info.ProjectLead}</Typography>
-              </Box>
-            ))}
-          </Paper>
-          <ProjectTimelineView promotions={overview.promotion} />
-          <PromotionHistory promotions={overview.promotion} />
-        </Box>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={7}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6">Project Information</Typography>
+              {overview.project_info.map(info => (
+                <Box key={info.ProjectId} sx={{ mt: 2 }}>
+                  <a href={`https://ctsolutions.sempra.com/projects/${info.ProjectId}`} target="_blank" rel="noopener noreferrer">
+                    <Typography><strong>Project Name:</strong> {info.ProjectName}</Typography>
+                  </a>
+                  <Typography><strong>Organization:</strong> {info.OrgName}</Typography>
+                  <Typography><strong>Program Name:</strong> {info.ProgramName}</Typography>
+                  <Typography><strong>Project Status:</strong> {info.ProjectStatus}</Typography>
+                  <Typography>
+                      <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
+                  </Typography>
+                  <Typography><strong>Project Lead:</strong> {info.ProjectLead}</Typography>
+                </Box>
+              ))}
+            </Paper>
+            <ProjectTimelineView promotions={overview.promotion} />
+            <Accordion defaultExpanded={false}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6">Promotion History</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <PromotionHistory promotions={overview.promotion} />
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Accordion defaultExpanded={true}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6">Project Milestones</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                {projectMilestones.length > 0 && (
+                  <TimelineOld milestones={projectMilestones} />
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+        </Grid>
       )}
     </Box>
   );
