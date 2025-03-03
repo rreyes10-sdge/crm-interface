@@ -221,7 +221,7 @@ def get_projects():
         conn = get_connection()
         active_projects_query = """
             select
-            	p.ProjectId, p.ProjectNumber , p.Name as 'ProjectName', ps.LongName as 'ProjectStatus', p2.Name as 'ProgramName', o.Name as 'OrgName', u.ProperName as 'ProjectLead', pp.Name as 'PhaseName'
+            	DISTINCT(p.ProjectId), p.ProjectNumber , p.Name as 'ProjectName', ps.LongName as 'ProjectStatus', p2.Name as 'ProgramName', o.Name as 'OrgName', u.ProperName as 'ProjectLead', pp.Name as 'PhaseName', COALESCE(TIMESTAMPDIFF(DAY, A.CreatedAt, NOW()),0) as 'DaysInPhase'
             from cleantranscrm.Project p 
             left join cleantranscrm.ProjectStatus ps on ps.ProjectStatusId = p.Status 
             left join cleantranscrm.Program p2 on p2.ProgramId = p.ProgramId 
@@ -230,7 +230,14 @@ def get_projects():
             left join cleantranscrm.ProjectRole pr on pr.ProjectId = p.ProjectId 
             left join cleantranscrm.`Role` r on r.RoleId = pr.RoleId 
             left join cleantranscrm.`User` u on u.UserId = pr.UserId 
-            where p.Deleted = 0 and pr.RoleId = 1;
+            LEFT JOIN (
+                SELECT a.*
+                FROM cleantranscrm.Activity a
+                WHERE (a.Text LIKE '%%promoted this project%%' OR a.Text LIKE '%%demoted this project%%')
+                AND a.PhaseId = (SELECT MAX(a2.PhaseId) FROM cleantranscrm.Activity a2 WHERE a2.ProjectId = a.ProjectId)
+            ) A ON A.ProjectId = p.ProjectId
+            where p.Deleted = 0 and pr.RoleId = 1
+            GROUP BY p.ProjectId, p.ProjectNumber, p.Name, ps.LongName, p2.Name, o.Name, u.ProperName, pp.Name, A.PhaseId;
         """
         active_projects = fetch_data(active_projects_query, conn).to_dict(orient='records')
 
