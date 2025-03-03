@@ -717,18 +717,36 @@ def get_phase_transitions():
         AND p.Deleted = 0
         AND (%s IS NULL OR p.ProgramId = %s)
         AND (%s IS NULL OR p.Status = %s)
+    ),
+    PhaseDurations AS (
+        SELECT 
+            PhaseId,
+            TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW())) as DaysInPhase
+        FROM PhaseTransitions
+    ),
+    MedianCalculation AS (
+        SELECT 
+            PhaseId,
+            DaysInPhase,
+            ROW_NUMBER() OVER (PARTITION BY PhaseId ORDER BY DaysInPhase) as RowAsc,
+            ROW_NUMBER() OVER (PARTITION BY PhaseId ORDER BY DaysInPhase DESC) as RowDesc
+        FROM PhaseDurations
     )
     SELECT 
-        PhaseId,
-        PhaseName,
-        SortOrder,
-        COUNT(DISTINCT ProjectId) as ProjectCount,
-        AVG(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as AvgDaysInPhase,
-        MIN(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as MinDaysInPhase,
-        MAX(TIMESTAMPDIFF(DAY, TransitionDate, COALESCE(NextTransitionDate, NOW()))) as MaxDaysInPhase
-    FROM PhaseTransitions
-    GROUP BY PhaseId, PhaseName, SortOrder
-    ORDER BY SortOrder;
+        pt.PhaseId,
+        pt.PhaseName,
+        pt.SortOrder,
+        COUNT(DISTINCT pt.ProjectId) as ProjectCount,
+        AVG(pd.DaysInPhase) as AvgDaysInPhase,
+        MIN(pd.DaysInPhase) as MinDaysInPhase,
+        MAX(pd.DaysInPhase) as MaxDaysInPhase,
+        AVG(mc.DaysInPhase) as MedDaysInPhase
+    FROM PhaseTransitions pt
+    JOIN PhaseDurations pd ON pt.PhaseId = pd.PhaseId
+    JOIN MedianCalculation mc ON mc.PhaseId = pt.PhaseId
+    WHERE mc.RowAsc = mc.RowDesc OR mc.RowAsc + 1 = mc.RowDesc
+    GROUP BY pt.PhaseId, pt.PhaseName, pt.SortOrder
+    ORDER BY pt.SortOrder;
     """
     
     try:

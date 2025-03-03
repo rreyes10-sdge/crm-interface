@@ -96,6 +96,7 @@ interface PhaseTransition {
   AvgDaysInPhase: number;
   MinDaysInPhase: number;
   MaxDaysInPhase: number;
+  MedDaysInPhase: number;
 }
 
 interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
@@ -111,7 +112,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, p
     });
 
     return (
-      <Box sx={{ 
+      <Box sx={{
         bgcolor: 'background.paper',
         p: 1.5,
         border: '1px solid',
@@ -123,22 +124,22 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, p
           {new Date(label as string).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </Typography>
         {sortedPayload.map((entry) => (
-          <Box 
-            key={entry.name} 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          <Box
+            key={entry.name}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
               gap: 1,
-              mt: 1 
+              mt: 1
             }}
           >
-            <Box 
-              sx={{ 
-                width: 8, 
-                height: 8, 
-                borderRadius: '50%', 
-                bgcolor: entry.color 
-              }} 
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: entry.color
+              }}
             />
             <Typography variant="body2">
               {entry.name}: <strong>{entry.value}</strong>
@@ -158,6 +159,7 @@ interface PhaseAnalysis extends PhaseTransition {
     volumeScore: number;      // How many projects are here
     variabilityScore: number; // How inconsistent the duration is
     throughputScore: number;  // How fast projects move through
+    medianDays: number;       // Median days in the phase
   };
 }
 
@@ -183,6 +185,16 @@ const calculateBottleneck = (transitions: PhaseTransition[]): PhaseAnalysis => {
     const maxThroughput = Math.max(...transitions.map(t => t.ProjectCount / t.AvgDaysInPhase));
     const throughputScore = (1 - (throughput / maxThroughput)) * 0.2;
 
+    // Calculate median days in phase
+    const daysInPhase = [
+      phase.AvgDaysInPhase,
+      phase.MinDaysInPhase,
+      phase.MaxDaysInPhase,
+      phase.MedDaysInPhase
+    ].filter(day => typeof day === 'number' && !isNaN(day)); // Filter out non-numeric values
+
+    const medianDays = calculateMedian(daysInPhase);
+
     // Total score
     const score = durationScore + volumeScore + variabilityScore + throughputScore;
 
@@ -193,14 +205,22 @@ const calculateBottleneck = (transitions: PhaseTransition[]): PhaseAnalysis => {
         durationScore,
         volumeScore,
         variabilityScore,
-        throughputScore
+        throughputScore,
+        medianDays
       }
     };
   });
 
-  return analysisResults.reduce((max, phase) => 
+  return analysisResults.reduce((max, phase) =>
     phase.score > max.score ? phase : max
-  , analysisResults[0]);
+    , analysisResults[0]);
+};
+
+// Helper function to calculate median
+const calculateMedian = (values: number[]): number => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 };
 
 const getPhaseColor = (phase: string, allPhases: string[]) => {
@@ -219,7 +239,7 @@ const getPhaseColor = (phase: string, allPhases: string[]) => {
   };
 
   // If phase isn't in our map, generate a consistent hue based on the phase name
-  const hue = phaseColorMap[phase] ?? 
+  const hue = phaseColorMap[phase] ??
     phase.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 360;
 
   return {
@@ -263,7 +283,7 @@ const ProgramSummary: React.FC = () => {
     }
 
     setLoading(true);
-    
+
     const params = new URLSearchParams();
     if (selectedProgramId !== "Any") params.append('program_id', selectedProgramId);
     if (selectedStatusId !== "Any") params.append('project_status', selectedStatusId);
@@ -324,7 +344,7 @@ const ProgramSummary: React.FC = () => {
 
     // Get unique phase names and sort by their SortOrder
     const phases = [...new Set(phaseData.map(item => item.PhaseName))].filter(Boolean);
-    
+
     // Sort in descending order for the area chart (higher SortOrder appears on top)
     return phases.sort((a, b) => phaseOrders[b] - phaseOrders[a]);
   }, [phaseData]);
@@ -336,7 +356,7 @@ const ProgramSummary: React.FC = () => {
       // Get latest data point (current snapshot)
       const latestData = chartData[chartData.length - 1];
       const earliestData = chartData[0];
-      
+
       // Calculate total projects (current)
       const totalProjects = Object.entries(latestData)
         .filter(([key]) => key !== 'date')
@@ -352,15 +372,15 @@ const ProgramSummary: React.FC = () => {
 
       // Find phase with most projects
       const largestPhase = Object.entries(phaseDistribution)
-        .reduce((max, [phase, count]) => 
+        .reduce((max, [phase, count]) =>
           count > max.count ? { name: phase, count } : max
-        , { name: '', count: 0 });
+          , { name: '', count: 0 });
 
       // Find phase with least projects
       const smallestPhase = Object.entries(phaseDistribution)
-        .reduce((min, [phase, count]) => 
+        .reduce((min, [phase, count]) =>
           count < min.count ? { name: phase, count } : min
-        , { name: '', count: Infinity });
+          , { name: '', count: Infinity });
 
       // Calculate growth
       const earliestTotal = Object.entries(earliestData)
@@ -394,7 +414,7 @@ const ProgramSummary: React.FC = () => {
         const total = Object.entries(dataPoint)
           .filter(([key]) => key !== 'date')
           .reduce((sum, [_, count]) => sum + (count as number), 0);
-        
+
         if (total > timeAnalysis.peakTotal.count) {
           timeAnalysis.peakTotal = {
             count: total,
@@ -408,9 +428,9 @@ const ProgramSummary: React.FC = () => {
       uniquePhases.forEach(phase => {
         const firstValue = chartData[0][phase] || 0;
         const lastValue = chartData[chartData.length - 1][phase] || 0;
-        const monthsDiff = (new Date(chartData[chartData.length - 1].date).getTime() - 
-                           new Date(chartData[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30);
-        
+        const monthsDiff = (new Date(chartData[chartData.length - 1].date).getTime() -
+          new Date(chartData[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30);
+
         const growthRate = monthsDiff > 0 ? ((lastValue - firstValue) / monthsDiff) : 0;
         phaseGrowthRates[phase] = growthRate;
 
@@ -424,20 +444,20 @@ const ProgramSummary: React.FC = () => {
 
       // Calculate overall monthly trend
       const recentMonths = chartData.slice(-3); // Look at last 3 data points
-      const monthlyTrend = recentMonths.map(point => 
+      const monthlyTrend = recentMonths.map(point =>
         Object.entries(point)
           .filter(([key]) => key !== 'date')
           .reduce((sum, [_, count]) => sum + (count as number), 0)
       );
-      
+
       timeAnalysis.monthlyTrend = {
         increasing: monthlyTrend[monthlyTrend.length - 1] > monthlyTrend[0],
         rate: (monthlyTrend[monthlyTrend.length - 1] - monthlyTrend[0]) / 3
       };
 
       // Calculate average monthly growth
-      const totalMonths = (new Date(chartData[chartData.length - 1].date).getTime() - 
-                          new Date(chartData[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30);
+      const totalMonths = (new Date(chartData[chartData.length - 1].date).getTime() -
+        new Date(chartData[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30);
       timeAnalysis.averageMonthlyGrowth = growthRate.absolute / totalMonths;
 
       return {
@@ -492,27 +512,27 @@ const ProgramSummary: React.FC = () => {
             </Grid>
           </Grid>
 
-          <Box sx={{ 
-            mt: 2, 
+          <Box sx={{
+            mt: 2,
             p: 1.5,
-            bgcolor: 'grey.50', 
+            bgcolor: 'grey.50',
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'grey.200',
             display: 'flex',
             justifyContent: 'center'
           }}>
-            <Grid 
-              container 
-              spacing={1} 
-              sx={{ 
+            <Grid
+              container
+              spacing={1}
+              sx={{
                 maxWidth: 'md',
                 justifyContent: 'center'
               }}
             >
               <Grid item xs={12} sm={6} md={3}>
                 <Tooltip title="Average number of new projects added per month across all phases">
-                  <Box sx={{ 
+                  <Box sx={{
                     p: 1.5,
                     bgcolor: 'background.paper',
                     borderRadius: 1,
@@ -536,7 +556,7 @@ const ProgramSummary: React.FC = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <Tooltip title={`${stats.timeAnalysis.fastestGrowingPhase.name} is growing the fastest at ${stats.timeAnalysis.fastestGrowingPhase.growthRate.toFixed(1)} projects per month`}>
-                  <Box sx={{ 
+                  <Box sx={{
                     p: 1.5,
                     bgcolor: 'background.paper',
                     borderRadius: 1,
@@ -560,7 +580,7 @@ const ProgramSummary: React.FC = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <Tooltip title={`Highest total project count reached on ${formatDate(stats.timeAnalysis.peakTotal.date)}`}>
-                  <Box sx={{ 
+                  <Box sx={{
                     p: 1.5,
                     bgcolor: 'background.paper',
                     borderRadius: 1,
@@ -583,7 +603,7 @@ const ProgramSummary: React.FC = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <Tooltip title={`Project count is ${stats.timeAnalysis.monthlyTrend.increasing ? 'increasing' : 'decreasing'} by ${Math.abs(stats.timeAnalysis.monthlyTrend.rate).toFixed(1)} projects per month`}>
-                  <Box sx={{ 
+                  <Box sx={{
                     p: 1.5,
                     bgcolor: 'background.paper',
                     borderRadius: 1,
@@ -617,7 +637,7 @@ const ProgramSummary: React.FC = () => {
               })
               .map(([phase, count], index) => (
                 <Grid item xs={6} sm={4} md={3} key={phase}>
-                  <Box sx={{ 
+                  <Box sx={{
                     p: 1,
                     bgcolor: 'background.paper',
                     borderRadius: 1,
@@ -636,10 +656,10 @@ const ProgramSummary: React.FC = () => {
                     <Box sx={{ pl: 1 }}>
                       <Typography variant="h6" sx={{ lineHeight: 1 }}>
                         {count}
-                        <Typography 
-                          component="span" 
-                          variant="caption" 
-                          color="text.secondary" 
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
                           sx={{ ml: 0.5 }}
                         >
                           ({((count / stats.totalProjects) * 100).toFixed(0)}%)
@@ -667,20 +687,20 @@ const ProgramSummary: React.FC = () => {
 
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'flex-start', 
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
-          mb: 3 
+          mb: 3
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Clock size={16} />
             <Typography variant="h6">Phase Duration Details</Typography>
           </Box>
-          
-          <Box 
+
+          <Box
             onClick={() => setModalOpen(true)}
-            sx={{ 
+            sx={{
               display: 'flex',
               alignItems: 'center',
               bgcolor: '#ff9800',
@@ -700,6 +720,9 @@ const ProgramSummary: React.FC = () => {
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
               Avg: {Math.round(bottleneckAnalysis.AvgDaysInPhase)} days
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Med: {Math.round(bottleneckAnalysis.MedDaysInPhase)} days
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
               Projects: {bottleneckAnalysis.ProjectCount}
@@ -727,6 +750,8 @@ const ProgramSummary: React.FC = () => {
                       <Typography variant="caption" component="div">
                         • Average Duration: {Math.round(phase.AvgDaysInPhase)} days
                         <br />
+                        • Median Duration: {Math.round(phase.MedDaysInPhase)} days
+                        <br />
                         • Range: {Math.round(phase.MinDaysInPhase)} - {Math.round(phase.MaxDaysInPhase)} days
                         <br />
                         • Current Projects: {phase.ProjectCount}
@@ -749,6 +774,9 @@ const ProgramSummary: React.FC = () => {
                 </Tooltip>
                 <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }}>
                   Avg: {Math.round(phase.AvgDaysInPhase)} days
+                </Typography>
+                <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }}>
+                  Med: {Math.round(phase.MedDaysInPhase)} days
                 </Typography>
               </Box>
             </Grid>
@@ -778,7 +806,7 @@ const ProgramSummary: React.FC = () => {
                 <X size={20} />
               </IconButton>
             </Box>
-            
+
             <Typography variant="body1" gutterBottom>
               {bottleneckAnalysis.PhaseName} phase has been identified as a bottleneck
               with a score of {(bottleneckAnalysis.score * 100).toFixed(0)}%.
@@ -787,7 +815,7 @@ const ProgramSummary: React.FC = () => {
             <Divider sx={{ my: 2 }} />
 
             <Typography variant="subtitle1" gutterBottom>Contributing Factors</Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <Paper sx={{ p: 2 }}>
@@ -802,7 +830,7 @@ const ProgramSummary: React.FC = () => {
                   </Tooltip>
                 </Paper>
               </Grid>
-              
+
               <Grid item xs={6}>
                 <Paper sx={{ p: 2 }}>
                   <Tooltip title="Considers the number of projects currently in this phase. More projects increase bottleneck severity.
@@ -869,14 +897,14 @@ const ProgramSummary: React.FC = () => {
     const quarterData: { [quarter: string]: number[] } = {
       'Q1': [], 'Q2': [], 'Q3': [], 'Q4': []
     };
-    
+
     chartData.forEach(point => {
       const date = new Date(point.date);
       const quarter = Math.floor(date.getMonth() / 3);
       const total = Object.entries(point)
         .filter(([key]) => key !== 'date')
         .reduce((sum, [_, count]) => sum + (count as number), 0);
-      
+
       quarterData[`Q${quarter + 1}`].push(total);
     });
 
@@ -896,10 +924,10 @@ const ProgramSummary: React.FC = () => {
     axios.get('http://127.0.0.1:5000/api/projects')
       .then(response => {
         let filtered = response.data.projects;
-        
+
         // Log for debugging
         console.log('All projects:', filtered);
-        
+
         if (selectedProgramId !== "Any") {
           filtered = filtered.filter((p: any) => {
             console.log('Comparing:', p.ProgramName, 'with', PROGRAM_MAPPINGS.find(m => m.id.toString() === selectedProgramId)?.name);
@@ -935,7 +963,7 @@ const ProgramSummary: React.FC = () => {
           <BarChart2 size={16} />
           <Typography variant="h6">Project Details</Typography>
         </Box>
-        
+
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -948,11 +976,11 @@ const ProgramSummary: React.FC = () => {
             </TableHead>
             <TableBody>
               {projects.map((project) => (
-                <TableRow 
+                <TableRow
                   key={project.ProjectId}
                   hover
                   onClick={() => setSelectedProjectId(project.ProjectId)}
-                  sx={{ 
+                  sx={{
                     cursor: 'pointer',
                     '&:hover': { bgcolor: 'action.hover' }
                   }}
@@ -960,18 +988,18 @@ const ProgramSummary: React.FC = () => {
                   <TableCell>{project.ProjectName}</TableCell>
                   <TableCell>{project.ProgramName}</TableCell>
                   <TableCell>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1 
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
                     }}>
-                      <Box 
-                        sx={{ 
-                          width: 8, 
-                          height: 8, 
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
                           borderRadius: '50%',
                           bgcolor: getPhaseColor(project.CurrentPhase, uniquePhases).main
-                        }} 
+                        }}
                       />
                       {project.CurrentPhase}
                     </Box>
@@ -987,7 +1015,7 @@ const ProgramSummary: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       display: 'flex',
       flexDirection: 'column',
       width: '100%',
@@ -1042,7 +1070,7 @@ const ProgramSummary: React.FC = () => {
 
       {!loading && selectedProgramId !== "Any" && selectedProgramId !== "16" && chartData.length > 0 && (
         <>
-          <Box sx={{ 
+          <Box sx={{
             width: '100%',
             minWidth: '100%',
             height: 500,
@@ -1061,8 +1089,8 @@ const ProgramSummary: React.FC = () => {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   angle={-45}
                   textAnchor="end"
                   height={70}  // Increased height for angled labels
@@ -1073,15 +1101,15 @@ const ProgramSummary: React.FC = () => {
                 <YAxis />
                 <RechartsTooltip<ValueType, NameType>
                   content={({ active, payload, label }) => (
-                    <CustomTooltip 
-                      active={active} 
-                      payload={payload} 
-                      label={label} 
+                    <CustomTooltip
+                      active={active}
+                      payload={payload}
+                      label={label}
                       phases={phaseData}
                     />
                   )}
                 />
-                <Legend 
+                <Legend
                   verticalAlign="top"
                   height={36}
                   formatter={(value) => (

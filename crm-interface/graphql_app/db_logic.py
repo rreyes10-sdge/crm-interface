@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from dateutil.parser import parse
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(verbose=True, override=True)
 
 def get_connection():
     """Establish database connection using environment variables"""
@@ -18,6 +18,8 @@ def get_connection():
     }
     
     try:
+        print(f"Connecting to database with parameters: {conn_str}")
+        print(f"Host: {os.getenv('HOST')}, Database: {os.getenv('DATABASE')}, User: {os.getenv('USER')}")
         connection = pymysql.connect(
             host=conn_str['host'],
             user=conn_str['user'],
@@ -27,6 +29,9 @@ def get_connection():
         return connection
     except pymysql.MySQLError as e:
         print(f"Error connecting to database: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
         return None
 
 # working fetch without processing data
