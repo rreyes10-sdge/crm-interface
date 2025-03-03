@@ -267,6 +267,7 @@ const ProgramSummary: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [selectedCurrentPhase, setSelectedCurrentPhase] = useState<string | null>('Any');
 
   // Fetch phase data when selections change
   useEffect(() => {
@@ -778,6 +779,9 @@ const ProgramSummary: React.FC = () => {
                 <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }}>
                   Med: {Math.round(phase.MedDaysInPhase)} days
                 </Typography>
+                <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }}>
+                  Project Count: {phase.ProjectCount}
+                </Typography>
               </Box>
             </Grid>
           ))}
@@ -957,12 +961,41 @@ const ProgramSummary: React.FC = () => {
 
   // Add this component after PhaseTransitionAnalysis
   const ProjectTable: React.FC<{ projects: ProjectDetails[] }> = ({ projects }) => {
+    const [selectedCurrentPhase, setSelectedCurrentPhase] = useState<string | null>('Any');
+
+    // Get unique phases for the filter
+    const uniquePhases = [...new Set(projects.map(project => project.CurrentPhase))];
+
+    // Filter projects based on selected current phase
+    const filteredProjects = selectedCurrentPhase === 'Any' 
+      ? projects 
+      : projects.filter(project => project.CurrentPhase === selectedCurrentPhase);
+
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <BarChart2 size={16} />
           <Typography variant="h6">Project Details</Typography>
         </Box>
+
+        {/* Current Phase Filter */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12} sm={6} lg={3}>
+            <Select
+              value={selectedCurrentPhase || ''}
+              onChange={(e) => setSelectedCurrentPhase(e.target.value)}
+              displayEmpty
+              fullWidth
+            >
+              <MenuItem value="Any">Any Current Phase</MenuItem>
+              {uniquePhases.map(phase => (
+                <MenuItem key={phase} value={phase}>
+                  {phase}
+                </MenuItem>
+              ))}
+            </Select>
+          </Grid>
+        </Grid>
 
         <TableContainer>
           <Table size="small">
@@ -975,7 +1008,7 @@ const ProgramSummary: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {projects.map((project) => (
+              {filteredProjects.map((project) => (
                 <TableRow
                   key={project.ProjectId}
                   hover
