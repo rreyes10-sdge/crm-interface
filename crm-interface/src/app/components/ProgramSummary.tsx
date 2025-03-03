@@ -632,8 +632,8 @@ const ProgramSummary: React.FC = () => {
           <Grid container spacing={1} sx={{ mt: 1 }}>
             {Object.entries(stats.phaseDistribution)
               .sort(([phaseA], [phaseB]) => {
-                const orderA = phaseData.find(p => p.PhaseName === phaseA)?.SortOrder ?? 0;
-                const orderB = phaseData.find(p => p.PhaseName === phaseB)?.SortOrder ?? 0;
+                const orderA = data.find(p => p.PhaseName === phaseA)?.SortOrder ?? 0;
+                const orderB = data.find(p => p.PhaseName === phaseB)?.SortOrder ?? 0;
                 return orderA - orderB;
               })
               .map(([phase, count], index) => (
@@ -927,7 +927,8 @@ const ProgramSummary: React.FC = () => {
 
     axios.get('http://127.0.0.1:5000/api/projects')
       .then(response => {
-        let filtered = response.data.projects;
+        console.log('Full API response:', response); // Log the full response
+        let filtered = response.data.projects || []; // Ensure it's an array
 
         // Log for debugging
         console.log('All projects:', filtered);
@@ -950,7 +951,7 @@ const ProgramSummary: React.FC = () => {
           ProjectName: p.ProjectName || '',
           ProgramName: p.ProgramName || '',
           CurrentPhase: p.PhaseName || 'Unknown',
-          DaysInPhase: p.DaysInPhase || 0,
+          DaysInPhase: p.DaysInPhase || 0, // Ensure this is correctly assigned
           Status: p.ProjectStatus || 'Unknown'
         })));
       })
@@ -1004,6 +1005,7 @@ const ProgramSummary: React.FC = () => {
                 <TableCell>Project Name</TableCell>
                 <TableCell>Program</TableCell>
                 <TableCell>Current Phase</TableCell>
+                <TableCell>Days in Current Phase</TableCell>
                 <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
@@ -1037,6 +1039,7 @@ const ProgramSummary: React.FC = () => {
                       {project.CurrentPhase}
                     </Box>
                   </TableCell>
+                  <TableCell>{project.DaysInPhase} days</TableCell>
                   <TableCell>{project.Status}</TableCell>
                 </TableRow>
               ))}
