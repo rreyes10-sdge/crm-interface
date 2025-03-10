@@ -23,6 +23,14 @@ export interface CalculationResults {
     totalCost: number;
     paybackPeriod: number;
     co2Reduction: number;
+    fossil_fuel_daily_avg_cost: number;
+    fossil_fuel_weekly_avg_cost: number;
+    fossil_fuel_monthly_avg_cost: number;
+    fossil_fuel_yearly_avg_cost: number;
+    optimal_scenario: boolean;
+    total_daily_charger_energy_output: number;
+    total_daily_vehicle_energy_needed: number;
+    unmanaged_scenario: boolean;
 }
 
 export interface Results {

@@ -10,25 +10,39 @@ const EvPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleCalculate = async (formData: FormData) => {
+    const handleCalculate = async (formDataJson: { [key: string]: any }) => {
+        console.log('Received Form Data:', formDataJson); // Log the received form data
         setError(null);
         setIsLoading(true);
 
         try {
-            // TODO: Replace with actual API call
-            const mockCalculations = {
-                annualFuelSavings: 50000,
-                totalCost: 250000,
-                paybackPeriod: 5,
-                co2Reduction: 100
-            };
+            const response = await fetch('http://localhost:5000/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formDataJson), // Use the form data passed from EvCalculator
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const calculations = await response.json();
+            console.log('API Response:', calculations); // Log the API response
 
             setResults({
                 vehicleGroups: [], // Get from form data
                 chargerGroups: [], // Get from form data
                 settings: {}, // Get from form data
-                calculations: mockCalculations
+                calculations: calculations // Use the actual API response
             });
+            console.log('Updated Results:', {
+                vehicleGroups: [],
+                chargerGroups: [],
+                settings: {},
+                calculations: calculations
+            }); // Log the updated results
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
@@ -52,7 +66,8 @@ const EvPage: React.FC = () => {
                         </Box>
                     )}
                     
-                    {results && (
+                    {results && results.calculations && (
+                        console.log('Results:', results.calculations), // Log the results
                         <EvResults 
                             results={results.calculations} 
                             isLoading={isLoading}
