@@ -755,7 +755,7 @@ const ProgramSummary: React.FC = () => {
                         <br />
                         • Range: {Math.round(phase.MinDaysInPhase)} - {Math.round(phase.MaxDaysInPhase)} days
                         <br />
-                        • Current Projects: {phase.ProjectCount}
+                        • Project Count: {phase.ProjectCount}
                         <br />
                         • Variability: {Math.round((phase.MaxDaysInPhase - phase.MinDaysInPhase) / phase.AvgDaysInPhase * 100)}%
                       </Typography>
