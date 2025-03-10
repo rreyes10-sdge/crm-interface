@@ -129,11 +129,11 @@ const Home = () => {
             boxSizing: 'border-box',
             backgroundColor: BG_COLOR,
             color: ICON_COLOR,
-            display: 'flex',
-            alignItems: 'center', // Center align icons vertically
+            // display: 'flex',
+            // alignItems: 'center', // Center align icons vertically
             paddingTop: 6, // Increase padding between icons
             paddingBottom: 6, // Increase padding between icons
-            paddingLeft: 4,
+            // paddingLeft: 4,
           },
         }}
       >
@@ -149,7 +149,7 @@ const Home = () => {
               },
             }}
             >
-              <ListItemIcon sx={{ color: selectedTab === 0 || selectedTab === 1 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+              <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 0 || selectedTab === 1 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
                 <HomeIcon />
               </ListItemIcon>
             </ListItemButton>
@@ -170,7 +170,7 @@ const Home = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: selectedTab === 2 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 2 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
               <DescriptionIcon />
             </ListItemIcon>
           </ListItemButton>
@@ -190,7 +190,7 @@ const Home = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: selectedTab === 3 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 3 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
               <PersonIcon />
             </ListItemIcon>
           </ListItemButton>
@@ -210,7 +210,7 @@ const Home = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: selectedTab === 4 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 4 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
               <EvStationIcon />
             </ListItemIcon>
           </ListItemButton>
@@ -230,7 +230,7 @@ const Home = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: selectedTab === 5 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 5 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
               <AssessmentIcon />
             </ListItemIcon>
           </ListItemButton>
@@ -245,7 +245,7 @@ const Home = () => {
                 },
               },
             }}>
-              <ListItemIcon sx={{ color: selectedTab >= 6 && selectedTab <= 8 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+              <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab >= 6 && selectedTab <= 8 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
                 <InboxIcon />
               </ListItemIcon>
             </ListItemButton>
