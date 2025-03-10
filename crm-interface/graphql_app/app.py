@@ -791,33 +791,56 @@ def calculate():
     data = request.json
 
     # Extracting data from the request
-    vehicle_class = data.get("vehicle_class_1")
-    num_vehicles = int(data.get("num_vehicles_1", 0))
-    avg_daily_mileage = int(data.get("avg_daily_mileage_1", 0))
-    num_chargers = int(data.get("num_chargers_1", 0))
-    charger_kw = int(data.get("charger_kw_1", 0))
+    vehicle_groups = []
+    for i in range(1, 6):  # Assuming a maximum of 5 vehicle groups
+        vehicle_class = data.get(f"vehicle_class_{i}")
+        num_vehicles = int(data.get(f"num_vehicles_{i}", 0))
+        avg_daily_mileage = int(data.get(f"avg_daily_mileage_{i}", 0))
+        if vehicle_class and num_vehicles > 0:
+            vehicle_groups.append({
+                "vehicle_class": vehicle_class,
+                "num_vehicles": num_vehicles,
+                "avg_daily_mileage": avg_daily_mileage
+            })
+
+    charger_groups = []
+    for i in range(1, 6):  # Assuming a maximum of 5 charger groups
+        num_chargers = int(data.get(f"num_chargers_{i}", 0))
+        charger_kw = int(data.get(f"charger_kw_{i}", 0))
+        if num_chargers > 0:
+            charger_groups.append({
+                "num_chargers": num_chargers,
+                "charger_kw": charger_kw
+            })
+
     fossil_fuel_price = float(data.get("fossil_fuel_price", 0))
     fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 0))
     fossil_fuel_efficiency = float(data.get("fossil_fuel_efficiency", 1))
     transformer_capacity = int(data.get("transformer_capacity", 0))
 
     # Constants
-    daily_mileage_per_vehicle = avg_daily_mileage
     energy_per_mile = 0.2  # Example: kWh per mile (this value should be based on vehicle specs)
     off_peak_hours = 8  # Example: number of off-peak hours available for charging
-    on_peak_hours = 16  # Example: number of on-peak hours available for charging
-    total_hours_per_day = 24
 
     # Calculations
-    total_daily_vehicle_energy_needed = num_vehicles * daily_mileage_per_vehicle * energy_per_mile
-    total_daily_charger_energy_output = num_chargers * charger_kw * off_peak_hours
+    total_daily_vehicle_energy_needed = sum(
+        num_vehicles * avg_daily_mileage * energy_per_mile
+        for vg in vehicle_groups
+        for num_vehicles, avg_daily_mileage in [(vg["num_vehicles"], vg["avg_daily_mileage"])]
+    )
+
+    total_daily_charger_energy_output = sum(
+        num_chargers * charger_kw * off_peak_hours
+        for cg in charger_groups
+        for num_chargers, charger_kw in [(cg["num_chargers"], cg["charger_kw"])]
+    )
 
     # Check if chargers cover vehicle energy needs
     unmanaged_scenario = total_daily_charger_energy_output >= total_daily_vehicle_energy_needed
-    optimal_scenario = (num_chargers * charger_kw * off_peak_hours) >= total_daily_vehicle_energy_needed
+    optimal_scenario = (total_daily_charger_energy_output >= total_daily_vehicle_energy_needed)
 
     # Calculate fossil fuel costs
-    fossil_fuel_daily_avg_cost = (fossil_fuel_price / fossil_fuel_efficiency) * daily_mileage_per_vehicle * num_vehicles
+    fossil_fuel_daily_avg_cost = (fossil_fuel_price / fossil_fuel_efficiency) * total_daily_vehicle_energy_needed
     fossil_fuel_weekly_avg_cost = fossil_fuel_daily_avg_cost * 7
     fossil_fuel_monthly_avg_cost = fossil_fuel_daily_avg_cost * 30
     fossil_fuel_yearly_avg_cost = fossil_fuel_daily_avg_cost * 365

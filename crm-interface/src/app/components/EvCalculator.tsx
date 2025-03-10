@@ -169,11 +169,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         <Typography variant="h5">Vehicle Groups</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        {vehicleGroups.map(group => (
+                        {vehicleGroups.map((group, index) => (
                             <Box key={group.id} mb={3}>
                                 <Grid container alignItems="center" spacing={2}>
                                     <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Typography variant="h6" sx={{ color: '#555' }}>Group {group.id}</Typography>
+                                        <Typography variant="h6" sx={{ color: '#555' }}>Group {index + 1}</Typography>
                                         {group.id > 1 && (
                                             <IconButton 
                                                 color="error" 
@@ -188,7 +188,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         <FormControl fullWidth>
                                             <InputLabel>Vehicle Class</InputLabel>
                                             <Select
-                                                name={`vehicle_class_${group.id}`}
+                                                name={`vehicle_class_${index + 1}`}
                                                 value={group.vehicleClass}
                                                 onChange={(e) => handleVehicleGroupChange(group.id, 'vehicleClass', e.target.value)}
                                                 sx={{ backgroundColor: 'white' }}
@@ -202,7 +202,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`num_vehicles_${group.id}`}
+                                            name={`num_vehicles_${index + 1}`}
                                             label="Number of Vehicles"
                                             type="number"
                                             fullWidth
@@ -217,7 +217,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`avg_daily_mileage_${group.id}`}
+                                            name={`avg_daily_mileage_${index + 1}`}
                                             label="Average Daily Mileage"
                                             type="number"
                                             fullWidth
@@ -396,11 +396,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         </span>
                     </AccordionSummary>
                     <AccordionDetails>
-                        {chargerGroups.map(group => (
+                        {chargerGroups.map((group, index) => (
                             <Box key={group.id} mb={3}>
                                 <Grid container alignItems="center" spacing={2}>
                                     <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Typography variant="h6" sx={{ color: '#555' }}>Group {group.id}</Typography>
+                                        <Typography variant="h6" sx={{ color: '#555' }}>Charger Group {index + 1}</Typography>
                                         {group.id > 1 && (
                                             <IconButton 
                                                 color="error" 
@@ -413,7 +413,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`num_chargers_${group.id}`}
+                                            name={`num_chargers_${index + 1}`}
                                             label="Number of Chargers"
                                             type="number"
                                             fullWidth
@@ -428,7 +428,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`charger_kw_${group.id}`}
+                                            name={`charger_kw_${index + 1}`}
                                             label="Charger kW"
                                             type="number"
                                             fullWidth
