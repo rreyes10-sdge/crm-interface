@@ -5,7 +5,7 @@ import EvStationIcon from '@mui/icons-material/EvStation';
 import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
 
 interface EvCalculatorProps {
-    onCalculate: (formData: FormData) => Promise<void>;
+    onCalculate: (formData: { [key: string]: any }) => Promise<void>;
     isLoading: boolean;
 }
 
@@ -121,7 +121,17 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         const formData = new FormData(event.target as HTMLFormElement);
-        await onCalculate(formData);
+        
+        // Convert FormData to a JSON object
+        const formDataJson: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            formDataJson[key] = value;
+        });
+
+        console.log('Form Data JSON:', formDataJson); // Log the form data
+
+        // Pass the FormData back to the parent component
+        await onCalculate(formDataJson); // Call the parent function with the FormData
     };
 
     const handleOpenHelpModal = () => {
@@ -489,7 +499,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 <TextField 
                                     name="fossil_fuel_multiplier" 
                                     label="Fossil Fuel Price Increase Multiplier YoY" 
-                                    type="number" 
+                                    type="decimal" 
                                     fullWidth 
                                     sx={{ backgroundColor: 'white' }}
                                 />

@@ -786,7 +786,58 @@ def get_phase_transitions():
 def health_check():
     return {"status": "healthy"}
 
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    data = request.json
+
+    # Extracting data from the request
+    vehicle_class = data.get("vehicle_class_1")
+    num_vehicles = int(data.get("num_vehicles_1", 0))
+    avg_daily_mileage = int(data.get("avg_daily_mileage_1", 0))
+    num_chargers = int(data.get("num_chargers_1", 0))
+    charger_kw = int(data.get("charger_kw_1", 0))
+    fossil_fuel_price = float(data.get("fossil_fuel_price", 0))
+    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 0))
+    fossil_fuel_efficiency = float(data.get("fossil_fuel_efficiency", 1))
+    transformer_capacity = int(data.get("transformer_capacity", 0))
+
+    # Constants
+    daily_mileage_per_vehicle = avg_daily_mileage
+    energy_per_mile = 0.2  # Example: kWh per mile (this value should be based on vehicle specs)
+    off_peak_hours = 8  # Example: number of off-peak hours available for charging
+    on_peak_hours = 16  # Example: number of on-peak hours available for charging
+    total_hours_per_day = 24
+
+    # Calculations
+    total_daily_vehicle_energy_needed = num_vehicles * daily_mileage_per_vehicle * energy_per_mile
+    total_daily_charger_energy_output = num_chargers * charger_kw * off_peak_hours
+
+    # Check if chargers cover vehicle energy needs
+    unmanaged_scenario = total_daily_charger_energy_output >= total_daily_vehicle_energy_needed
+    optimal_scenario = (num_chargers * charger_kw * off_peak_hours) >= total_daily_vehicle_energy_needed
+
+    # Calculate fossil fuel costs
+    fossil_fuel_daily_avg_cost = (fossil_fuel_price / fossil_fuel_efficiency) * daily_mileage_per_vehicle * num_vehicles
+    fossil_fuel_weekly_avg_cost = fossil_fuel_daily_avg_cost * 7
+    fossil_fuel_monthly_avg_cost = fossil_fuel_daily_avg_cost * 30
+    fossil_fuel_yearly_avg_cost = fossil_fuel_daily_avg_cost * 365
+
+    # Prepare results
+    results = {
+        "total_daily_vehicle_energy_needed": total_daily_vehicle_energy_needed,
+        "total_daily_charger_energy_output": total_daily_charger_energy_output,
+        "unmanaged_scenario": unmanaged_scenario,
+        "optimal_scenario": optimal_scenario,
+        "fossil_fuel_daily_avg_cost": fossil_fuel_daily_avg_cost,
+        "fossil_fuel_weekly_avg_cost": fossil_fuel_weekly_avg_cost,
+        "fossil_fuel_monthly_avg_cost": fossil_fuel_monthly_avg_cost,
+        "fossil_fuel_yearly_avg_cost": fossil_fuel_yearly_avg_cost,
+    }
+
+    return jsonify(results)
+
 # Enable CORS
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 CORS(app, resources={r"/graphql": {"origins": "http://localhost:3000"}})
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
