@@ -13,6 +13,7 @@ interface ExpandableCardProps {
   defaultHeight?: string;
   collapsedSize?: string;
   emptyStateHeight?: string;
+  statusIcon?: React.ReactNode;
 }
 
 const ExpandMore = styled(IconButton, {
@@ -31,7 +32,8 @@ const ExpandableCard: React.FC<ExpandableCardProps> = ({
   emptyMessage = 'No items available.',
   defaultHeight = '300px',
   collapsedSize = '250px',
-  emptyStateHeight = '100px'
+  emptyStateHeight = '100px',
+  statusIcon
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [isExpandable, setIsExpandable] = useState(false);
@@ -73,6 +75,7 @@ const ExpandableCard: React.FC<ExpandableCardProps> = ({
           mb: count === 0 ? 1 : 2,
           width: '100%'
         }}>
+          {statusIcon && <Box sx={{ marginRight: 1 }}>{statusIcon}</Box>}
           <Typography variant="h6" component="div">
             {title} ({count})
           </Typography>

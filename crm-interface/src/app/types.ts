@@ -45,3 +45,16 @@ export interface ChargingBehavior {
     startTime: string;
     endTime: string;
 } 
+
+export interface ProjectServiceAttributes {
+    projectId: number;
+    projectNumber: string;
+    organizationName: string;
+    coreName: string;
+    serviceName: string;
+    ControlType: string;
+    Label: string;
+    Value: string;
+    Description: string;
+    Initials: string;
+}

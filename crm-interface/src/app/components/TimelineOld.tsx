@@ -76,8 +76,7 @@ function getBackgroundColor(phaseName: string): string {
 }
 
 const TimelineOld: React.FC<TimelineProps> = ({ milestones }) => {
-    // Sort the milestones based on a relevant property, e.g., DateName
-    const sortedMilestones = [...milestones].sort((a, b) => new Date(a.Value).getTime() - new Date(b.Value).getTime());
+    const sortedMilestones = [...milestones].sort((a, b) => new Date(b.Value).getTime() - new Date(a.Value).getTime());
 
     return (
         <div className="timeline-container">
