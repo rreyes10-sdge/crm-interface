@@ -5,6 +5,7 @@ import PromotionHistory from './PromotionHistory';
 import ProjectTimelineView from './ProjectTimelineView';
 import TimelineOld from './TimelineOld';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AttributesCurrent from './AttributesCurrent';
 
 interface Project {
   ProjectId: string;
@@ -52,6 +53,20 @@ interface ProjectSummaryProps {
   projectId?: number;
 }
 
+interface CurrentPhaseAttributes {
+  ProjectId: number;
+  Label: string;
+  ControlType: string;
+  Required: number;
+  SortOrder: number;
+  AttributeValue: string;
+  UpdatedAt: string;
+  UpdatedBy: string;
+  PhaseName: string;
+  ProgramAttributeId: number;
+  AssignedUser: string;
+}
+
 const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -61,6 +76,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [selectedProjectLead, setSelectedProjectLead] = useState<string | null>('Any');
   const [overview, setOverview] = useState<Overview | null>(null);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestones[]>([]);
+  const [currentPhaseAttributes, setCurrentPhaseAttributes] = useState<CurrentPhaseAttributes[] | null>(null);
 
   useEffect(() => {
     axios.get('http://127.0.0.1:5000/api/projects')
@@ -84,17 +100,17 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-        try {
-            const response = await fetch(`http://127.0.0.1:5000/api/data/project-milestone-dates?projectId=${projectId}`);
-            if (!response.ok) throw new Error(`Error: ${response.status}`);
-            const data = await response.json();
-            setProjectMilestones(data);
-        } catch (error) {
-            console.error('Error fetching project milestones:', error);
-        }
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/data/project-milestone-dates?projectId=${projectId}`);
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        const data = await response.json();
+        setProjectMilestones(data);
+      } catch (error) {
+        console.error('Error fetching project milestones:', error);
+      }
     };
     fetchData();
-}, [projectId]);
+  }, [projectId]);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -104,6 +120,15 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
         })
         .catch(error => {
           console.error('Error fetching project overview:', error);
+        });
+
+      axios.get(`http://127.0.0.1:5000/api/data/current-phase-attributes?projectId=${selectedProjectId}`)
+        .then(response => {
+          console.log('Current Phase Attributes Response:', response.data);
+          setCurrentPhaseAttributes(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching current phase attributes:', error);
         });
     }
   }, [selectedProjectId]);
@@ -118,7 +143,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
     if (selectedProjectStatus && selectedProjectStatus !== 'Any') {
       filtered = filtered.filter(project => project.ProjectStatus === selectedProjectStatus);
     }
-  
+
     if (selectedProjectLead && selectedProjectLead !== 'Any') {
       filtered = filtered.filter(project => project.ProjectLead === selectedProjectLead);
     }
@@ -211,7 +236,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
                   <Typography><strong>Program Name:</strong> {info.ProgramName}</Typography>
                   <Typography><strong>Project Status:</strong> {info.ProjectStatus}</Typography>
                   <Typography>
-                      <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
+                    <strong>Project Created:</strong> {new Date(info.ProjectCreationDate).toLocaleDateString()}
                   </Typography>
                   <Typography><strong>Project Lead:</strong> {info.ProjectLead}</Typography>
                 </Box>
@@ -226,6 +251,11 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
                 <PromotionHistory promotions={overview.promotion} />
               </AccordionDetails>
             </Accordion>
+          </Grid>
+          <Grid item xs={12} md={5}>
+                {currentPhaseAttributes && (
+                  <AttributesCurrent attributes={currentPhaseAttributes} />
+                )}
           </Grid>
           <Grid item xs={12} md={5}>
             <Accordion defaultExpanded={true}>

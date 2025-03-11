@@ -76,3 +76,7 @@ def get_project_service_attributes(connection, projectId, serviceName):
 def get_project_milestone_dates(connection, projectId):
     df = fetch_data(QUERIES['project-milestone-dates'], connection, params={'projectId': projectId})
     return df
+
+def get_current_phase_attributes(connection, projectId):
+    df = fetch_data(QUERIES['current-phase-attributes'], connection, params={'projectId': projectId})
+    return df

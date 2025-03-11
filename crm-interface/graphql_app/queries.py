@@ -666,7 +666,42 @@ QUERY_MILESTONE_DATES = """
     WHERE pa.ControlType = 'date'
     and p.ProjectId = %(projectId)s
     GROUP BY p.ProjectNumber, pa.Label
-    Order by p.ProjectId asc, pal.UpdatedAt asc;
+    Order by p.ProjectId asc, pal.UpdatedAt desc;
+"""
+
+QUERY_CURRENT_PHASE_ATTRIBUTES = """
+    SELECT 
+        p.ProjectId,
+        pa.Label,
+        pa.ControlType,
+        pa.Required,
+        pa.SortOrder,
+        CASE
+            WHEN pa.ControlType = 'select' THEN so.OptionText
+            WHEN pav.Value IS NULL THEN NULL
+            ELSE pav.Value
+        END AS AttributeValue,
+        pav.UpdatedAt,
+        pav.UpdatedBy,
+        pp.Name AS 'PhaseName',
+        pa.ProgramAttributeId,
+        CASE 
+            WHEN pa.AssignedUserUserId IS NOT NULL THEN (select u.ProperName from cleantranscrm.`User` u where u.UserId = pa.AssignedUserUserId)
+            ELSE u.ProperName 
+        END AS 'AssignedUser'
+    FROM cleantranscrm.ProgramAttribute pa
+    LEFT JOIN cleantranscrm.ProjectAttributeValue pav ON pav.ProgramAttributeId = pa.ProgramAttributeId AND pav.ProjectId = %(projectId)s
+    LEFT JOIN cleantranscrm.Project p ON p.ProjectId = %(projectId)s AND pa.ProgramId = p.ProgramId
+    LEFT JOIN cleantranscrm.ProgramPhase pp ON pp.ProgramId = pa.ProgramId AND pp.PhaseId = pa.PhaseId
+    LEFT JOIN cleantranscrm.ProjectRole pr ON pr.ProjectId = p.ProjectId
+    LEFT JOIN cleantranscrm.Organization o ON o.OrganizationId = p.OrganizationId
+    LEFT JOIN cleantranscrm.SelectOption so ON pa.Source = so.SelectControlId
+        AND pa.ControlType = 'select'
+        AND CAST(pav.Value AS UNSIGNED) = so.OptionValue
+    LEFT JOIN cleantranscrm.`User` u ON u.UserId = pr.UserId AND pr.RoleId = 1
+    WHERE pa.PhaseId = p.CurrentPhaseId
+    AND p.ProjectId = %(projectId)s
+    ORDER BY pa.SortOrder ASC;
 """
 
 
@@ -689,5 +724,6 @@ QUERIES = {
     'logged-time': QUERY_LOGGED_TIME,
     'logged-time-trend': QUERY_LOGGED_TIME_TREND,
     'project-milestone-dates': QUERY_MILESTONE_DATES,
+    'current-phase-attributes': QUERY_CURRENT_PHASE_ATTRIBUTES,
     # ... add other queries with descriptive names
 }

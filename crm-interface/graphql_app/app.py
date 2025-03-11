@@ -3,7 +3,7 @@ from ariadne import QueryType, graphql_sync, make_executable_schema
 from graphql_app.resolvers import Resolvers  
 from flask_cors import CORS
 from graphql_app.schema import type_defs
-from .db_logic import get_connection, fetch_data, format_dates, get_project_service_attributes, get_project_milestone_dates
+from .db_logic import get_connection, fetch_data, format_dates, get_project_service_attributes, get_project_milestone_dates, get_current_phase_attributes
 import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
@@ -274,6 +274,22 @@ def project_milestone_dates():
         connection = get_connection()
         data = get_project_milestone_dates(connection, projectId)
         date_columns = ['Value', 'UpdatedAt']
+        df = format_dates(data, date_columns)
+        return df.to_json(orient='records')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        connection.close()
+
+@app.route('/api/data/current-phase-attributes', methods=['GET'])
+def current_phase_attributes():
+    projectId = request.args.get('projectId')
+    if not projectId:
+        return jsonify({'error': 'Missing projectId'}), 400
+    try:
+        connection = get_connection()
+        data = get_current_phase_attributes(connection, projectId)
+        date_columns = ['UpdatedAt']
         df = format_dates(data, date_columns)
         return df.to_json(orient='records')
     except Exception as e:
