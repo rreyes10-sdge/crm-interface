@@ -829,10 +829,10 @@ def calculate():
                 "charger_kw": charger_kw
             })
 
-    fossil_fuel_price = float(data.get("fossil_fuel_price", 0))
-    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 0))
-    fossil_fuel_efficiency = float(data.get("fossil_fuel_efficiency", 1))
-    transformer_capacity = int(data.get("transformer_capacity", 0))
+    fossil_fuel_price = float(data.get("fossil_fuel_price", 0) or 0)
+    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 0) or 0) # use for YoY calculations
+    fossil_fuel_efficiency = float(data.get("fossil_fuel_efficiency", 0) or 1)
+    transformer_capacity = int(data.get("transformer_capacity", 0) or 0) # use to compare against set charger groups vs actual transformer
 
     # Constants
     energy_per_mile = 0.2  # Example: kWh per mile (this value should be based on vehicle specs)
