@@ -8,6 +8,7 @@ import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
 import datetime
+from collections import Counter
 
 # Set up resolvers
 query = QueryType()
@@ -809,9 +810,9 @@ def calculate():
     # Extracting data from the request
     vehicle_groups = []
     for i in range(1, 6):  # Assuming a maximum of 5 vehicle groups
-        vehicle_class = data.get(f"vehicle_class_{i}")
-        num_vehicles = int(data.get(f"num_vehicles_{i}", 0))
-        avg_daily_mileage = int(data.get(f"avg_daily_mileage_{i}", 0))
+        vehicle_class = data.get(f"vehicle_group_{i}_class")
+        num_vehicles = int(data.get(f"vehicle_group_{i}_num", 0))
+        avg_daily_mileage = int(data.get(f"vehicle_group_{i}_mileage", 0))
         if vehicle_class and num_vehicles > 0:
             vehicle_groups.append({
                 "vehicle_class": vehicle_class,
@@ -821,18 +822,44 @@ def calculate():
 
     charger_groups = []
     for i in range(1, 6):  # Assuming a maximum of 5 charger groups
-        num_chargers = int(data.get(f"num_chargers_{i}", 0))
-        charger_kw = int(data.get(f"charger_kw_{i}", 0))
+        num_chargers = int(data.get(f"charger_group_{i}_num", 0))
+        charger_kw = int(data.get(f"charger_group_{i}_kw", 0))
         if num_chargers > 0:
             charger_groups.append({
                 "num_chargers": num_chargers,
                 "charger_kw": charger_kw
             })
 
-    fossil_fuel_price = float(data.get("fossil_fuel_price", 0) or 0)
-    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 0) or 0) # use for YoY calculations
-    fossil_fuel_efficiency = float(data.get("fossil_fuel_efficiency", 0) or 1)
-    transformer_capacity = int(data.get("transformer_capacity", 0) or 0) # use to compare against set charger groups vs actual transformer
+    fossil_fuel_price = float(data.get("fossil_fuel_price", 4.30) or 4.30)
+    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 1) or 1)  # use for YoY calculations
+    fossil_fuel_mpg_override = float(data.get("fossil_fuel_efficiency", 0) or 1)
+    transformer_capacity = int(data.get("transformer_capacity", 0) or 0)  # use to compare against set charger groups vs actual transformer
+
+    # Extract charging behavior days
+    charging_behavior_days = data.get("charging_behavior", {}).get("days", [])
+    charging_days_count = len(charging_behavior_days)
+
+    # Define fossil fuel MPG mapping - pull from database at some point. should include both ev efficiency and fossil fuel efficiency
+    fossil_fuel_mpg_mapping = {
+        "Heavy Duty Pickup & Van - Class 2B": 15.1,
+        "Heavy Duty Pickup & Van - Class 3": 11.5,
+        "Shuttle Bus - Class 3-5": 6.0,
+        "Delivery Van - Class 3-5": 10.5,
+        "Service Van - Class 3-5": 10.5,
+        "Box Truck (Freight) - Class 3-5": 10.5,
+        "Stake Truck - Class 3-5": 11.5,
+        "Stake Truck - Class 6-7": 10.5,
+        "Box Truck (Freight) - Class 6-7": 8.1,
+        "Delivery Truck - Class 6-7": 6.0,
+        "Service Truck - Class 6-7": 8.1,
+        "School Bus - Class 7": 8.16,
+        "Regional Haul Tractor - Class 7-8": 5.85,
+        "Box Truck (Freight) - Class 8": 7.5,
+        "Long Haul Tractor - Class 8": 6.3,
+        "Transit Bus - Class 8": 6.19,
+        "Refuse Hauler - Class 8": 5.8,
+        "Dump Truck - Class 8": 6.9,
+    }
 
     # Constants
     energy_per_mile = 0.2  # Example: kWh per mile (this value should be based on vehicle specs)
@@ -855,11 +882,38 @@ def calculate():
     unmanaged_scenario = total_daily_charger_energy_output >= total_daily_vehicle_energy_needed
     optimal_scenario = (total_daily_charger_energy_output >= total_daily_vehicle_energy_needed)
 
-    # Calculate fossil fuel costs
-    fossil_fuel_daily_avg_cost = (fossil_fuel_price / fossil_fuel_efficiency) * total_daily_vehicle_energy_needed
-    fossil_fuel_weekly_avg_cost = fossil_fuel_daily_avg_cost * 7
-    fossil_fuel_monthly_avg_cost = fossil_fuel_daily_avg_cost * 30
-    fossil_fuel_yearly_avg_cost = fossil_fuel_daily_avg_cost * 365
+    # Calculate average MPG
+    average_mpg = sum(
+        (fossil_fuel_mpg_mapping.get(vg["vehicle_class"], fossil_fuel_mpg_override) * vg["num_vehicles"])
+        for vg in vehicle_groups
+    ) / sum(vg["num_vehicles"] for vg in vehicle_groups)
+
+    # Calculate daily average miles
+    daily_average_miles = sum(vg["avg_daily_mileage"] * vg["num_vehicles"] for vg in vehicle_groups)
+
+    # Calculate daily fossil fuel cost
+    daily_fossil_fuel_cost = (daily_average_miles / average_mpg) * fossil_fuel_price
+
+    # Calculate weekly fossil fuel cost based on charging behavior days
+    fossil_fuel_weekly_avg_cost = daily_fossil_fuel_cost * charging_days_count
+
+    # Calculate yearly costs based on charging behavior days
+    yearly_fossil_fuel_costs = {}
+    yearly_ev_costs = {}
+    start_year = 2025
+    end_year = 2032
+
+    # Calculate the base yearly fossil fuel cost for the first year
+    base_yearly_fossil_fuel_cost = daily_fossil_fuel_cost * (charging_days_count * 52)  # Approximate based on weekly distribution
+    yearly_fossil_fuel_costs[start_year] = base_yearly_fossil_fuel_cost
+
+    base_yearly_ev_cost = 15000
+    yearly_ev_costs[start_year] = base_yearly_ev_cost
+
+    for year in range(start_year + 1, end_year + 1):
+        # Apply the YoY multiplier
+        yearly_fossil_fuel_costs[year] = yearly_fossil_fuel_costs[year - 1] * (1 + fossil_fuel_multiplier / 100)
+        yearly_ev_costs[year] = 15000
 
     # Prepare results
     results = {
@@ -867,10 +921,13 @@ def calculate():
         "total_daily_charger_energy_output": total_daily_charger_energy_output,
         "unmanaged_scenario": unmanaged_scenario,
         "optimal_scenario": optimal_scenario,
-        "fossil_fuel_daily_avg_cost": fossil_fuel_daily_avg_cost,
+        "fossil_fuel_daily_avg_cost": daily_fossil_fuel_cost,
         "fossil_fuel_weekly_avg_cost": fossil_fuel_weekly_avg_cost,
-        "fossil_fuel_monthly_avg_cost": fossil_fuel_monthly_avg_cost,
-        "fossil_fuel_yearly_avg_cost": fossil_fuel_yearly_avg_cost,
+        "yearly_fossil_fuel_costs": yearly_fossil_fuel_costs,
+        "yearly_ev_costs": yearly_ev_costs,
+        "average_mpg": average_mpg,
+        "daily_average_miles": daily_average_miles,
+        "daily_fossil_fuel_cost": daily_fossil_fuel_cost,
     }
 
     return jsonify(results)

@@ -128,6 +128,27 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             formDataJson[key] = value;
         });
 
+        // Include charging behavior in the form data
+        formDataJson['charging_behavior'] = {
+            days: chargingBehavior.days,
+            startTime: chargingBehavior.startTime,
+            endTime: chargingBehavior.endTime
+        };
+
+        // Rename vehicle and charger group keys
+        vehicleGroups.forEach((group, index) => {
+            const groupIndex = index + 1; // Start from 1
+            formDataJson[`vehicle_group_${groupIndex}_class`] = group.vehicleClass;
+            formDataJson[`vehicle_group_${groupIndex}_num`] = group.numVehicles;
+            formDataJson[`vehicle_group_${groupIndex}_mileage`] = group.avgDailyMileage;
+        });
+
+        chargerGroups.forEach((group, index) => {
+            const groupIndex = index + 1; // Start from 1
+            formDataJson[`charger_group_${groupIndex}_num`] = group.numChargers;
+            formDataJson[`charger_group_${groupIndex}_kw`] = group.chargerKW;
+        });
+
         console.log('Form Data JSON:', formDataJson); // Log the form data
 
         // Pass the FormData back to the parent component
@@ -188,7 +209,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         <FormControl fullWidth>
                                             <InputLabel>Vehicle Class</InputLabel>
                                             <Select
-                                                name={`vehicle_class_${index + 1}`}
+                                                name={`vehicle_group_${index + 1}_class`}
                                                 value={group.vehicleClass}
                                                 onChange={(e) => handleVehicleGroupChange(group.id, 'vehicleClass', e.target.value)}
                                                 sx={{ backgroundColor: 'white' }}
@@ -202,7 +223,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`num_vehicles_${index + 1}`}
+                                            name={`vehicle_group_${index + 1}_num`}
                                             label="Number of Vehicles"
                                             type="number"
                                             fullWidth
@@ -217,7 +238,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`avg_daily_mileage_${index + 1}`}
+                                            name={`vehicle_group_${index + 1}_mileage`}
                                             label="Average Daily Mileage"
                                             type="number"
                                             fullWidth
@@ -413,7 +434,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`num_chargers_${index + 1}`}
+                                            name={`charger_group_${index + 1}_num`}
                                             label="Number of Chargers"
                                             type="number"
                                             fullWidth
@@ -428,7 +449,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            name={`charger_kw_${index + 1}`}
+                                            name={`charger_group_${index + 1}_kw`}
                                             label="Charger kW"
                                             type="number"
                                             fullWidth

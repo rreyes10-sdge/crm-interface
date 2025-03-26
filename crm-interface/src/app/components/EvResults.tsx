@@ -1,6 +1,7 @@
 import React from 'react';
 import { Paper, Typography, Box, Grid } from '@mui/material';
 import { CalculationResults } from '../types';
+import YearlyCostChart from './YearlyCostChart';
 
 interface EvResultsProps {
     results: CalculationResults | null;
@@ -57,12 +58,16 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                     <Typography variant="h6">${results.fossil_fuel_weekly_avg_cost.toFixed(2)}</Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Fossil Fuel Monthly Avg Cost</Typography>
-                    <Typography variant="h6">${results.fossil_fuel_monthly_avg_cost.toFixed(2)}</Typography>
+                    <Typography variant="subtitle1">Average MPG</Typography>
+                    <Typography variant="h6">{results.average_mpg.toFixed(2)}</Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Fossil Fuel Yearly Avg Cost</Typography>
-                    <Typography variant="h6">${results.fossil_fuel_yearly_avg_cost.toFixed(2)}</Typography>
+                    <Typography variant="subtitle1">Daily Average Miles</Typography>
+                    <Typography variant="h6">{results.daily_average_miles.toFixed(2)}</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle1">Daily Fossil Fuel Cost</Typography>
+                    <Typography variant="h6">${results.daily_fossil_fuel_cost.toFixed(2)}</Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Total Daily Charger Energy Output</Typography>
@@ -79,6 +84,10 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Unmanaged Scenario</Typography>
                     <Typography variant="h6">{results.unmanaged_scenario ? 'Yes' : 'No'}</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle1">Yearly Fossil Fuel Costs</Typography>
+                    <YearlyCostChart yearlyFossilFuelCosts={results.yearly_fossil_fuel_costs} yearlyEvCosts={results.yearly_ev_costs} />
                 </Grid>
             </Grid>
         </Paper>
