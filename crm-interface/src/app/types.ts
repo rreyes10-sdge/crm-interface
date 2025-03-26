@@ -25,8 +25,11 @@ export interface CalculationResults {
     co2Reduction: number;
     fossil_fuel_daily_avg_cost: number;
     fossil_fuel_weekly_avg_cost: number;
-    fossil_fuel_monthly_avg_cost: number;
-    fossil_fuel_yearly_avg_cost: number;
+    average_mpg: number;
+    daily_average_miles: number;
+    daily_fossil_fuel_cost: number;
+    yearly_fossil_fuel_costs: { [year: string]: number };
+    yearly_ev_costs: { [year: string]: number };
     optimal_scenario: boolean;
     total_daily_charger_energy_output: number;
     total_daily_vehicle_energy_needed: number;
