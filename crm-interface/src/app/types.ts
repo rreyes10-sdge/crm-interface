@@ -19,7 +19,7 @@ export interface OptionalSettings {
 }
 
 export interface CalculationResults {
-    annualFuelSavings: number;
+    average_yearly_savings: number;
     totalCost: number;
     paybackPeriod: number;
     co2Reduction: number;
@@ -28,6 +28,7 @@ export interface CalculationResults {
     average_mpg: number;
     daily_average_miles: number;
     daily_fossil_fuel_cost: number;
+    total_monthly_ev_cost: number;
     yearly_fossil_fuel_costs: { [year: string]: number };
     yearly_ev_costs: { [year: string]: number };
     optimal_scenario: boolean;

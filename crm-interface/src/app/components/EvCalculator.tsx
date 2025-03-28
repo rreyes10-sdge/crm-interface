@@ -3,6 +3,7 @@ import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typograph
 import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import EvStationIcon from '@mui/icons-material/EvStation';
 import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 interface EvCalculatorProps {
     onCalculate: (formData: { [key: string]: any }) => Promise<void>;
@@ -19,7 +20,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         startTime: '22:00',
         endTime: '06:00'
     });
-    
+
     // State for modal
     const [openHelpModal, setOpenHelpModal] = useState(false);
 
@@ -63,11 +64,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
 
     const addVehicleGroup = () => {
         if (vehicleGroups.length < 5) {
-            setVehicleGroups([...vehicleGroups, { 
-                id: vehicleGroups.length + 1, 
-                vehicleClass: '', 
-                numVehicles: 0, 
-                avgDailyMileage: 0 
+            setVehicleGroups([...vehicleGroups, {
+                id: vehicleGroups.length + 1,
+                vehicleClass: '',
+                numVehicles: 0,
+                avgDailyMileage: 0
             }]);
         }
     };
@@ -88,10 +89,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
 
     const addChargerGroup = () => {
         if (chargerGroups.length < 5) {
-            setChargerGroups([...chargerGroups, { 
-                id: chargerGroups.length + 1, 
-                numChargers: 0, 
-                chargerKW: 0 
+            setChargerGroups([...chargerGroups, {
+                id: chargerGroups.length + 1,
+                numChargers: 0,
+                chargerKW: 0
             }]);
         }
     };
@@ -112,7 +113,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
     const handleDayChange = (day: string) => {
         setChargingBehavior(prev => ({
             ...prev,
-            days: prev.days.includes(day) 
+            days: prev.days.includes(day)
                 ? prev.days.filter(d => d !== day)
                 : [...prev.days, day]
         }));
@@ -121,7 +122,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         const formData = new FormData(event.target as HTMLFormElement);
-        
+
         // Convert FormData to a JSON object
         const formDataJson: { [key: string]: any } = {};
         formData.forEach((value, key) => {
@@ -166,9 +167,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
     return (
         <Paper sx={{ p: 4 }}>
             <form onSubmit={handleSubmit}>
-                <Accordion 
-                    defaultExpanded 
-                    sx={{ 
+                <Accordion
+                    defaultExpanded
+                    sx={{
                         ...sectionStyle,
                         '&.MuiAccordion-root': {
                             '&:before': {
@@ -196,8 +197,8 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Typography variant="h6" sx={{ color: '#555' }}>Group {index + 1}</Typography>
                                         {group.id > 1 && (
-                                            <IconButton 
-                                                color="error" 
+                                            <IconButton
+                                                color="error"
                                                 onClick={() => removeVehicleGroup(group.id)}
                                                 size="small"
                                             >
@@ -254,12 +255,12 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 </Grid>
                             </Box>
                         ))}
-                        <Button 
-                            variant="contained" 
+                        <Button
+                            variant="contained"
                             onClick={addVehicleGroup}
                             startIcon={<AddIcon />}
                             disabled={vehicleGroups.length >= 5}
-                            sx={{ 
+                            sx={{
                                 mt: 2,
                                 backgroundColor: vehicleGroups.length >= 5 ? 'grey.400' : undefined,
                                 '&:hover': {
@@ -272,9 +273,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     </AccordionDetails>
                 </Accordion>
 
-                <Accordion 
-                    defaultExpanded 
-                    sx={{ 
+                <Accordion
+                    defaultExpanded
+                    sx={{
                         ...sectionStyle,
                         '&.MuiAccordion-root': {
                             '&:before': {
@@ -300,7 +301,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
                                     <Typography variant="subtitle1" gutterBottom sx={{ color: '#555' }}>Days for Charging</Typography>
-                                    <Box sx={{ 
+                                    <Box sx={{
                                         display: 'flex',
                                         gap: 1,
                                         width: '100%',
@@ -320,15 +321,15 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s',
                                                     '&:hover': {
-                                                        backgroundColor: chargingBehavior.days.includes(day) 
-                                                            ? '#ffc107' 
+                                                        backgroundColor: chargingBehavior.days.includes(day)
+                                                            ? '#ffc107'
                                                             : 'rgba(0, 0, 0, 0.04)'
                                                     }
                                                 }}
                                             >
-                                                <Typography 
-                                                    variant="body1" 
-                                                    sx={{ 
+                                                <Typography
+                                                    variant="body1"
+                                                    sx={{
                                                         fontWeight: chargingBehavior.days.includes(day) ? 500 : 400
                                                     }}
                                                 >
@@ -351,7 +352,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                                     startTime: e.target.value
                                                 }))}
                                                 InputLabelProps={{ shrink: true }}
-                                                inputProps={{ step: 300 }}
+                                                inputProps={{ step: 3600 }}  // Set step to 3600 seconds (1 hour)
                                                 fullWidth
                                                 sx={{ backgroundColor: 'white' }}
                                             />
@@ -366,7 +367,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                                     endTime: e.target.value
                                                 }))}
                                                 InputLabelProps={{ shrink: true }}
-                                                inputProps={{ step: 300 }}
+                                                inputProps={{ step: 3600 }}  // Set step to 3600 seconds (1 hour)
                                                 fullWidth
                                                 sx={{ backgroundColor: 'white' }}
                                             />
@@ -378,9 +379,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     </AccordionDetails>
                 </Accordion>
 
-                <Accordion 
-                    defaultExpanded 
-                    sx={{ 
+                <Accordion
+                    defaultExpanded
+                    sx={{
                         ...sectionStyle,
                         '&.MuiAccordion-root': {
                             '&:before': {
@@ -400,13 +401,13 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         }}
                     >
                         <Typography variant="h5">Charger Groups</Typography>
-                        <span 
+                        <span
                             onClick={() => window.open('https://insitetool.org/equipment_catalog', '_blank')}
                             style={{ cursor: 'pointer', marginLeft: '8px' }}
                         >
                             <EvStationIcon />
                         </span>
-                        <span 
+                        <span
                             onClick={(event) => {
                                 event.stopPropagation();
                                 handleOpenHelpModal();
@@ -423,8 +424,8 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Typography variant="h6" sx={{ color: '#555' }}>Charger Group {index + 1}</Typography>
                                         {group.id > 1 && (
-                                            <IconButton 
-                                                color="error" 
+                                            <IconButton
+                                                color="error"
                                                 onClick={() => removeChargerGroup(group.id)}
                                                 size="small"
                                             >
@@ -465,12 +466,12 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 </Grid>
                             </Box>
                         ))}
-                        <Button 
-                            variant="contained" 
+                        <Button
+                            variant="contained"
                             onClick={addChargerGroup}
                             startIcon={<AddIcon />}
                             disabled={chargerGroups.length >= 5}
-                            sx={{ 
+                            sx={{
                                 mt: 2,
                                 backgroundColor: chargerGroups.length >= 5 ? 'grey.400' : undefined,
                                 '&:hover': {
@@ -483,8 +484,8 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     </AccordionDetails>
                 </Accordion>
 
-                <Accordion 
-                    sx={{ 
+                <Accordion
+                    sx={{
                         ...sectionStyle,
                         '&.MuiAccordion-root': {
                             '&:before': {
@@ -508,38 +509,38 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     <AccordionDetails>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <TextField 
-                                    name="fossil_fuel_price" 
-                                    label="Fossil Fuel Price ($/gal)" 
-                                    type="number" 
-                                    fullWidth 
+                                <TextField
+                                    name="fossil_fuel_price"
+                                    label="Fossil Fuel Price ($/gal)"
+                                    type="decimal"
+                                    fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField 
-                                    name="fossil_fuel_multiplier" 
-                                    label="Fossil Fuel Price Increase Multiplier YoY" 
-                                    type="decimal" 
-                                    fullWidth 
+                                <TextField
+                                    name="fossil_fuel_multiplier"
+                                    label="Fossil Fuel Price Increase Multiplier YoY"
+                                    type="decimal"
+                                    fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField 
-                                    name="fossil_fuel_efficiency" 
-                                    label="Fossil Fuel Vehicle Efficiency Override (mpg)" 
-                                    type="number" 
-                                    fullWidth 
+                                <TextField
+                                    name="fossil_fuel_efficiency"
+                                    label="Fossil Fuel Vehicle Efficiency Override (mpg)"
+                                    type="number"
+                                    fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField 
-                                    name="transformer_capacity" 
-                                    label="Available Capacity for Existing Transformer (kW)" 
-                                    type="number" 
-                                    fullWidth 
+                                <TextField
+                                    name="transformer_capacity"
+                                    label="Available Capacity for Existing Transformer (kW)"
+                                    type="number"
+                                    fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
@@ -571,9 +572,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     </DialogActions>
                 </Dialog>
 
-                <Button 
-                    variant="contained" 
-                    type="submit" 
+                <Button
+                    variant="contained"
+                    type="submit"
                     disabled={isLoading}
                     fullWidth
                     size="large"
