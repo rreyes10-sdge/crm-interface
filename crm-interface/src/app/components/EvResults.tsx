@@ -32,7 +32,7 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
             <Box mb={3}>
                 <Typography variant="h6">Annual Savings</Typography>
                 <Typography variant="h4" color="primary">
-                    ${results?.annualFuelSavings?.toLocaleString() || 'N/A'}
+                    ${results?.average_yearly_savings?.toLocaleString() || 'N/A'}
                 </Typography>
             </Box>
 
@@ -46,8 +46,16 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                     <Typography variant="h6">{results.paybackPeriod} years</Typography>
                 </Grid>
                 <Grid item xs={12}>
+                    <Typography variant="subtitle1">Yearly Fossil Fuel Costs</Typography>
+                    <YearlyCostChart yearlyFossilFuelCosts={results.yearly_fossil_fuel_costs} yearlyEvCosts={results.yearly_ev_costs} />
+                </Grid>
+                <Grid item xs={12}>
                     <Typography variant="subtitle1">CO2 Reduction</Typography>
                     <Typography variant="h6">{results.co2Reduction} metric tons/year</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle1">EV Monthly Cost</Typography>
+                    <Typography variant="h6">${results.total_monthly_ev_cost.toFixed(2)}</Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Fossil Fuel Daily Avg Cost</Typography>
@@ -84,10 +92,6 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Unmanaged Scenario</Typography>
                     <Typography variant="h6">{results.unmanaged_scenario ? 'Yes' : 'No'}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="subtitle1">Yearly Fossil Fuel Costs</Typography>
-                    <YearlyCostChart yearlyFossilFuelCosts={results.yearly_fossil_fuel_costs} yearlyEvCosts={results.yearly_ev_costs} />
                 </Grid>
             </Grid>
         </Paper>

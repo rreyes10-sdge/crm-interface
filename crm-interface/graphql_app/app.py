@@ -7,7 +7,7 @@ from .db_logic import get_connection, fetch_data, format_dates, get_project_serv
 import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
-import datetime
+from datetime import datetime, timedelta
 from collections import Counter
 
 # Set up resolvers
@@ -831,43 +831,298 @@ def calculate():
             })
 
     fossil_fuel_price = float(data.get("fossil_fuel_price", 4.30) or 4.30)
-    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 1) or 1)  # use for YoY calculations
+    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 1.0131) or 1.0131)  # use for YoY calculations
     fossil_fuel_mpg_override = float(data.get("fossil_fuel_efficiency", 0) or 1)
     transformer_capacity = int(data.get("transformer_capacity", 0) or 0)  # use to compare against set charger groups vs actual transformer
 
-    # Extract charging behavior days
+    # Extract charging behavior days and times
     charging_behavior_days = data.get("charging_behavior", {}).get("days", [])
     charging_days_count = len(charging_behavior_days)
+    charging_behavior_start_time = data.get("charging_behavior", {}).get("startTime", "21:00")
+    charging_behavior_end_time = data.get("charging_behavior", {}).get("endTime", "05:59")
 
-    # Define fossil fuel MPG mapping - pull from database at some point. should include both ev efficiency and fossil fuel efficiency
+    # Convert start and end times to datetime objects
+    start_time = datetime.strptime(charging_behavior_start_time, "%H:%M")
+    end_time = datetime.strptime(charging_behavior_end_time, "%H:%M")
+
+    # Define fossil fuel MPG mapping
     fossil_fuel_mpg_mapping = {
-        "Heavy Duty Pickup & Van - Class 2B": 15.1,
-        "Heavy Duty Pickup & Van - Class 3": 11.5,
-        "Shuttle Bus - Class 3-5": 6.0,
-        "Delivery Van - Class 3-5": 10.5,
-        "Service Van - Class 3-5": 10.5,
-        "Box Truck (Freight) - Class 3-5": 10.5,
-        "Stake Truck - Class 3-5": 11.5,
-        "Stake Truck - Class 6-7": 10.5,
-        "Box Truck (Freight) - Class 6-7": 8.1,
-        "Delivery Truck - Class 6-7": 6.0,
-        "Service Truck - Class 6-7": 8.1,
-        "School Bus - Class 7": 8.16,
-        "Regional Haul Tractor - Class 7-8": 5.85,
-        "Box Truck (Freight) - Class 8": 7.5,
-        "Long Haul Tractor - Class 8": 6.3,
-        "Transit Bus - Class 8": 6.19,
-        "Refuse Hauler - Class 8": 5.8,
-        "Dump Truck - Class 8": 6.9,
+        "Heavy Duty Pickup & Van - Class 2B": {"mpg": 15.1, "mile_per_kwh": 1.09},
+        "Heavy Duty Pickup & Van - Class 3": {"mpg": 11.5, "mile_per_kwh": 1.09},
+        "Shuttle Bus - Class 3-5": {"mpg": 6.06, "mile_per_kwh": 2.06},
+        "Delivery Van - Class 3-5": {"mpg": 10.5, "mile_per_kwh": 1.19},
+        "Service Van - Class 3-5": {"mpg": 10.5, "mile_per_kwh": 1.19},
+        "Box Truck (Freight) - Class 3-5": {"mpg": 11.5, "mile_per_kwh": 1.09},
+        "Stake Truck - Class 3-5": {"mpg": 10.5, "mile_per_kwh": 1.19},
+        "Stake Truck - Class 6-7": {"mpg": 8.1, "mile_per_kwh": 1.55},
+        "Box Truck (Freight) - Class 6-7": {"mpg": 8.7, "mile_per_kwh": 1.44},
+        "Delivery Truck - Class 6-7": {"mpg": 8.1, "mile_per_kwh": 1.55},
+        "Service Truck - Class 6-7": {"mpg": 8.1, "mile_per_kwh": 1.55},
+        "School Bus - Class 7": {"mpg": 8.16, "mile_per_kwh": 1.53},
+        "Regional Haul Tractor - Class 7-8": {"mpg": 5.85, "mile_per_kwh": 2.14},
+        "Box Truck (Freight) - Class 8": {"mpg": 7.5, "mile_per_kwh": 1.67},
+        "Long Haul Tractor - Class 8": {"mpg": 5.83, "mile_per_kwh": 2.15},
+        "Transit Bus - Class 8": {"mpg": 6.19, "mile_per_kwh": 2.02},
+        "Refuse Hauler - Class 8": {"mpg": 5.72, "mile_per_kwh": 2.19},
+        "Dump Truck - Class 8": {"mpg": 6.9, "mile_per_kwh": 1.81}
     }
 
-    # Constants
-    energy_per_mile = 0.2  # Example: kWh per mile (this value should be based on vehicle specs)
-    off_peak_hours = 8  # Example: number of off-peak hours available for charging
+    TOU_DATA = {
+        "TOU": {
+            "Weekdays": {
+                "Summer": {
+                    "On-Peak": "16:00-21:00",
+                    "Off-Peak": ["06:00-16:00", "21:00-00:00"],
+                    "Super Off-Peak": "00:00-06:00"
+                },
+                "Winter": {
+                    "On-Peak": "16:00-21:00",
+                    "Off-Peak": ["06:00-16:00", "21:00-00:00"],
+                    "Super Off-Peak": "00:00-06:00"
+                }
+            },
+            "WeekendsAndHolidays": {
+                "Summer": {
+                    "On-Peak": "16:00-21:00",
+                    "Off-Peak": ["14:00-16:00", "21:00-00:00"],
+                    "Super Off-Peak": "00:00-14:00"
+                },
+                "Winter": {
+                    "On-Peak": "16:00-21:00",
+                    "Off-Peak": ["14:00-16:00", "21:00-00:00"],
+                    "Super Off-Peak": "00:00-14:00"
+                }
+            }
+        },
+        "Seasons": {
+            "Summer": "June 1 - October 31",
+            "Winter": "November 1 - May 31"
+        },
+        "TOU_Rates": {
+            "2025": {
+            "Weekdays": {
+                "Summer": {
+                    "On-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.12124,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.16986,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.10183,
+                        "Total": 0.27730
+                    },
+                    "Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00028,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.06291,
+                        "Total": 0.11734
+                    },
+                    "Super_Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.05346,
+                        "Total": 0.10789
+                    }
+                },
+                "Winter": {
+                    "On-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.12124,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.16986,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.11125,
+                        "Total": 0.28762
+                    },
+                    "Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00028,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.06291,
+                        "Total": 0.11734
+                    },
+                    "Super_Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.04861,
+                        "Total": 0.10304
+                    }
+                }
+            },
+            "WeekendsAndHolidays": {
+                "Summer": {
+                    "On-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.12124,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.16986,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.10183,
+                        "Total": 0.27730
+                    },
+                    "Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00028,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.06291,
+                        "Total": 0.11734
+                    },
+                    "Super_Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.05346,
+                        "Total": 0.10789
+                    }
+                },
+                "Winter": {
+                    "On-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.12124,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.16986,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.11125,
+                        "Total": 0.28762
+                    },
+                    "Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00028,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.06291,
+                        "Total": 0.11734
+                    },
+                    "Super_Off-Peak": {
+                        "Transm": 0.02066,
+                        "Distr": 0.00020,
+                        "PPP": 0.02224,
+                        "ND": 0.00001,
+                        "CTC": 0.00028,
+                        "LGC": 0.00542,
+                        "RS": 0.00001,
+                        "UDC_Total": 0.04882,
+                        "DWR_Bond_Rate": 0.00561,
+                        "DWR_Credit": 0.00000,
+                        "EECC_Rate": 0.04861,
+                        "Total": 0.10304
+                    }
+                }
+            }
+            }
+        }
+    }
+
+    # Initialize hour counts
+    off_peak_hours = 0
+    super_off_peak_hours = 0
+    on_peak_hours = 0
+    # Assuming you have a way to determine the current season and day type
+    current_season = "Summer"  # Replace with logic to determine the current season
+    current_day_type = "Weekdays"  # Replace with logic to determine if it's a weekday or weekend
+
+    # Function to calculate hours in a given time range
+    def calculate_hours_in_range(start, end, time_range):
+        start_dt = datetime.strptime(start, "%H:%M")
+        end_dt = datetime.strptime(end, "%H:%M")
+        if end_dt < start_dt:  # Handle overnight ranges
+            end_dt += timedelta(days=1)
+        
+        total_hours = 0
+        for time_range in time_range:
+            range_start, range_end = time_range.split('-')
+            range_start_dt = datetime.strptime(range_start, "%H:%M")
+            range_end_dt = datetime.strptime(range_end, "%H:%M")
+            if range_end_dt < range_start_dt:  # Handle overnight ranges
+                range_end_dt += timedelta(days=1)
+
+            # Calculate overlap
+            overlap_start = max(start_dt, range_start_dt)
+            overlap_end = min(end_dt, range_end_dt)
+            if overlap_end > overlap_start:
+                total_hours += (overlap_end - overlap_start).seconds / 3600  # Convert seconds to hours
+
+        return total_hours
+
+    # Calculate hours for each TOU period
+    on_peak_hours = calculate_hours_in_range(charging_behavior_start_time, charging_behavior_end_time, [TOU_DATA["TOU"][current_day_type][current_season]["On-Peak"]])
+    off_peak_hours = calculate_hours_in_range(charging_behavior_start_time, charging_behavior_end_time, TOU_DATA["TOU"][current_day_type][current_season]["Off-Peak"])
+    super_off_peak_hours = calculate_hours_in_range(charging_behavior_start_time, charging_behavior_end_time, [TOU_DATA["TOU"][current_day_type][current_season]["Super Off-Peak"]])
 
     # Calculations
     total_daily_vehicle_energy_needed = sum(
-        num_vehicles * avg_daily_mileage * energy_per_mile
+        num_vehicles * avg_daily_mileage * (1 / fossil_fuel_mpg_mapping.get(vg["vehicle_class"], {"mile_per_kwh": 1})["mile_per_kwh"])
         for vg in vehicle_groups
         for num_vehicles, avg_daily_mileage in [(vg["num_vehicles"], vg["avg_daily_mileage"])]
     )
@@ -884,7 +1139,7 @@ def calculate():
 
     # Calculate average MPG
     average_mpg = sum(
-        (fossil_fuel_mpg_mapping.get(vg["vehicle_class"], fossil_fuel_mpg_override) * vg["num_vehicles"])
+    (fossil_fuel_mpg_mapping.get(vg["vehicle_class"], {"mpg": fossil_fuel_mpg_override})["mpg"] * vg["num_vehicles"])
         for vg in vehicle_groups
     ) / sum(vg["num_vehicles"] for vg in vehicle_groups)
 
@@ -897,6 +1152,35 @@ def calculate():
     # Calculate weekly fossil fuel cost based on charging behavior days
     fossil_fuel_weekly_avg_cost = daily_fossil_fuel_cost * charging_days_count
 
+    # Assuming a single power requirement for simplicity
+    power_requirement = total_daily_vehicle_energy_needed / (on_peak_hours + off_peak_hours + super_off_peak_hours) 
+
+    # Monthly Cost Calculations
+    service_fee = 213.30 if power_requirement <= 500 else 766.91
+    subscription_fee = (48.33 * (power_requirement / 10)) if power_requirement <= 150 else (120.85 * (power_requirement / 25))
+    
+
+    # Example energy consumption (replace with actual consumption data)
+    energy_consumption = {
+        "On-Peak": power_requirement * on_peak_hours,  # kWh
+        "Off-Peak": power_requirement * off_peak_hours,  # kWh
+        "Super Off-Peak": power_requirement * super_off_peak_hours,  # kWh
+    }
+
+    # Access the TOU rates from TOU_DATA
+    tou_rates = TOU_DATA["TOU_Rates"]["2025"][current_day_type][current_season]
+
+    # Calculate commodity distribution
+    commodity_distribution = 0
+    for period in energy_consumption:
+        if period in tou_rates:
+            commodity_distribution += energy_consumption[period] * tou_rates[period]["Total"]
+        else:
+            print(f"Warning: {period} not found in TOU rates.")
+
+    # Total Monthly Cost Calculation
+    total_monthly_ev_cost = service_fee + subscription_fee + commodity_distribution
+
     # Calculate yearly costs based on charging behavior days
     yearly_fossil_fuel_costs = {}
     yearly_ev_costs = {}
@@ -907,14 +1191,21 @@ def calculate():
     base_yearly_fossil_fuel_cost = daily_fossil_fuel_cost * (charging_days_count * 52)  # Approximate based on weekly distribution
     yearly_fossil_fuel_costs[start_year] = base_yearly_fossil_fuel_cost
 
-    base_yearly_ev_cost = 15000
+    base_yearly_ev_cost = total_monthly_ev_cost * 12
     yearly_ev_costs[start_year] = base_yearly_ev_cost
 
     for year in range(start_year + 1, end_year + 1):
         # Apply the YoY multiplier
         yearly_fossil_fuel_costs[year] = yearly_fossil_fuel_costs[year - 1] * (1 + fossil_fuel_multiplier / 100)
-        yearly_ev_costs[year] = 15000
+        yearly_ev_costs[year] = yearly_ev_costs[year - 1] * 1.03
 
+    # Calculate yearly savings
+    yearly_savings = {}
+    for year in range(start_year, end_year + 1):
+        yearly_savings[year] = yearly_fossil_fuel_costs[year] - yearly_ev_costs[year]
+
+    # Calculate average yearly savings
+    average_yearly_savings = sum(yearly_savings.values()) / len(yearly_savings)
     # Prepare results
     results = {
         "total_daily_vehicle_energy_needed": total_daily_vehicle_energy_needed,
@@ -924,8 +1215,10 @@ def calculate():
         "fossil_fuel_daily_avg_cost": daily_fossil_fuel_cost,
         "fossil_fuel_weekly_avg_cost": fossil_fuel_weekly_avg_cost,
         "yearly_fossil_fuel_costs": yearly_fossil_fuel_costs,
+        "total_monthly_ev_cost": total_monthly_ev_cost,
         "yearly_ev_costs": yearly_ev_costs,
         "average_mpg": average_mpg,
+        "average_yearly_savings": average_yearly_savings, 
         "daily_average_miles": daily_average_miles,
         "daily_fossil_fuel_cost": daily_fossil_fuel_cost,
     }
