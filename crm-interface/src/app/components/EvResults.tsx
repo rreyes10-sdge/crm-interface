@@ -28,7 +28,7 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
     return (
         <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom>Results</Typography>
-            
+
             <Box mb={3}>
                 <Typography variant="h6">Annual Savings</Typography>
                 <Typography variant="h4" color="primary">
@@ -59,11 +59,15 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Fossil Fuel Daily Avg Cost</Typography>
-                    <Typography variant="h6">${results.fossil_fuel_daily_avg_cost.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                        ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.fossil_fuel_daily_avg_cost)}
+                    </Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Fossil Fuel Weekly Avg Cost</Typography>
-                    <Typography variant="h6">${results.fossil_fuel_weekly_avg_cost.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                        ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.fossil_fuel_weekly_avg_cost)}
+                    </Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Average MPG</Typography>
@@ -75,15 +79,17 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Daily Fossil Fuel Cost</Typography>
-                    <Typography variant="h6">${results.daily_fossil_fuel_cost.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                        ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.daily_fossil_fuel_cost)}
+                    </Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Total Daily Charger Energy Output</Typography>
-                    <Typography variant="h6">{results.total_daily_charger_energy_output} kWh</Typography>
+                    <Typography variant="h6">{results.total_daily_charger_energy_output.toFixed(2)} kWh</Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Total Daily Vehicle Energy Needed</Typography>
-                    <Typography variant="h6">{results.total_daily_vehicle_energy_needed} kWh</Typography>
+                    <Typography variant="h6">{results.total_daily_vehicle_energy_needed.toFixed(2)} kWh</Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Optimal Scenario</Typography>
