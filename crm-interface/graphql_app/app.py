@@ -1010,7 +1010,8 @@ def calculate_v2():
                 "TDVEN": result["TDVEN"],
                 "fossil_fuel_average_mpg": result["fossil_fuel_average_mpg"],
                 "first_active_daily_tou_hours": result["first_active_daily_tou_hours"],
-                "error_checks": result["error_checks"]
+                "error_checks": result["error_checks"],
+                "first_active_daily_tou_hours": result["first_active_daily_tou_hours"],
             }
 
         # Append monthly results
@@ -1060,28 +1061,56 @@ def calculate_total_costs_per_year(monthly_results):
     return yearly_costs
 
 def calculate_averages_and_savings(monthly_results):
-    total_electric_monthly_tc = 0
+    total_electric_monthly_tc_1 = 0
+    total_electric_monthly_tc_2 = 0
+    total_electric_monthly_tc_3 = 0
+    total_electric_monthly_tc_4 = 0
     total_fossil_fuel_monthly_tc = 0
     num_months = len(monthly_results)
 
     for result in monthly_results:
-        total_electric_monthly_tc += result["scenario_1"]["electric_monthly_tc"]
+        total_electric_monthly_tc_1 += result["scenario_1"]["electric_monthly_tc"]
+        total_electric_monthly_tc_2 += result["scenario_2"]["electric_monthly_tc"]
+        total_electric_monthly_tc_3 += result["scenario_3"]["electric_monthly_tc"]
+        total_electric_monthly_tc_4 += result["scenario_4"]["electric_monthly_tc"]
         total_fossil_fuel_monthly_tc += result["monthly_fossil_fuel_tc"]
 
-    average_electric_monthly_tc = total_electric_monthly_tc / num_months
     average_fossil_fuel_monthly_tc = total_fossil_fuel_monthly_tc / num_months
-    monthly_savings = average_fossil_fuel_monthly_tc - average_electric_monthly_tc
-
-    yearly_electric_tc = average_electric_monthly_tc * 12
     yearly_fossil_fuel_tc = average_fossil_fuel_monthly_tc * 12
-    yearly_savings = yearly_fossil_fuel_tc - yearly_electric_tc
+
+    
+
+    average_electric_monthly_tc_1 = total_electric_monthly_tc_1 / num_months
+    yearly_electric_tc_1 = average_electric_monthly_tc_1 * 12
+
+    average_electric_monthly_tc_2 = total_electric_monthly_tc_2 / num_months
+    yearly_electric_tc_2 = average_electric_monthly_tc_1 * 12
+
+    average_electric_monthly_tc_3 = total_electric_monthly_tc_3 / num_months
+    yearly_electric_tc_3 = average_electric_monthly_tc_1 * 12
+
+    average_electric_monthly_tc_4 = total_electric_monthly_tc_4 / num_months
+    yearly_electric_tc_4 = average_electric_monthly_tc_1 * 12
+
+    monthly_savings = average_fossil_fuel_monthly_tc - average_electric_monthly_tc_1
+    yearly_savings = yearly_fossil_fuel_tc - yearly_electric_tc_1
 
     return {
-        "average_electric_monthly_tc": average_electric_monthly_tc,
-        "average_fossil_fuel_monthly_tc": average_fossil_fuel_monthly_tc,
+        "monthly_average_cost": {
+            "average_electric_monthly_tc_1": average_electric_monthly_tc_1,
+            "average_electric_monthly_tc_2": average_electric_monthly_tc_2,
+            "average_electric_monthly_tc_3": average_electric_monthly_tc_3,
+            "average_electric_monthly_tc_4": average_electric_monthly_tc_4,
+            "average_fossil_fuel_monthly_tc": average_fossil_fuel_monthly_tc,
+        },
+        "yearly_average_cost": {
+            "yearly_electric_tc_1": yearly_electric_tc_1,
+            "yearly_electric_tc_2": yearly_electric_tc_2,
+            "yearly_electric_tc_3": yearly_electric_tc_3,
+            "yearly_electric_tc_4": yearly_electric_tc_4,
+            "yearly_fossil_fuel_tc": yearly_fossil_fuel_tc,
+        },
         "monthly_savings": monthly_savings,
-        "yearly_electric_tc": yearly_electric_tc,
-        "yearly_fossil_fuel_tc": yearly_fossil_fuel_tc,
         "yearly_savings": yearly_savings
     }
 
