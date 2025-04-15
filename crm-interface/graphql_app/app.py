@@ -946,6 +946,60 @@ def get_total_tou_hours_for_period(data, year, month, tou_data, scenario, tdven,
     
     return total_tou_hours
 
+
+def parse_time_range(time_range):
+    start_time, end_time = time_range.split('-')
+    start_hour = int(start_time.split(':')[0])
+    end_hour = int(end_time.split(':')[0])
+    return start_hour, end_hour
+
+def calculate_load_profile(data, year, month, tou_data, scenarios, tdven, power_requirements):
+    load_profiles = {scenario: [0] * 24 for scenario in scenarios}  # Initialize with 0 for each hour
+
+    # Get charging behavior start and end times
+    start_time_str = data.get("charging_behavior", {}).get("startTime", "22:00")
+    end_time_str = data.get("charging_behavior", {}).get("endTime", "06:00")
+    
+    start_hour = int(start_time_str.split(':')[0])
+    end_hour = int(end_time_str.split(':')[0])
+
+    # Adjust for overnight charging
+    if end_hour <= start_hour:
+        end_hour += 24  # Shift end_hour to the next day
+
+    # Process each scenario
+    for scenario in scenarios:
+        allowed_periods = ["On-Peak", "Off-Peak", "Super Off-Peak"] if scenario in ["scenario_1", "scenario_3"] else ["Off-Peak", "Super Off-Peak"]
+        
+        remaining_energy = tdven
+        hourly_load = power_requirements[scenario]
+
+        # Distribute energy across allowed hours starting from start_hour
+        if remaining_energy > 0:
+            for hour in range(start_hour, end_hour):
+                current_hour = hour % 24  # Wrap around to 0-23
+
+                # Determine the current hour's period
+                current_hour_period = None
+                if current_hour >= 16 and current_hour < 21:  # On-Peak hours
+                    current_hour_period = "On-Peak"
+                elif current_hour < 6 or current_hour >= 21:  # Off-Peak hours
+                    current_hour_period = "Off-Peak"
+                else:  # Super Off-Peak hours
+                    current_hour_period = "Super Off-Peak"
+
+                # Check if the current hour is in the allowed periods
+                if current_hour_period in allowed_periods and remaining_energy > 0:
+                    load_profiles[scenario][current_hour] += hourly_load
+                    remaining_energy -= hourly_load
+
+                # If TDVEN is met, stop further distribution
+                if remaining_energy <= 0:
+                    break
+
+    return load_profiles
+
+
 def service_fee(power_requirement, year):
     year_data = TOU_DATA["TOU_Rates"].get(str(year), {})
     service_fee_data = year_data.get("ServiceFee", {'ServiceFeeLess': 213.30, 'ServiceFeeMore': 766.91})
@@ -991,6 +1045,27 @@ def calculate_v2():
     general_info = {}
     monthly_results = []
 
+    # Calculate load profiles for the first year/month combination only
+    first_year_month = year_month_combinations[0]
+    year = first_year_month["year"]
+    month = first_year_month["month"]
+    season = determine_season(year, month, TOU_DATA["Seasons"])
+
+    result_first = process_row(data, year, month, season)
+    tdven = result_first["TDVEN"]
+    charger_kw = result_first["charger_kw"]
+
+    # Extract power requirements from result_first
+    power_requirements = {
+        "scenario_1": result_first["scenario_1"]["power_requirement"],
+        "scenario_2": result_first["scenario_2"]["power_requirement"],
+        "scenario_3": result_first["scenario_3"]["power_requirement"],
+        "scenario_4": result_first["scenario_4"]["power_requirement"]
+    }
+
+    scenarios = ["scenario_1", "scenario_2", "scenario_3", "scenario_4"]
+    load_profiles = calculate_load_profile(data, year, month, TOU_DATA, scenarios, tdven, power_requirements)
+
     for combination in year_month_combinations:
         year = combination["year"]
         month = combination["month"]
@@ -1003,7 +1078,7 @@ def calculate_v2():
 
         # Extract general information once
         if not general_info:
-            general_info = {
+            general_info.update({
                 "total_vehicles": result["total_vehicles"],
                 "total_daily_miles_driven": result["total_daily_miles_driven"],
                 "total_chargers": result["total_chargers"],
@@ -1012,7 +1087,7 @@ def calculate_v2():
                 "first_active_daily_tou_hours": result["first_active_daily_tou_hours"],
                 "error_checks": result["error_checks"],
                 "first_active_daily_tou_hours": result["first_active_daily_tou_hours"],
-            }
+            })
 
         # Append monthly results
         monthly_results.append({
@@ -1020,8 +1095,6 @@ def calculate_v2():
             "month": month,
             "charging_days_count": result["charging_days_count"],
             "tou_season": result["tou_season"],
-            # "total_daily_charger_energy_output_with_onpeak": result["total_daily_charger_energy_output_with_onpeak"],
-            # "total_daily_charger_energy_output_without_onpeak": result["total_daily_charger_energy_output_without_onpeak"],
             "total_month_tou_hours": result["total_month_tou_hours"],
             "scenario_1": result["scenario_1"],
             "scenario_2": result["scenario_2"],
@@ -1033,6 +1106,8 @@ def calculate_v2():
 
     averages_and_savings = calculate_averages_and_savings(monthly_results)
     yearly_costs = calculate_total_costs_per_year(monthly_results)
+    # Store load profiles in general_info
+    general_info["load_profiles"] = load_profiles
 
     return jsonify({
         "general_info": general_info,
@@ -1084,16 +1159,16 @@ def calculate_averages_and_savings(monthly_results):
     yearly_electric_tc_1 = average_electric_monthly_tc_1 * 12
 
     average_electric_monthly_tc_2 = total_electric_monthly_tc_2 / num_months
-    yearly_electric_tc_2 = average_electric_monthly_tc_1 * 12
+    yearly_electric_tc_2 = average_electric_monthly_tc_2 * 12
 
     average_electric_monthly_tc_3 = total_electric_monthly_tc_3 / num_months
-    yearly_electric_tc_3 = average_electric_monthly_tc_1 * 12
+    yearly_electric_tc_3 = average_electric_monthly_tc_3 * 12
 
     average_electric_monthly_tc_4 = total_electric_monthly_tc_4 / num_months
-    yearly_electric_tc_4 = average_electric_monthly_tc_1 * 12
+    yearly_electric_tc_4 = average_electric_monthly_tc_4 * 12
 
     monthly_savings = average_fossil_fuel_monthly_tc - average_electric_monthly_tc_1
-    yearly_savings = yearly_fossil_fuel_tc - yearly_electric_tc_1
+    yearly_savings = yearly_fossil_fuel_tc - yearly_electric_tc_2
 
     return {
         "monthly_average_cost": {
@@ -1178,13 +1253,6 @@ def process_row(data, year, month, season):
         except json.JSONDecodeError:
             data['charging_behavior_days'] = {}
 
-    # all_days_in_month = generate_days_in_month(year, month)
-    # active_days = [
-    #     day for day in all_days_in_month
-    #     if str(data['charging_behavior_days'].get(day, 'false')).lower() in ['true', '1']
-    # ]
-
-    
     all_days_in_month = generate_days_in_month(year, month)
     selected_days = data['charging_behavior']['days']
 
@@ -1257,7 +1325,6 @@ def process_row(data, year, month, season):
         "scenario_3": total_charger_capacity,
         "scenario_4": total_charger_capacity
     }
-
     # Monthly EV Cost compilations start here
     # basic service fee
     fee = {
@@ -1315,6 +1382,7 @@ def process_row(data, year, month, season):
         "total_vehicles": total_num_vehicles,
         "total_daily_miles_driven": total_daily_miles_driven,
         "total_chargers": total_num_chargers,
+        "charger_kw": charger_kw,
         "charging_days_count": count_days_in_month(year,month,active_days),
         "tou_season": season,
         "TDVEN": round(tdven, 2),

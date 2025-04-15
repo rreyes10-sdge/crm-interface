@@ -12,7 +12,7 @@ interface EvCalculatorProps {
 
 const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) => {
     const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([{ id: 1, vehicleClass: 'Heavy Duty Pickup & Van - Class 3', numVehicles: 5, avgDailyMileage: 80 }]);
-    const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([{ id: 1, numChargers: 5, chargerKW: 100 }]);
+    const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([{ id: 1, numChargers: 5, chargerKW: 30 }]);
     const [results, setResults] = useState<Results | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [chargingBehavior, setChargingBehavior] = useState<ChargingBehavior>({

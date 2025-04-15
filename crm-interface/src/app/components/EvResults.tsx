@@ -9,6 +9,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { BarChart } from '@mui/x-charts/BarChart';
 import Divider from '@mui/material/Divider';
+import { axisClasses } from '@mui/x-charts/ChartsAxis';
+
 
 
 interface EvResultsProps {
@@ -36,17 +38,27 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 		},
 	];
 
+	// Find the adjusted fossil fuel price for January 2025
+    const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
+    const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
+
 	return (
 		<TableContainer component={Paper}>
-			<Table sx={{ minWidth: 650 }} aria-label="simple table">
+			<Table sx={{ minWidth: 650 }} aria-label="basic table">
 				<TableHead>
-					<TableRow>
+					<TableRow sx={{
+						"& th": {
+							fontSize: "1rem",
+							color: "primary",
+							backgroundColor: "primary"
+						}
+					}}>
 						<TableCell></TableCell>
 						<TableCell align="right">Scenario A</TableCell>
 						<TableCell align="right">Scenario B</TableCell>
 						<TableCell align="right">Scenario C</TableCell>
 						<TableCell align="right">Scenario D</TableCell>
-						<TableCell align="right">Fossil Fuel</TableCell>
+						<TableCell align="center">Fossil Fuel <br></br>(${adjustedFossilFuelPrice} per gallon)</TableCell>
 					</TableRow>
 				</TableHead>
 				<TableBody>
@@ -93,6 +105,44 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
 	);
 
+	// Prepare data for BarChart using load_profiles
+	const loadProfiles = results.general_info.load_profiles;
+	const barChartData = {
+		xAxis: [{ scaleType: 'band' as const, data: ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm'] }],
+		yAxis: [{
+			label: 'Energy (kWh)',
+		}],
+		series: [
+			{
+				label: 'Scenario A',
+				data: loadProfiles.scenario_1,
+				color: '#001689'
+			},
+			{
+				label: 'Scenario B',
+				data: loadProfiles.scenario_2,
+				color: '#58B947'
+			},
+			{
+				label: 'Scenario C',
+				data: loadProfiles.scenario_3,
+				color: '#009BDA'
+			},
+			{
+				label: 'Scenario D',
+				data: loadProfiles.scenario_4,
+				color: '#FED600'
+			}
+		],
+		width:850,
+		height:350,
+		sx: {
+			[`& .${axisClasses.directionY} .${axisClasses.label}`]: {
+			  transform: 'translateX(-10px)',
+			},
+		  },
+	};
+
 	return (
 		<Paper sx={{ p: 3, height: '100%' }}>
 			{/* <Typography variant="h5" gutterBottom>Results</Typography> */}
@@ -124,27 +174,7 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 			</Box>
 
 			<BarChart
-				xAxis={[{ scaleType: 'band', data: ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm'] }]}
-				series={[
-					{
-						label: 'Scenario A',
-						data: [4, 3, 2, 1, 0, 0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 4, 2, 1]
-					},
-					{
-						label: 'Scenario B',
-						data: [2, 1, 1, 0, 0, 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 7, 5, 3, 2]
-					},
-					{
-						label: 'Scenario C',
-						data: [5, 4, 3, 2, 1, 2, 4, 6, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 8, 6, 4, 3]
-					},
-					{
-						label: 'Scenario D',
-						data: [3, 2, 1, 0, 0, 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 7, 5, 3, 2]
-					}
-				]}
-				width={850}
-				height={350}
+				{...barChartData}
 			/>
 
 			<Box mt={3} mb={3}>
