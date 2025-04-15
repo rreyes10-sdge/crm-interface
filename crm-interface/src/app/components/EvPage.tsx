@@ -16,7 +16,7 @@ const EvPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/calculate', {
+            const response = await fetch('http://localhost:5000/calculate_v2', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
