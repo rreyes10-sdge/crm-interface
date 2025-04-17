@@ -10,6 +10,8 @@ import TableRow from '@mui/material/TableRow';
 import { BarChart } from '@mui/x-charts/BarChart';
 import Divider from '@mui/material/Divider';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
+import { PieChart } from '@mui/x-charts/PieChart';
+
 
 
 
@@ -39,8 +41,8 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 	];
 
 	// Find the adjusted fossil fuel price for January 2025
-    const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
-    const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
+	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
+	const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
 
 	return (
 		<TableContainer component={Paper}>
@@ -77,6 +79,50 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 				</TableBody>
 			</Table>
 		</TableContainer>
+	);
+};
+
+export const valueFormatter = (item: { value: number }) => `$${item.value.toFixed(2)}`;
+
+
+const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
+	// Find the adjusted fossil fuel price for January 2025
+	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
+	const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
+	const monthlyCosts = [
+		{
+			label: 'Basic Service Fee',
+			value: january2025Result ? january2025Result.scenario_1.basic_service_fee.toFixed(2) : 'N/A',
+			color: '#F8971D'
+
+		},
+		{
+			label: 'Subscription Fee',
+			value: january2025Result ? january2025Result.scenario_1.subscription_fee.toFixed(2) : 'N/A',
+			color: '#1ABFD5'
+		},
+		{
+			label: 'Energy Costs',
+			value: january2025Result ? january2025Result.scenario_1.commodity_distribution_cost.toFixed(2) : 'N/A',
+			color: '#545861'
+		}
+	]
+
+	return (
+		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
+			<PieChart
+				series={[
+					{
+						data: monthlyCosts,
+						highlightScope: { fade: 'global', highlight: 'item' },
+						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+						valueFormatter,
+					},
+				]}
+				height={400}
+				width={400}
+			/>
+		</div>
 	);
 };
 
@@ -134,13 +180,13 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 				color: '#FED600'
 			}
 		],
-		width:850,
-		height:350,
+		width: 800,
+		height: 350,
 		sx: {
 			[`& .${axisClasses.directionY} .${axisClasses.label}`]: {
-			  transform: 'translateX(-10px)',
+				transform: 'translateX(-10px)',
 			},
-		  },
+		},
 	};
 
 	return (
@@ -162,7 +208,7 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 			</Box>
 
 			<Box mt={3} mb={3}>
-				<Typography variant="h6">Yearly Costs</Typography>
+				{/* <Typography variant="h6">Yearly Costs</Typography> */}
 				<YearlyCostChart yearlyFossilFuelCosts={yearlyFossilFuelCosts} yearlyEvCosts={yearlyEvCosts} />
 			</Box>
 
@@ -176,6 +222,19 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 			<BarChart
 				{...barChartData}
 			/>
+
+			<Divider />
+
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='center'>Monthly Electricity Cost Breakdown:</Typography>
+				<Typography component="div">
+
+				</Typography>
+			</Box>
+
+			<EvResultsPie results={results}></EvResultsPie>
+
+			<Divider />
 
 			<Box mt={3} mb={3}>
 				<Typography variant="h6" align='center'>Considerations as You Review Your Load Plan:</Typography>
