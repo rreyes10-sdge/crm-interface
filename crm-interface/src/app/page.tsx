@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon } from '@mui/material';
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import client from '../apollo-client';
@@ -25,20 +25,24 @@ import {
     Inbox as InboxIcon
 } from '@mui/icons-material';
 import BasicListMenu from './components/BasicListMenu';
+import PopupState from 'material-ui-popup-state';
+import { bindTrigger, bindMenu } from 'material-ui-popup-state/hooks';
 
 const DRAWER_WIDTH = 60;
 
 const SELECTED_BG_COLOR = '#f3f3f3';
 const SELECTED_ICON_COLOR = '#088856';
 const HOVER_BG_COLOR = '#58B947';
-const BG_COLOR = '#f3f3f3'
+const BG_COLOR = '#001689'
 const ICON_COLOR = '#009BDA'
+const TEXT_COLOR = '#FFFFFF'
 
 const Home = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [showSubMenu, setShowSubMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     if (location.pathname === '/project-tracker') {
@@ -81,6 +85,14 @@ const Home = () => {
     setSelectedTab(6);
   };
 
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const getPageTitle = () => {
     switch (selectedTab) {
       case 0:
@@ -117,151 +129,71 @@ const Home = () => {
     { text: 'Inbox', icon: <InboxIcon />, href: '/tasks-inbox' },
   ];
 
-  return (
-    <Box sx={{ display: 'flex' }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: DRAWER_WIDTH,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            backgroundColor: BG_COLOR,
-            color: ICON_COLOR,
-            // display: 'flex',
-            // alignItems: 'center', // Center align icons vertically
-            paddingTop: 6, // Increase padding between icons
-            paddingBottom: 6, // Increase padding between icons
-            // paddingLeft: 4,
-          },
-        }}
-      >
-        <List component="nav" sx={{ pt: 2 }}>
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleHomeClick} selected={selectedTab === 0 || selectedTab === 1}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}
-            >
-              <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 0 || selectedTab === 1 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
-                <HomeIcon />
+  const Navbar = () => {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: BG_COLOR, padding: 1 }}>
+        <img src="/images/logo.png" alt="Logo" style={{ height: '40px', margin: '10px 0px 10px 40px' }} />
+        <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'flex-end' }}>
+          <List sx={{ display: 'flex', flexDirection: 'row', margin: 0 }}>
+            <PopupState variant="popover" popupId="home-menu">
+              {(popupState) => (
+                <React.Fragment>
+                  <ListItemButton {...bindTrigger(popupState)} selected={selectedTab === 0 || selectedTab === 1}>
+                    <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                      <HomeIcon />
+                    </ListItemIcon>
+                    <span style={{ color: TEXT_COLOR }}>Home</span>
+                  </ListItemButton>
+                  <Menu {...bindMenu(popupState)}>
+                    {homeSubMenuItems.map((item) => (
+                      <MenuItem key={item.text} onClick={() => { navigate(item.href); popupState.close(); }}>
+                        <ListItemIcon>{item.icon}</ListItemIcon>
+                        {item.text}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </React.Fragment>
+              )}
+            </PopupState>
+            <ListItemButton selected={selectedTab === 2} onClick={() => navigate('/project-summary')}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                <DescriptionIcon />
               </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>Project Summary</span>
             </ListItemButton>
-          </ListItem>
-
-          <ListItemButton 
-            selected={selectedTab === 2}
-            onClick={() => {
-              navigate('/project-summary');
-              setShowSubMenu(false);
-            }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 2 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
-              <DescriptionIcon />
-            </ListItemIcon>
-          </ListItemButton>
-
-          <ListItemButton 
-            selected={selectedTab === 3}
-            onClick={() => {
-              navigate('/user-overview');
-              setShowSubMenu(false);
-            }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 3 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
-              <PersonIcon />
-            </ListItemIcon>
-          </ListItemButton>
-
-          <ListItemButton 
-            selected={selectedTab === 4}
-            onClick={() => {
-              navigate('/ev-calculator');
-              setShowSubMenu(false);
-            }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 4 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
-              <EvStationIcon />
-            </ListItemIcon>
-          </ListItemButton>
-
-          <ListItemButton 
-            selected={selectedTab === 5}
-            onClick={() => {
-              navigate('/program-summary');
-              setShowSubMenu(false);
-            }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab === 5 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
-              <AssessmentIcon />
-            </ListItemIcon>
-          </ListItemButton>
-
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleTasksClick} selected={selectedTab >= 6 && selectedTab <= 8}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: SELECTED_BG_COLOR,
-                '&:hover': {
-                  backgroundColor: HOVER_BG_COLOR,
-                },
-              },
-            }}>
-              <ListItemIcon sx={{ minWidth: 'auto', color: selectedTab >= 6 && selectedTab <= 8 ? SELECTED_ICON_COLOR : ICON_COLOR }}>
+            <ListItemButton selected={selectedTab === 3} onClick={() => navigate('/user-overview')}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                <PersonIcon />
+              </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>User Overview</span>
+            </ListItemButton>
+            <ListItemButton selected={selectedTab === 4} onClick={() => navigate('/ev-calculator')}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                <EvStationIcon />
+              </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>EV Calculator</span>
+            </ListItemButton>
+            <ListItemButton selected={selectedTab === 5} onClick={() => navigate('/program-summary')}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                <AssessmentIcon />
+              </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>Program Summary</span>
+            </ListItemButton>
+            <ListItemButton onClick={handleTasksClick} selected={selectedTab >= 6 && selectedTab <= 8}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
                 <InboxIcon />
               </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>Tasks</span>
             </ListItemButton>
-          </ListItem>
-        </List>
-      </Drawer>
+          </List>
+        </Box>
+      </Box>
+    );
+  };
 
-      {showSubMenu && selectedTab <= 1 && (
-        <BasicListMenu items={homeSubMenuItems} activeItem={location.pathname} />
-      )}
-
-      {showSubMenu && selectedTab >= 6 && selectedTab <= 8 && (
-        <BasicListMenu items={tasksSubMenuItems} activeItem={location.pathname} />
-      )}
-
-      {/* Main content */}
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Navbar />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <PageTitle title={getPageTitle()} />
         <Box sx={{ p: 0, marginLeft: 0, marginRight: 0, width: '100%' }}>

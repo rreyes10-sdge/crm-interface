@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Typography, Box, Grid, Tabs, Tab } from '@mui/material';
+import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,9 +11,7 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import Divider from '@mui/material/Divider';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { PieChart } from '@mui/x-charts/PieChart';
-
-
-
+import { SelectChangeEvent } from '@mui/material';
 
 interface EvResultsProps {
 	results: any;
@@ -40,9 +38,9 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 		},
 	];
 
-	// Find the adjusted fossil fuel price for January 2025
-	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
-	const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
+	// Find the adjusted fossil fuel price for current Year and Month
+	const currentYearMonthResult = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
+	const adjustedFossilFuelPrice = currentYearMonthResult ? currentYearMonthResult.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
 
 	return (
 		<TableContainer component={Paper}>
@@ -82,41 +80,49 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 	);
 };
 
-export const valueFormatter = (item: { value: number }) => `$${item.value.toFixed(2)}`;
-
+const formatCurrency = (value: any) => {
+	if (typeof value === 'number') {
+		return `$${value.toFixed(2)}`;
+	}
+	return value; // Return the value as is if it's not a number
+};
 
 const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
 	// Find the adjusted fossil fuel price for January of current year
-	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
+	const currentYearMonthResult = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
+
 	const monthlyCosts = [
 		{
 			label: 'Basic Service Fee',
-			value: january2025Result ? january2025Result.scenario_1.basic_service_fee.toFixed(2) : 'N/A',
+			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.basic_service_fee : 0,
 			color: '#F8971D'
-
 		},
 		{
 			label: 'Subscription Fee',
-			value: january2025Result ? january2025Result.scenario_1.subscription_fee.toFixed(2) : 'N/A',
+			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.subscription_fee : 0,
 			color: '#1ABFD5'
 		},
 		{
 			label: 'Energy Costs',
-			value: january2025Result ? january2025Result.scenario_1.commodity_distribution_cost.toFixed(2) : 'N/A',
+			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.commodity_distribution_cost : 0,
 			color: '#545861'
 		}
-	]
+	];
+
+	// Ensure that the data structure is correct
+	const pieData = monthlyCosts.map(cost => ({
+		...cost,
+		formattedValue: formatCurrency(cost.value) // Add formatted value for display
+	}));
 
 	return (
 		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
 			<PieChart
 				series={[
 					{
-						data: monthlyCosts,
+						data: pieData,
 						highlightScope: { fade: 'global', highlight: 'item' },
-						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
-						valueFormatter,
-					},
+						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' }					},
 				]}
 				height={400}
 				width={400}
@@ -166,7 +172,101 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 
 	return (
 		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
-			   <BarChart {...barChartData} />
+			<BarChart {...barChartData} />
+		</div>
+	);
+};
+
+const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
+	const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Default year
+	const [selectedScenario, setSelectedScenario] = useState<number>(2); // Default scenario (B)
+
+	const handleYearChange = (event: SelectChangeEvent<number>) => {
+		setSelectedYear(event.target.value as number);
+	};
+
+	const handleScenarioChange = (event: SelectChangeEvent<number>) => {
+		setSelectedScenario(event.target.value as number);
+	};
+
+	const years = results?.monthly_results ? Array.from(new Set(results.monthly_results.map((result: { year: number }) => result.year))) : [];
+
+	// Prepare data for the bar chart based on selected year and scenario
+	const monthlyData = results && results.monthly_results
+		? results.monthly_results.filter((result: { year: number }) => result.year === selectedYear)
+		: []; // Default to an empty array if results or monthly_results is null
+
+	const barChartData = {
+		xAxis: [
+			{
+				scaleType: 'band' as const,
+				data: monthlyData.map((result: { month: number }) => new Date(0, result.month - 1).toLocaleString('default', { month: 'long' })),
+			},
+		],
+		yAxis: [{ label: 'Cost ($)' }],
+		series: [
+			{
+				label: 'Basic Service Fee',
+				data: monthlyData.map((result: any) => result[`scenario_${selectedScenario}`].basic_service_fee),
+				color: '#F8971D',
+				stack: 'costs',
+			},
+			{
+				label: 'Subscription Fee',
+				data: monthlyData.map((result: any) => result[`scenario_${selectedScenario}`].subscription_fee),
+				color: '#1ABFD5',
+				stack: 'costs',
+			},
+			{
+				label: 'Commodity Distribution Costs',
+				data: monthlyData.map((result: any) => result[`scenario_${selectedScenario}`].commodity_distribution_cost),
+				color: '#545861',
+				stack: 'costs',
+			},
+		],
+		width: 800,
+		height: 350,
+	};
+
+	return (
+		<div>
+			{/* Year and Scenario Selection */}
+			<Box sx={{ mt: 2 }}>
+				<FormControl variant="outlined" sx={{ mr: 2 }}>
+					<InputLabel id="year-select-label">Year</InputLabel>
+					<Select
+						labelId="year-select-label"
+						value={selectedYear}
+						onChange={handleYearChange}
+						label="Year"
+					>
+						{years.map((year: number) => (
+							<MenuItem key={year} value={year}>{year}</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+
+				<FormControl variant="outlined">
+					<InputLabel id="scenario-select-label">Scenario</InputLabel>
+					<Select
+						labelId="scenario-select-label"
+						value={selectedScenario}
+						onChange={handleScenarioChange}
+						label="Scenario"
+					>
+						<MenuItem value={1}>Scenario A</MenuItem>
+						<MenuItem value={2}>Scenario B</MenuItem>
+						<MenuItem value={3}>Scenario C</MenuItem>
+						<MenuItem value={4}>Scenario D</MenuItem>
+					</Select>
+				</FormControl>
+			</Box>
+
+			{/* Render the Stacked Bar Chart */}
+			<Box sx={{ mt: 3 }}>
+				<Typography variant="h6" align='center'>Monthly Costs for {selectedYear} - Scenario {selectedScenario}</Typography>
+				<BarChart {...barChartData} />
+			</Box>
 		</div>
 	);
 };
@@ -193,14 +293,6 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 			</Paper>
 		);
 	}
-
-	// Prepare data for YearlyCostChart
-	const yearlyFossilFuelCosts = Object.fromEntries(
-		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_fossil_fuel_tc])
-	);
-	const yearlyEvCosts = Object.fromEntries(
-		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
-	);
 
 	return (
 		<Paper sx={{ p: 3, height: '100%' }}>
@@ -280,32 +372,35 @@ const ChargersSection = ({ results }: { results: any }) => (
 	</div>
 );
 // Costs Section
-const CostsSection = ({ results }: { results: any }) => (
-	<div>
-		<EvResultsTable results={results} />
-		<br></br>
-		<Divider />
+const CostsSection = ({ results }: { results: any }) => {
+	return (
+		<div>
+			<EvResultsTable results={results} />
+			<br />
+			<Divider />
 			<Box mt={3} mb={3}>
 				<Typography variant="h6" align='left'>Charging Scenarios:</Typography>
-			<Typography component="div">
-				<strong>Scenario 1 - Managed Optimal Without On-Peak Hours</strong>
-				<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce their electricity costs. This approach requires planning and scheduling to ensure that all vehicles are charged within the cheaper hours, but it can lead to substantial savings.</p>
-				<br></br>
-				<strong>Scenario 2 - Managed Optimal With On-Peak Hours</strong>
-				<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
-				<br></br>
-				<strong>Scenario 3 - Unmanaged Without On-Peak Hours</strong>
-				<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, which means that chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges because of the intense power usage, but it simplifies the charging process as no scheduling is required.</p>
-				<br></br>
-				<strong>Scenario 4 - Unmanaged With On-Peak Hours</strong>
-				<p>Similar to the unmanaged without on-peak hours scenario, but charging can occur during both off-peak and on-peak hours. This approach offers the most flexibility, as vehicles can be charged at any time. However, it can result in even higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
+				<Typography component="div">
+					<strong>Scenario 1 - Managed Optimal Without On-Peak Hours</strong>
+					<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce their electricity costs. This approach requires planning and scheduling to ensure that all vehicles are charged within the cheaper hours, but it can lead to substantial savings.</p>
+					<br></br>
+					<strong>Scenario 2 - Managed Optimal With On-Peak Hours</strong>
+					<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
+					<br></br>
+					<strong>Scenario 3 - Unmanaged Without On-Peak Hours</strong>
+					<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, which means that chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges because of the intense power usage, but it simplifies the charging process as no scheduling is required.</p>
+					<br></br>
+					<strong>Scenario 4 - Unmanaged With On-Peak Hours</strong>
+					<p>Similar to the unmanaged without on-peak hours scenario, but charging can occur during both off-peak and on-peak hours. This approach offers the most flexibility, as vehicles can be charged at any time. However, it can result in even higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
 
-			</Typography>
+				</Typography>
 			</Box>
 			<Divider />
-			<EvResultsPie results={results} />
+			{/* <EvResultsPie results={results} /> */}
+			<EvResultsMonthlyCosts results={results} />
 		</div>
-);
+	);
+};
 // TBD Section
 const TBDSection = ({ results }: { results: any }) => (
 	<div>

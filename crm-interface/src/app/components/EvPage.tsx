@@ -49,9 +49,8 @@ const EvPage: React.FC = () => {
             setIsLoading(false);
         }
     };
-
     return (
-        <Container maxWidth="xl" disableGutters>
+        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto', px: '40px' }}>
             <Grid container spacing={3}>
                 {/* Calculator - Left Side */}
                 <Grid item xs={12} lg={5}>
@@ -74,7 +73,7 @@ const EvPage: React.FC = () => {
                 </Grid>
             </Grid>
             <LegalDisclaimer />
-        </Container>
+        </Box>
     );
 };
 
