@@ -1234,12 +1234,12 @@ def process_row(data, year, month, season):
             })
             total_num_chargers += num_chargers
             total_charger_capacity += num_chargers * charger_kw
-    base_year = 2025
+    base_year = datetime.now().year
     # Calculate the number of years since the base year
     years_since_base = year - base_year
 
     fossil_fuel_price = float(data.get("fossil_fuel_price", 4.30) or 4.30)
-    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 1.0131) or 1.0131)
+    fossil_fuel_multiplier = float(data.get("fossil_fuel_multiplier", 1.03) or 1.03)
     fossil_fuel_mpg_override = data.get("fossil_fuel_efficiency")
     transformer_capacity = float(data.get("transformer_capacity", 0) or 0)
 

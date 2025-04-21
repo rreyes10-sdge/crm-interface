@@ -1,5 +1,5 @@
-import React from 'react';
-import { Paper, Typography, Box, Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Paper, Typography, Box, Grid, Tabs, Tab } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -86,9 +86,8 @@ export const valueFormatter = (item: { value: number }) => `$${item.value.toFixe
 
 
 const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
-	// Find the adjusted fossil fuel price for January 2025
-	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === 1 && result.year === 2025);
-	const adjustedFossilFuelPrice = january2025Result ? january2025Result.adjusted_fossil_fuel_price.toFixed(2) : 'N/A';
+	// Find the adjusted fossil fuel price for January of current year
+	const january2025Result = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
 	const monthlyCosts = [
 		{
 			label: 'Basic Service Fee',
@@ -126,31 +125,7 @@ const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
 	);
 };
 
-const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
-	if (isLoading) {
-		return (
-			<Paper sx={{ p: 3, height: '100%' }}>
-				<Typography>Calculating...</Typography>
-			</Paper>
-		);
-	}
-
-	if (!results) {
-		return (
-			<Paper sx={{ p: 3, height: '100%' }}>
-				<Typography>Enter your fleet details to see potential savings</Typography>
-			</Paper>
-		);
-	}
-
-	// Prepare data for YearlyCostChart
-	const yearlyFossilFuelCosts = Object.fromEntries(
-		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_fossil_fuel_tc])
-	);
-	const yearlyEvCosts = Object.fromEntries(
-		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
-	);
-
+const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 	// Prepare data for BarChart using load_profiles
 	const loadProfiles = results.general_info.load_profiles;
 	const barChartData = {
@@ -190,126 +165,153 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 	};
 
 	return (
-		<Paper sx={{ p: 3, height: '100%' }}>
-			{/* <Typography variant="h5" gutterBottom>Results</Typography> */}
+		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
+			   <BarChart {...barChartData} />
+		</div>
+	);
+};
 
-			<Box mb={3}>
-				<Typography variant="h6">Annual Savings</Typography>
+const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
+	const [value, setValue] = useState(0); // State for managing the selected tab
+
+	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+		setValue(newValue);
+	};
+
+	if (isLoading) {
+		return (
+			<Paper sx={{ p: 3, height: '100%' }}>
+				<Typography variant="h4" align='center' color="primary">Calculating...</Typography>
+			</Paper>
+		);
+	}
+
+	if (!results) {
+		return (
+			<Paper sx={{ p: 3, height: '100%' }}>
+				<Typography variant="h4" align='center' color="primary">Enter your details to see potential savings</Typography>
+			</Paper>
+		);
+	}
+
+	// Prepare data for YearlyCostChart
+	const yearlyFossilFuelCosts = Object.fromEntries(
+		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_fossil_fuel_tc])
+	);
+	const yearlyEvCosts = Object.fromEntries(
+		Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
+	);
+
+	return (
+		<Paper sx={{ p: 3, height: '100%' }}>
+			<Tabs value={value} onChange={handleChange} aria-label="results tabs">
+				<Tab label="Overview" />
+				<Tab label="Chargers" />
+				<Tab label="Costs" />
+				<Tab label="TBD" />
+			</Tabs>
+			<Box sx={{ p: 2 }}>
+				{value === 0 && <OverviewSection results={results} />}
+				{value === 1 && <ChargersSection results={results} />}
+				{value === 2 && <CostsSection results={results} />}
+				{value === 3 && <TBDSection results={results} />}
+			</Box>
+		</Paper>
+	);
+};
+// Overview Section
+const OverviewSection = ({ results }: { results: any }) => (
+	<div>
+		<Box mb={3} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+			<Box>
+				<Typography variant="h6">Average Annual Savings</Typography>
 				<Typography variant="h4" color="primary">
 					${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
 				</Typography>
 			</Box>
-
-			<Box mb={3}>
-				{/* <Typography variant="h5" align='center'>Summary of Findings:</Typography> */}
-				<Typography variant="h6" align='center'>
-					By electrifying your vehicles during off-peak hours in a managed scenario, you can save on average <strong>${results?.averages_and_savings?.monthly_savings ? Number(results.averages_and_savings.monthly_savings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'} per month</strong>, and <strong>${results?.averages_and_savings?.yearly_savings ? Number(results.averages_and_savings.yearly_savings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'} per year</strong> compared to fossil fuel costs.
+			<Divider orientation="vertical" flexItem />
+			<Box>
+				<Typography variant="h6">Annual EV Fuel Costs</Typography>
+				<Typography variant="h4" color="primary">
+					${results?.averages_and_savings?.yearly_average_cost?.yearly_electric_tc_2?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
 				</Typography>
 			</Box>
-
-			<Box mt={3} mb={3}>
-				{/* <Typography variant="h6">Yearly Costs</Typography> */}
-				<YearlyCostChart yearlyFossilFuelCosts={yearlyFossilFuelCosts} yearlyEvCosts={yearlyEvCosts} />
+			<Divider orientation="vertical" flexItem />
+			<Box>
+				<Typography variant="h6">Annual Fossil Fuel Costs</Typography>
+				<Typography variant="h4" color="primary">
+					${results?.averages_and_savings?.yearly_average_cost?.yearly_fossil_fuel_tc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
+				</Typography>
 			</Box>
+		</Box>
 
-			<EvResultsTable results={results}></EvResultsTable>
-			<br></br>
-			<Divider />
-			<Box mt={3} mb={3}>
-				<Typography variant="h6" align='center'>The site's energy use will be the aggregate of all vehicles and their charging patterns, as shown for each scenario:</Typography>
-			</Box>
+		<Divider />
 
-			<BarChart
-				{...barChartData}
+		<Box mt={3} mb={3}>
+			{/* <Typography variant="h5" align='center'>Summary of Findings:</Typography> */}
+			<Typography variant="h6" align='center'>
+				By electrifying your vehicles during off-peak hours in a managed scenario, you can save on average <strong>${results?.averages_and_savings?.monthly_savings ? Number(results.averages_and_savings.monthly_savings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'} per month</strong>, and <strong>${results?.averages_and_savings?.yearly_savings ? Number(results.averages_and_savings.yearly_savings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'} per year</strong> compared to fossil fuel costs.
+			</Typography>
+		</Box>
+
+		<Box mt={3} mb={3}>
+			{/* <Typography variant="h6">Yearly Costs</Typography> */}
+			<YearlyCostChart
+				yearlyFossilFuelCosts={Object.fromEntries(
+					Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_fossil_fuel_tc])
+				)}
+				yearlyEvCosts={Object.fromEntries(
+					Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
+				)}
 			/>
+		</Box>
+	</div>
+);
+// Chargers Section
+const ChargersSection = ({ results }: { results: any }) => (
+	<div>
 
-			<Divider />
+		<Box mt={3} mb={3}>
+			<Typography variant="h6" align='center'>The site's energy use will be the aggregate of all vehicles and their charging patterns, as shown for each scenario:</Typography>
+		</Box>
 
+		<EvResultsLoadProfile results={results} />
+		<Divider />
+	</div>
+);
+// Costs Section
+const CostsSection = ({ results }: { results: any }) => (
+	<div>
+		<EvResultsTable results={results} />
+		<br></br>
+		<Divider />
 			<Box mt={3} mb={3}>
-				<Typography variant="h6" align='center'>Monthly Electricity Cost Breakdown:</Typography>
-				<Typography component="div">
+				<Typography variant="h6" align='left'>Charging Scenarios:</Typography>
+			<Typography component="div">
+				<strong>Scenario 1 - Managed Optimal Without On-Peak Hours</strong>
+				<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce their electricity costs. This approach requires planning and scheduling to ensure that all vehicles are charged within the cheaper hours, but it can lead to substantial savings.</p>
+				<br></br>
+				<strong>Scenario 2 - Managed Optimal With On-Peak Hours</strong>
+				<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
+				<br></br>
+				<strong>Scenario 3 - Unmanaged Without On-Peak Hours</strong>
+				<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, which means that chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges because of the intense power usage, but it simplifies the charging process as no scheduling is required.</p>
+				<br></br>
+				<strong>Scenario 4 - Unmanaged With On-Peak Hours</strong>
+				<p>Similar to the unmanaged without on-peak hours scenario, but charging can occur during both off-peak and on-peak hours. This approach offers the most flexibility, as vehicles can be charged at any time. However, it can result in even higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
 
-				</Typography>
+			</Typography>
 			</Box>
-
-			<EvResultsPie results={results}></EvResultsPie>
-
 			<Divider />
-
-			<Box mt={3} mb={3}>
-				<Typography variant="h6" align='center'>Considerations as You Review Your Load Plan:</Typography>
-				<Typography component="div">
-					<ul>
-						<li><strong>To help manage costs,</strong> scale infrastructure deployments for all planned electric vehicles that will be in operation. With this approach, consider installing as much of the in-ground infrastructure necessary for the full deployment during the first phase to lower construction costs.</li>
-						<li><strong>For ease of operation,</strong> consider deploying vehicles and chargers in a 1-1 relationship. Once the operators are more familiar with the technology and its limitations, this can be scaled to a shared asset scenario in keeping with operational needs.</li>
-						<li><strong>For customers who lease their sites:</strong> Before development of any specific site plans or engineering drawings needed for deployment, be sure to contact the property lessor to discuss access and permission for construction.</li>
-						<li><strong>Easements may be necessary for</strong> some utility-side upgrades, and these will also need to be discussed with the property owner/lessor.</li>
-						<li><strong>Understanding energy load can prevent</strong> overloading infrastructure, which could require costly upgrades.</li>
-						<li><strong>Level 2 chargers versus DCFC (fast chargers) impact energy load differently.</strong> For example, fast chargers demand more power but reduce charging time. Some key considerations are:
-							<ul>
-								<li>Operational restrictions (operating hours, staff availability, etc.) will dictate the optimal charging infrastructure deployment.</li>
-								<li>The cost of deployment is driven by the cost of equipment. Shared use of assets (1:2 relationship of chargers to vehicles) can help minimize cost of deployment but come with more challenging operating profiles.</li>
-							</ul>
-						</li>
-						<li><strong>Peak vs. Off-Peak Costs:</strong> Charging during off-peak times can reduce energy costs. There will be a rate analysis included with your load plan, but for more information, speak with your advisor about Rate Education service. A best practice is to charge at the lowest power rating possible while still getting a full charge during the available dwell time (this reduces cost of charging and improves long-term battery health).</li>
-					</ul>
-				</Typography>
-			</Box>
-
-			<Grid container spacing={3} mt={3}>
-				<Grid item xs={12} md={6}>
-					<Typography variant="subtitle1">Total Cost</Typography>
-					<Typography variant="h6">${results.totalCost}</Typography>
-				</Grid>
-				<Grid item xs={12} md={6}>
-					<Typography variant="subtitle1">Payback Period</Typography>
-					<Typography variant="h6">{results.paybackPeriod} years</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">CO2 Reduction</Typography>
-					<Typography variant="h6">{results.co2Reduction} metric tons/year</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Fossil Fuel Daily Avg Cost</Typography>
-					<Typography variant="h6">
-						${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.fossil_fuel_daily_avg_cost)}
-					</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Fossil Fuel Weekly Avg Cost</Typography>
-					<Typography variant="h6">
-						${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.fossil_fuel_weekly_avg_cost)}
-					</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Average MPG</Typography>
-					<Typography variant="h6">{results.general_info.fossil_fuel_average_mpg.toFixed(2)}</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Daily Average Miles</Typography>
-					<Typography variant="h6">{results.general_info.total_daily_miles_driven.toFixed(2)}</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Daily Fossil Fuel Cost</Typography>
-					<Typography variant="h6">
-						${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(results.monthly_fossil_fuel_tc / 30)}
-					</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Total Daily Vehicle Energy Needed</Typography>
-					<Typography variant="h6">{results.general_info.TDVEN.toFixed(2)} kWh</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Does current set of charger(s) cover your vehicle group(s) daily energy needs? (unmanaged scenario)</Typography>
-					<Typography variant="h6">{results.general_info.error_checks.charger_cover_scenarios_1_and_3_flag === "true" ? 'Yes' : 'No'}</Typography>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography variant="subtitle1">Will set of charger(s) cover your vehicle group(s) daily energy using only Off-Peak energy? (optimal scenario)</Typography>
-					<Typography variant="h6">{results.general_info.error_checks.charger_cover_scenarios_2_and_4_flag === "true" ? 'Yes' : 'No'}</Typography>
-				</Grid>
-			</Grid>
-		</Paper>
-	);
-};
+			<EvResultsPie results={results} />
+		</div>
+);
+// TBD Section
+const TBDSection = ({ results }: { results: any }) => (
+	<div>
+		<Typography variant="h6">TBD Content</Typography>
+		{/* Add TBD-specific content here */}
+	</div>
+);
 
 export default EvResults;

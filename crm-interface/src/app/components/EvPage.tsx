@@ -66,13 +66,11 @@ const EvPage: React.FC = () => {
                         </Box>
                     )}
                     
-                    {results && results.calculations && (
-                        console.log('Results:', results.calculations), // Log the results
-                        <EvResults 
-                            results={results.calculations} 
-                            isLoading={isLoading}
-                        />
-                    )}
+                    {/* Always render EvResults, passing results and isLoading */}
+                    <EvResults 
+                        results={results ? results.calculations : null} 
+                        isLoading={isLoading}
+                    />
                 </Grid>
             </Grid>
             <LegalDisclaimer />
