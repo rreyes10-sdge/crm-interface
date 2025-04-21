@@ -12,6 +12,8 @@ import Divider from '@mui/material/Divider';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
+import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
+import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
 
 interface EvResultsProps {
 	results: any;
@@ -315,9 +317,15 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 const OverviewSection = ({ results }: { results: any }) => (
 	<div>
 		<Box mb={3} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+			<Box sx={{ display: 'flex', alignItems: 'center' }}>
+				<Typography variant="h4" color="primary">
+					<EnergySavingsLeafTwoToneIcon sx={{ fontSize: '4.5rem', marginRight: '4px' }} />
+				</Typography>
+			</Box>
 			<Box>
 				<Typography variant="h6">Average Annual Savings</Typography>
 				<Typography variant="h4" color="primary">
+					
 					${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
 				</Typography>
 			</Box>
