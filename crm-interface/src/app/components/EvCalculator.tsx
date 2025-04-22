@@ -312,7 +312,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                                 key={day}
                                                 onClick={() => handleDayChange(day)}
                                                 sx={{
-                                                    backgroundColor: chargingBehavior.days.includes(day) ? '#ffc107' : 'transparent',
+                                                    backgroundColor: chargingBehavior.days.includes(day) ? '#FED600' : 'transparent',
                                                     border: '1px solid #e0e0e0',
                                                     borderRadius: '8px',
                                                     padding: '12px',

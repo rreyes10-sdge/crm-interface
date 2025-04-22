@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,8 +12,9 @@ import Divider from '@mui/material/Divider';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
-import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
+import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+
 
 interface EvResultsProps {
 	results: any;
@@ -56,10 +57,10 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 						}
 					}}>
 						<TableCell></TableCell>
-						<TableCell align="right">Scenario A</TableCell>
-						<TableCell align="right">Scenario B</TableCell>
-						<TableCell align="right">Scenario C</TableCell>
-						<TableCell align="right">Scenario D</TableCell>
+						<TableCell align="right">Scenario 1</TableCell>
+						<TableCell align="right">Scenario 2</TableCell>
+						<TableCell align="right">Scenario 3</TableCell>
+						<TableCell align="right">Scenario 4</TableCell>
 						<TableCell align="center">Fossil Fuel <br></br>(${adjustedFossilFuelPrice} per gallon)</TableCell>
 					</TableRow>
 				</TableHead>
@@ -124,7 +125,8 @@ const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
 					{
 						data: pieData,
 						highlightScope: { fade: 'global', highlight: 'item' },
-						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' }					},
+						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' }
+					},
 				]}
 				height={400}
 				width={400}
@@ -143,22 +145,22 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 		}],
 		series: [
 			{
-				label: 'Scenario A',
+				label: 'Scenario 1',
 				data: loadProfiles.scenario_1,
 				color: '#001689'
 			},
 			{
-				label: 'Scenario B',
+				label: 'Scenario 2',
 				data: loadProfiles.scenario_2,
 				color: '#58B947'
 			},
 			{
-				label: 'Scenario C',
+				label: 'Scenario 3',
 				data: loadProfiles.scenario_3,
 				color: '#009BDA'
 			},
 			{
-				label: 'Scenario D',
+				label: 'Scenario 4',
 				data: loadProfiles.scenario_4,
 				color: '#FED600'
 			}
@@ -191,7 +193,7 @@ const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 		setSelectedScenario(event.target.value as number);
 	};
 
-	const years = results?.monthly_results ? Array.from(new Set(results.monthly_results.map((result: { year: number }) => result.year))) : [];
+	const years: number[] = results?.monthly_results ? Array.from(new Set(results.monthly_results.map((result: { year: number }) => result.year))) : [];
 
 	// Prepare data for the bar chart based on selected year and scenario
 	const monthlyData = results && results.monthly_results
@@ -205,7 +207,9 @@ const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 				data: monthlyData.map((result: { month: number }) => new Date(0, result.month - 1).toLocaleString('default', { month: 'long' })),
 			},
 		],
-		yAxis: [{ label: 'Cost ($)' }],
+		// yAxis: [{ 
+		// 	label: 'Cost ($)' ,
+		// }],
 		series: [
 			{
 				label: 'Basic Service Fee',
@@ -220,13 +224,13 @@ const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 				stack: 'costs',
 			},
 			{
-				label: 'Commodity Distribution Costs',
+				label: 'Energy Costs',
 				data: monthlyData.map((result: any) => result[`scenario_${selectedScenario}`].commodity_distribution_cost),
 				color: '#545861',
 				stack: 'costs',
 			},
 		],
-		width: 800,
+		width: 850,
 		height: 350,
 	};
 
@@ -256,10 +260,10 @@ const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 						onChange={handleScenarioChange}
 						label="Scenario"
 					>
-						<MenuItem value={1}>Scenario A</MenuItem>
-						<MenuItem value={2}>Scenario B</MenuItem>
-						<MenuItem value={3}>Scenario C</MenuItem>
-						<MenuItem value={4}>Scenario D</MenuItem>
+						<MenuItem value={1}>Scenario 1</MenuItem>
+						<MenuItem value={2}>Scenario 2</MenuItem>
+						<MenuItem value={3}>Scenario 3</MenuItem>
+						<MenuItem value={4}>Scenario 4</MenuItem>
 					</Select>
 				</FormControl>
 			</Box>
@@ -304,6 +308,7 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 				<Tab label="Costs" />
 				<Tab label="TBD" />
 			</Tabs>
+			<Divider />
 			<Box sx={{ p: 2 }}>
 				{value === 0 && <OverviewSection results={results} />}
 				{value === 1 && <ChargersSection results={results} />}
@@ -325,7 +330,6 @@ const OverviewSection = ({ results }: { results: any }) => (
 			<Box>
 				<Typography variant="h6">Average Annual Savings</Typography>
 				<Typography variant="h4" color="primary">
-					
 					${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
 				</Typography>
 			</Box>
@@ -368,17 +372,67 @@ const OverviewSection = ({ results }: { results: any }) => (
 	</div>
 );
 // Chargers Section
-const ChargersSection = ({ results }: { results: any }) => (
-	<div>
 
-		<Box mt={3} mb={3}>
-			<Typography variant="h6" align='center'>The site's energy use will be the aggregate of all vehicles and their charging patterns, as shown for each scenario:</Typography>
-		</Box>
+const ChargersSection = ({ results }: { results: any }) => {
+	const [openHelpModal, setOpenHelpModal] = useState(false);
 
-		<EvResultsLoadProfile results={results} />
-		<Divider />
-	</div>
-);
+	const handleOpenHelpModal = () => {
+		setOpenHelpModal(true);
+	};
+
+	const handleCloseHelpModal = () => {
+		setOpenHelpModal(false);
+	};
+
+	return (
+		<div>
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='center'>
+					The site's energy use will be the aggregate of all vehicles and their charging patterns, as shown for each scenario:
+					<span
+						onClick={(event) => {
+							event.stopPropagation();
+							handleOpenHelpModal();
+						}}
+						style={{ cursor: 'pointer', marginLeft: '8px' }}
+					>
+						<HelpOutlineIcon />
+					</span>
+				</Typography>
+			</Box>
+
+			<EvResultsLoadProfile results={results} />
+			<Divider />
+			<Dialog open={openHelpModal} onClose={handleCloseHelpModal}>
+				<DialogTitle>Charging Scenarios</DialogTitle>
+				<DialogContent>
+					<Typography variant="body1">
+						<strong>Scenario 1 - Managed Optimal With On-Peak Hours</strong>
+						<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
+						<br></br>
+
+						<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong>
+						<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.</p>
+						<br></br>
+
+						<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
+						<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, meaning chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges due to intense power usage, but it simplifies the charging process as no scheduling is required.</p>
+						<br></br>
+
+						<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
+						<p>This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
+						<br></br>
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseHelpModal} color="primary">
+						Close
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</div>
+	);
+};
 // Costs Section
 const CostsSection = ({ results }: { results: any }) => {
 	return (
@@ -389,20 +443,24 @@ const CostsSection = ({ results }: { results: any }) => {
 			<Box mt={3} mb={3}>
 				<Typography variant="h6" align='left'>Charging Scenarios:</Typography>
 				<Typography component="div">
-					<strong>Scenario 1 - Managed Optimal Without On-Peak Hours</strong>
-					<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce their electricity costs. This approach requires planning and scheduling to ensure that all vehicles are charged within the cheaper hours, but it can lead to substantial savings.</p>
-					<br></br>
-					<strong>Scenario 2 - Managed Optimal With On-Peak Hours</strong>
+					<strong>Scenario 1 - Managed Optimal With On-Peak Hours</strong>
 					<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
 					<br></br>
-					<strong>Scenario 3 - Unmanaged Without On-Peak Hours</strong>
-					<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, which means that chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges because of the intense power usage, but it simplifies the charging process as no scheduling is required.</p>
+
+					<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong>
+					<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.</p>
 					<br></br>
-					<strong>Scenario 4 - Unmanaged With On-Peak Hours</strong>
-					<p>Similar to the unmanaged without on-peak hours scenario, but charging can occur during both off-peak and on-peak hours. This approach offers the most flexibility, as vehicles can be charged at any time. However, it can result in even higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
+
+					<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
+					<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, meaning chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges due to intense power usage, but it simplifies the charging process as no scheduling is required.</p>
+					<br></br>
+
+					<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
+					<p>This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
+					<br></br>
 
 				</Typography>
-			</Box>
+			</Box>			
 			<Divider />
 			{/* <EvResultsPie results={results} /> */}
 			<EvResultsMonthlyCosts results={results} />
