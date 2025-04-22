@@ -1410,9 +1410,11 @@ def process_row(data, year, month, season):
     }
 
 # Enable CORS
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-CORS(app, resources={r"/graphql": {"origins": "http://localhost:3000"}})
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={
+    r"/*": {"origins": ["http://localhost:3000", "http://192.168.0.35:3000"]},
+    r"/graphql": {"origins": ["http://localhost:3000", "http://192.168.0.35:3000"]},
+    r"/api/*": {"origins": ["http://localhost:3000", "http://192.168.0.35:3000"]}
+})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
