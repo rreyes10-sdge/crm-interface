@@ -7,13 +7,13 @@ from .db_logic import get_connection, fetch_data, format_dates, get_project_serv
 import pandas as pd
 from .queries import QUERIES
 from werkzeug.exceptions import HTTPException
-from datetime import datetime, timedelta
 from collections import Counter
 from src.app.data.static_data import fossil_fuel_mpg_mapping, TOU_DATA
 import json
 import calendar
 import math
-from datetime import datetime, date, timedelta
+import datetime
+from datetime import date, timedelta
 
 
 
@@ -836,7 +836,7 @@ def get_tou_segments_for_day_type(tou_data, day_type, season):
     return segments
 
 def time_to_datetime(t):
-    return datetime.strptime(t, "%H:%M")
+    return datetime.datetime.strptime(t, "%H:%M")
 
 def get_day_type(day_name):
     return "WeekendsAndHolidays" if day_name in ["Saturday", "Sunday"] else "Weekdays"
@@ -1234,7 +1234,7 @@ def process_row(data, year, month, season):
             })
             total_num_chargers += num_chargers
             total_charger_capacity += num_chargers * charger_kw
-    base_year = datetime.now().year
+    base_year = datetime.datetime.now().year
     # Calculate the number of years since the base year
     years_since_base = year - base_year
 

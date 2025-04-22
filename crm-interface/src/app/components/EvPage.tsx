@@ -3,9 +3,10 @@ import { Container, Grid, Box, Typography } from '@mui/material';
 import EvCalculator from './EvCalculator';
 import EvResults from './EvResults';
 import LegalDisclaimer from './LegalDisclaimer';
-import { Results } from '../types';
+import { Results, VehicleGroup } from '../types';
 
 const EvPage: React.FC = () => {
+    const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([]); // Specify the type here
     const [results, setResults] = useState<Results | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -31,12 +32,41 @@ const EvPage: React.FC = () => {
             const calculations = await response.json();
             console.log('API Response:', calculations); // Log the API response
 
+            const vehicleGroups = [];
+            const chargerGroups = [];
+
+            // Extract vehicle groups from formDataJson
+            for (let i = 1; i <= 5; i++) {
+                if (formDataJson[`vehicle_group_${i}_class`]) {
+                    vehicleGroups.push({
+                        id: i,
+                        vehicleClass: formDataJson[`vehicle_group_${i}_class`],
+                        numVehicles: Number(formDataJson[`vehicle_group_${i}_num`]),
+                        avgDailyMileage: Number(formDataJson[`vehicle_group_${i}_mileage`]),
+                    });
+                }
+            }
+            console.log('Extracted Vehicle Groups:', vehicleGroups); // Log the extracted vehicle groups
+
+            // Extract charger groups from formDataJson
+            for (let i = 1; i <= 5; i++) {
+                if (formDataJson[`charger_group_${i}_num`]) {
+                    chargerGroups.push({
+                        id: i,
+                        numChargers: Number(formDataJson[`charger_group_${i}_num`]),
+                        chargerKW: Number(formDataJson[`charger_group_${i}_kw`]),
+                    });
+                }
+            }
+
             setResults({
-                vehicleGroups: [], // Get from form data
-                chargerGroups: [], // Get from form data
-                settings: {}, // Get from form data
-                calculations: calculations // Use the actual API response
+                vehicleGroups: vehicleGroups,
+                chargerGroups: chargerGroups,
+                settings: {},
+                calculations: calculations
             });
+
+            setVehicleGroups(vehicleGroups);
             console.log('Updated Results:', {
                 vehicleGroups: [],
                 chargerGroups: [],
@@ -64,10 +94,11 @@ const EvPage: React.FC = () => {
                             <Typography color="error">{error}</Typography>
                         </Box>
                     )}
-                    
+
                     {/* Always render EvResults, passing results and isLoading */}
-                    <EvResults 
-                        results={results ? results.calculations : null} 
+                    <EvResults
+                        results={results ? results.calculations : null}
+                        vehicleGroups={vehicleGroups}
                         isLoading={isLoading}
                     />
                 </Grid>

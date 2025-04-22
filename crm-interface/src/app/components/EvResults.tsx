@@ -14,7 +14,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
 import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
-
+import { VehicleGroup } from '../types';
 
 interface EvResultsProps {
 	results: any;
@@ -131,6 +131,68 @@ const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
 				height={400}
 				width={400}
 			/>
+		</div>
+	);
+};
+
+const EvResultsBarChart: React.FC<{ results: any }> = ({ results }) => {
+	// Find the adjusted fossil fuel price for the current year and month
+	const currentYearMonthResult = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
+
+	// Prepare data for all four scenarios
+	const monthlyCosts = [
+		{
+			label: 'Basic Service Fee',
+			values: [
+				currentYearMonthResult ? currentYearMonthResult.scenario_1.basic_service_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_2.basic_service_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_3.basic_service_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_4.basic_service_fee : 0,
+			],
+			color: '#F8971D',
+		},
+		{
+			label: 'Subscription Fee',
+			values: [
+				currentYearMonthResult ? currentYearMonthResult.scenario_1.subscription_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_2.subscription_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_3.subscription_fee : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_4.subscription_fee : 0,
+			],
+			color: '#1ABFD5',
+		},
+		{
+			label: 'Energy Costs',
+			values: [
+				currentYearMonthResult ? currentYearMonthResult.scenario_1.commodity_distribution_cost : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_2.commodity_distribution_cost : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_3.commodity_distribution_cost : 0,
+				currentYearMonthResult ? currentYearMonthResult.scenario_4.commodity_distribution_cost : 0,
+			],
+			color: '#545861',
+		},
+	];
+
+	// Prepare data for the bar chart
+	const barChartData = {
+		xAxis: [{ scaleType: 'band' as const, data: ['Scenario 1', 'Scenario 2', 'Scenario 3', 'Scenario 4'] }],
+		series: monthlyCosts.map(cost => ({
+			label: cost.label,
+			data: cost.values,
+			color: cost.color,
+		})),
+		height: 350,
+		width: 600,
+	};
+
+	return (
+		<div>
+			<Typography variant="h6" align='center' sx={{ mb: 1, mt: 3 }}>
+				Scenario Costs Breakdown for {new Date(0, currentYearMonthResult.month).toLocaleString('default', { month: 'long' })} {currentYearMonthResult.year}
+			</Typography>
+			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+				<BarChart {...barChartData} />
+			</div>
 		</div>
 	);
 };
@@ -269,16 +331,113 @@ const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 			</Box>
 
 			{/* Render the Stacked Bar Chart */}
-			<Box sx={{ mt: 3 }}>
-				<Typography variant="h6" align='center'>Monthly Costs for {selectedYear} - Scenario {selectedScenario}</Typography>
-				<BarChart {...barChartData} />
-			</Box>
+			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+				<Box sx={{ mt: 3 }}>
+					<Typography variant="h6" align='center'>Monthly Costs for {selectedYear} - Scenario {selectedScenario}</Typography>
+					<BarChart {...barChartData} />
+				</Box>
+			</div>
+
 		</div>
 	);
 };
 
-const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
+interface EfficiencyData {
+	mpg: number;
+	mile_per_kwh: number;
+}
+
+interface FossilFuelMpgMapping {
+	[key: string]: EfficiencyData; // This allows any string key
+}
+
+const fossil_fuel_mpg_mapping: FossilFuelMpgMapping = {
+	"Heavy Duty Pickup & Van - Class 2B": { "mpg": 15.1, "mile_per_kwh": 1.09 },
+	"Heavy Duty Pickup & Van - Class 3": { "mpg": 11.5, "mile_per_kwh": 1.09 },
+	"Shuttle Bus - Class 3-5": { "mpg": 6.06, "mile_per_kwh": 2.06 },
+	"Delivery Van - Class 3-5": { "mpg": 10.5, "mile_per_kwh": 1.19 },
+	"Service Van - Class 3-5": { "mpg": 10.5, "mile_per_kwh": 1.19 },
+	"Box Truck (Freight) - Class 3-5": { "mpg": 11.5, "mile_per_kwh": 1.09 },
+	"Stake Truck - Class 3-5": { "mpg": 10.5, "mile_per_kwh": 1.19 },
+	"Stake Truck - Class 6-7": { "mpg": 8.1, "mile_per_kwh": 1.55 },
+	"Box Truck (Freight) - Class 6-7": { "mpg": 8.7, "mile_per_kwh": 1.44 },
+	"Delivery Truck - Class 6-7": { "mpg": 8.1, "mile_per_kwh": 1.55 },
+	"Service Truck - Class 6-7": { "mpg": 8.1, "mile_per_kwh": 1.55 },
+	"School Bus - Class 7": { "mpg": 8.16, "mile_per_kwh": 1.53 },
+	"Regional Haul Tractor - Class 7-8": { "mpg": 5.85, "mile_per_kwh": 2.14 },
+	"Box Truck (Freight) - Class 8": { "mpg": 7.5, "mile_per_kwh": 1.67 },
+	"Long Haul Tractor - Class 8": { "mpg": 5.83, "mile_per_kwh": 2.15 },
+	"Transit Bus - Class 8": { "mpg": 6.19, "mile_per_kwh": 2.02 },
+	"Refuse Hauler - Class 8": { "mpg": 5.72, "mile_per_kwh": 2.19 },
+	"Dump Truck - Class 8": { "mpg": 6.9, "mile_per_kwh": 1.81 }
+}
+
+const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[] }> = ({ results, vehicleGroups }) => {
+	// Calculate totals
+	const totalActiveVehicles = vehicleGroups.reduce((acc, group) => acc + (group.numVehicles > 0 ? group.numVehicles : 0), 0); // Assuming all active
+
+	// Calculate average daily miles driven, ensuring to handle division by zero
+	const avgMiles = totalActiveVehicles > 0
+		? (vehicleGroups.reduce((acc, group) => acc + (group.avgDailyMileage * group.numVehicles), 0) / totalActiveVehicles).toFixed(2)
+		: 'N/A'; // Display 'N/A' if there are no active vehicles
+
+	// Calculate TDVEN (Total Daily Vehicle Energy Needed)
+	let tdven = 0;
+
+	return (
+		<div>
+			<Typography variant="h6" align='center'>Fleet Summary</Typography>
+			<br />
+			<TableContainer component={Paper}>
+				<Table>
+					<TableHead>
+						<TableRow>
+							<TableCell></TableCell>
+							{vehicleGroups.map((group, index) => (
+								<TableCell key={index}>{group.vehicleClass}</TableCell>
+							))}
+							<TableCell><strong>Total</strong></TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						<TableRow>
+							<TableCell>Number of Vehicles</TableCell>
+							{vehicleGroups.map((group, index) => (
+								<TableCell key={index}>{group.numVehicles > 0 ? group.numVehicles : 0}</TableCell>
+							))}
+							<TableCell><strong>{totalActiveVehicles}</strong></TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Avg. Daily Miles Driven</TableCell>
+							{vehicleGroups.map((group, index) => (
+								<TableCell key={index}>{group.avgDailyMileage} Miles</TableCell>
+							))}
+							<TableCell><strong>{avgMiles} Miles</strong></TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Daily Energy Needed (kWh)</TableCell>
+							{vehicleGroups.map((group, index) => {
+								const efficiencyData = fossil_fuel_mpg_mapping[group.vehicleClass];
+								const milesPerKwh = efficiencyData ? efficiencyData.mile_per_kwh : 0;
+								const dailyEnergyNeeded = (group.numVehicles * group.avgDailyMileage) / milesPerKwh;
+								tdven += dailyEnergyNeeded; // Accumulate total daily energy needed
+								return (
+									<TableCell key={index}>{dailyEnergyNeeded.toFixed(2)} kWh</TableCell>
+								);
+							})}
+							<TableCell><strong>{tdven.toFixed(2)} kWh</strong></TableCell>
+						</TableRow>
+					</TableBody>
+				</Table>
+			</TableContainer>
+		</div>
+	);
+};
+
+const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; isLoading: boolean }> = ({ results, vehicleGroups, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
+	console.log('EvResults Props:', { results, vehicleGroups, isLoading }); // Log incoming props
+
 
 	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
 		setValue(newValue);
@@ -301,53 +460,58 @@ const EvResults: React.FC<EvResultsProps> = ({ results, isLoading }) => {
 	}
 
 	return (
-		<Paper sx={{ p: 3, height: '100%' }}>
-			<Tabs value={value} onChange={handleChange} aria-label="results tabs">
-				<Tab label="Overview" />
-				<Tab label="Chargers" />
-				<Tab label="Costs" />
-				<Tab label="TBD" />
-			</Tabs>
-			<Divider />
-			<Box sx={{ p: 2 }}>
-				{value === 0 && <OverviewSection results={results} />}
-				{value === 1 && <ChargersSection results={results} />}
-				{value === 2 && <CostsSection results={results} />}
-				{value === 3 && <TBDSection results={results} />}
-			</Box>
-		</Paper>
+		<div>
+			<Paper sx={{ p: 3, height: '100%' }}>
+				<Box mb={3} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+					<Box sx={{ display: 'flex', alignItems: 'center' }}>
+						<Typography variant="h4" color="primary">
+							<EnergySavingsLeafTwoToneIcon sx={{ fontSize: '4.5rem', marginRight: '4px' }} />
+						</Typography>
+					</Box>
+					<Box>
+						<Typography variant="h6">Average Annual Savings</Typography>
+						<Typography variant="h4" color="primary">
+							${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
+						</Typography>
+					</Box>
+					<Divider orientation="vertical" flexItem />
+					<Box>
+						<Typography variant="h6">Annual EV Fuel Costs</Typography>
+						<Typography variant="h4" color="primary">
+							${results?.averages_and_savings?.yearly_average_cost?.yearly_electric_tc_2?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
+						</Typography>
+					</Box>
+					<Divider orientation="vertical" flexItem />
+					<Box>
+						<Typography variant="h6">Annual Fossil Fuel Costs</Typography>
+						<Typography variant="h4" color="primary">
+							${results?.averages_and_savings?.yearly_average_cost?.yearly_fossil_fuel_tc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
+						</Typography>
+					</Box>
+				</Box>
+				<Divider />
+
+				<Tabs value={value} onChange={handleChange} aria-label="results tabs">
+					<Tab label="Overview" />
+					<Tab label="Chargers" />
+					<Tab label="Costs" />
+					<Tab label="TBD" />
+				</Tabs>
+				<Divider />
+				<Box sx={{ p: 2 }}>
+					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} />}
+					{value === 1 && <ChargersSection results={results} />}
+					{value === 2 && <CostsSection results={results} />}
+					{value === 3 && <TBDSection results={results} />}
+				</Box>
+			</Paper>
+		</div>
 	);
 };
 // Overview Section
-const OverviewSection = ({ results }: { results: any }) => (
+const OverviewSection = ({ results, vehicleGroups }: { results: any; vehicleGroups: VehicleGroup[] }) => (
 	<div>
-		<Box mb={3} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-			<Box sx={{ display: 'flex', alignItems: 'center' }}>
-				<Typography variant="h4" color="primary">
-					<EnergySavingsLeafTwoToneIcon sx={{ fontSize: '4.5rem', marginRight: '4px' }} />
-				</Typography>
-			</Box>
-			<Box>
-				<Typography variant="h6">Average Annual Savings</Typography>
-				<Typography variant="h4" color="primary">
-					${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
-				</Typography>
-			</Box>
-			<Divider orientation="vertical" flexItem />
-			<Box>
-				<Typography variant="h6">Annual EV Fuel Costs</Typography>
-				<Typography variant="h4" color="primary">
-					${results?.averages_and_savings?.yearly_average_cost?.yearly_electric_tc_2?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
-				</Typography>
-			</Box>
-			<Divider orientation="vertical" flexItem />
-			<Box>
-				<Typography variant="h6">Annual Fossil Fuel Costs</Typography>
-				<Typography variant="h4" color="primary">
-					${results?.averages_and_savings?.yearly_average_cost?.yearly_fossil_fuel_tc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
-				</Typography>
-			</Box>
-		</Box>
+
 
 		<Divider />
 
@@ -369,6 +533,9 @@ const OverviewSection = ({ results }: { results: any }) => (
 				)}
 			/>
 		</Box>
+		<Divider />
+		<br></br>
+		<EvResultsSummary results={results} vehicleGroups={vehicleGroups} />
 	</div>
 );
 // Chargers Section
@@ -408,21 +575,32 @@ const ChargersSection = ({ results }: { results: any }) => {
 				<DialogContent>
 					<Typography variant="body1">
 						<strong>Scenario 1 - Managed Optimal With On-Peak Hours</strong>
-						<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
-						<br></br>
-
-						<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong>
-						<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.</p>
-						<br></br>
-
-						<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
-						<p>In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, meaning chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges due to intense power usage, but it simplifies the charging process as no scheduling is required.</p>
-						<br></br>
-
-						<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
-						<p>This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
-						<br></br>
 					</Typography>
+					<div>
+						This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong>
+					</Typography>
+					<div>
+						In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
+					</Typography>
+					<div>
+						In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, meaning chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges due to intense power usage, but it simplifies the charging process as no scheduling is required.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
+					</Typography>
+					<div>
+						This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.
+					</div>
+					<br />
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCloseHelpModal} color="primary">
@@ -460,7 +638,9 @@ const CostsSection = ({ results }: { results: any }) => {
 					<br></br>
 
 				</Typography>
-			</Box>			
+			</Box>
+			<Divider />
+			<EvResultsBarChart results={results} />
 			<Divider />
 			{/* <EvResultsPie results={results} /> */}
 			<EvResultsMonthlyCosts results={results} />
