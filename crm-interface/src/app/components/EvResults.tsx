@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle } from '@mui/material';
+import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle, Link } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -603,7 +603,7 @@ const CostsSection = ({ results }: { results: any }) => {
 					<br></br>
 					<p>The <strong>EV-HP Pricing Plan</strong> allows EV customers to choose the amount of power they will need to charge their vehicles and pay for it with a monthly subscription fee — similar to a cell phone plan that lets customers choose the amount of data they will use.</p> 
 					<br></br>
-					<p>The EV-HP rate has three components: <strong>Basic Service Fee + Subscription Charge + Energy Cost (charging consumption)</strong>. EV-HP Basic Service Fee is $199.35 per month for loads under 500 kW and $766.91 for loads over 500 kW. 
+					<p>The EV-HP rate has three components: <strong>Basic Service Fee + Subscription Charge + Energy Cost (charging consumption)</strong>. EV-HP Basic Service Fee is $213.30 per month for loads under 500 kW and $766.91 for loads over 500 kW. For more details on the EV-HP rate, please visit the <Link href="https://tariffsprd.sdge.com/sdge/tariffs/?utilId=SDGE&bookId=ELEC&sectId=ELEC-SCHEDS&tarfRateGroup=Commercial/Industrial%20Rates" target="_blank" rel="noopener noreferrer">SDG&E Tariff Rates Page</Link>.
 					</p>
 
 				</Typography>
@@ -620,8 +620,8 @@ const CostsSection = ({ results }: { results: any }) => {
 					<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
 					<br></br>
 
-					<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong>
-					<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.</p>
+					<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong><span style={{ color: '#1976d2' }}>*</span>
+					<p>In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are at the lowest. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach is <i>typically the best scenario for minimizing energy costs</i>, as it requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.</p>
 					<br></br>
 
 					<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
@@ -631,7 +631,6 @@ const CostsSection = ({ results }: { results: any }) => {
 					<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
 					<p>This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.</p>
 					<br></br>
-
 				</Typography>
 			</Box>
 		</div>
@@ -642,7 +641,7 @@ const TCOSection = ({ results }: { results: any }) => (
 	<div>
 		{/* <Typography variant="h6">TCO</Typography> */}
 		<p>
-			<a href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</a>
+			<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</Link>
 		</p>
 		{/* Add TBD-specific content here */}
 	</div>

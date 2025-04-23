@@ -580,7 +580,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Acquisition Costs</strong>
-                                    <Tooltip title="Total costs associated with purchasing and maintaining your electric vehicles">
+                                    <Tooltip title="Typical costs are $300,000 per vehicle">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
@@ -593,7 +593,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Costs</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Costs</strong>
+                                <Tooltip title="Typical costs are $0.15 per mile">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip></Typography>
                                 <TextField
                                     name="vehicle_maintenance_repair_costs"
                                     type="number"
@@ -602,7 +605,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Costs</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Costs</strong>
+                                <Tooltip title="Typical costs are $1,500 per vehicle per year">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip></Typography>
                                 <TextField
                                     name="vehicle_insurance_costs"
                                     type="number"
@@ -614,7 +620,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 <Typography variant="h6" sx={{ color: '#555' }}>Charger Costs</Typography>
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Charger Installation Costs</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Installation Costs</strong>
+                                <Tooltip title="Typical costs are $114,400 per charger">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="charger_installation_costs"
                                     type="number"
@@ -623,7 +633,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Costs</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Costs</strong>
+                                <Tooltip title="Typical costs are $1,100 per charger per year">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="charger_maintenance_repair_network_costs"
                                     type="number"
@@ -635,7 +649,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 <Typography variant="h6" sx={{ color: '#555' }}>Incentives</Typography>
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Incentive Credits</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Incentive Credits</strong>
+                                <Tooltip title="Typical incenvtives are $150,000 per vehicle">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="vehicle_incentive_credits"
                                     type="number"
@@ -644,7 +662,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Charger Incentive Credits</strong></Typography>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Incentive Credits</strong>
+                                <Tooltip title="Typical incentives are $1,000 per charger">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="charger_incentive_credits"
                                     type="number"
