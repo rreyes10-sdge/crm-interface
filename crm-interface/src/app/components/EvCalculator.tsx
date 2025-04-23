@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import EvStationIcon from '@mui/icons-material/EvStation';
 import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
@@ -194,7 +194,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         {vehicleGroups.map((group, index) => (
                             <Box key={group.id} mb={3}>
                                 <Grid container alignItems="center" spacing={2}>
-                                    <Grid item xs={12} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Grid item xs={12} sx={{ mb: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Typography variant="h6" sx={{ color: '#555' }}>Group {index + 1}</Typography>
                                         {group.id > 1 && (
                                             <IconButton
@@ -207,8 +207,8 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         )}
                                     </Grid>
                                     <Grid item xs={12}>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Vehicle Class</strong></Typography>
                                         <FormControl fullWidth>
-                                            <InputLabel>Vehicle Class</InputLabel>
                                             <Select
                                                 name={`vehicle_group_${index + 1}_class`}
                                                 value={group.vehicleClass}
@@ -223,9 +223,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         </FormControl>
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Vehicles</strong></Typography>
                                         <TextField
                                             name={`vehicle_group_${index + 1}_num`}
-                                            label="Number of Vehicles"
                                             type="number"
                                             fullWidth
                                             required
@@ -238,9 +238,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Average Daily Mileage</strong></Typography>
                                         <TextField
                                             name={`vehicle_group_${index + 1}_mileage`}
-                                            label="Average Daily Mileage"
                                             type="number"
                                             fullWidth
                                             required
@@ -300,7 +300,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         <FormGroup>
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
-                                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#555' }}>Days for Charging</Typography>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>Days for Charging</Typography>
                                     <Box sx={{
                                         display: 'flex',
                                         gap: 1,
@@ -340,11 +340,12 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#555' }}>Charging Time Window</Typography>
+                                    <Typography variant="h6" sx={{ color: '#555' }}>Charging Time Window</Typography>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} sm={6}>
+                                            <Typography color="secondary" variant="subtitle1"><strong>Start Time</strong></Typography>
                                             <TextField
-                                                label="Start Time"
+                                                // label="Start Time"
                                                 type="time"
                                                 value={chargingBehavior.startTime}
                                                 onChange={(e) => setChargingBehavior(prev => ({
@@ -358,8 +359,9 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
+                                            <Typography color="secondary" variant="subtitle1"><strong>End Time</strong></Typography>
                                             <TextField
-                                                label="End Time"
+                                                // label="End Time"
                                                 type="time"
                                                 value={chargingBehavior.endTime}
                                                 onChange={(e) => setChargingBehavior(prev => ({
@@ -434,9 +436,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         )}
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Chargers</strong></Typography>
                                         <TextField
                                             name={`charger_group_${index + 1}_num`}
-                                            label="Number of Chargers"
+                                            // label="Number of Chargers"
                                             type="number"
                                             fullWidth
                                             required
@@ -449,9 +452,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Charger kW</strong></Typography>
                                         <TextField
                                             name={`charger_group_${index + 1}_kw`}
-                                            label="Charger kW"
+                                            // label="Charger kW"
                                             type="number"
                                             fullWidth
                                             required
@@ -509,36 +513,140 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     <AccordionDetails>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Fossil Fuel Price ($/gal)</strong></Typography>
                                 <TextField
                                     name="fossil_fuel_price"
-                                    label="Fossil Fuel Price ($/gal)"
                                     type="decimal"
                                     fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Fossil Fuel Price Increase Multiplier YoY</strong></Typography>
                                 <TextField
                                     name="fossil_fuel_multiplier"
-                                    label="Fossil Fuel Price Increase Multiplier YoY"
                                     type="decimal"
                                     fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Fossil Fuel Vehicle Efficiency Override (mpg)</strong></Typography>
                                 <TextField
                                     name="fossil_fuel_efficiency"
-                                    label="Fossil Fuel Vehicle Efficiency Override (mpg)"
                                     type="number"
                                     fullWidth
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Available Capacity for Existing Transformer (kW)</strong></Typography>
                                 <TextField
                                     name="transformer_capacity"
-                                    label="Available Capacity for Existing Transformer (kW)"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </AccordionDetails>
+                </Accordion>
+                <Accordion
+                    sx={{
+                        ...sectionStyle,
+                        '&.MuiAccordion-root': {
+                            '&:before': {
+                                display: 'none',
+                            },
+                        },
+                    }}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                            borderBottom: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '& .MuiAccordionSummary-content': {
+                                margin: '12px 0',
+                            },
+                        }}
+                    >
+                        <Typography variant="h5">Project Costs</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sx={{ mb: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Typography variant="h6" sx={{ color: '#555' }}>Vehicle Costs</Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Acquisition Costs</strong>
+                                    <Tooltip title="Total costs associated with purchasing and maintaining your electric vehicles">
+                                        <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                    </Tooltip>
+                                </Typography>
+
+                                <TextField
+                                    name="vehicle_acquisition_costs"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Costs</strong></Typography>
+                                <TextField
+                                    name="vehicle_maintenance_repair_costs"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Costs</strong></Typography>
+                                <TextField
+                                    name="vehicle_insurance_costs"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sx={{ mb: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Typography variant="h6" sx={{ color: '#555' }}>Charger Costs</Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Installation Costs</strong></Typography>
+                                <TextField
+                                    name="charger_installation_costs"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Costs</strong></Typography>
+                                <TextField
+                                    name="charger_maintenance_repair_network_costs"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sx={{ mb: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Typography variant="h6" sx={{ color: '#555' }}>Incentives</Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Incentive Credits</strong></Typography>
+                                <TextField
+                                    name="vehicle_incentive_credits"
+                                    type="number"
+                                    fullWidth
+                                    sx={{ backgroundColor: 'white' }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Incentive Credits</strong></Typography>
+                                <TextField
+                                    name="charger_incentive_credits"
                                     type="number"
                                     fullWidth
                                     sx={{ backgroundColor: 'white' }}
@@ -583,7 +691,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     {isLoading ? 'Calculating...' : 'Calculate'}
                 </Button>
             </form>
-        </Paper>
+        </Paper >
     );
 };
 

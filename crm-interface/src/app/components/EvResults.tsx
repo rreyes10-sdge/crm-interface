@@ -14,7 +14,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
 import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
-import { VehicleGroup } from '../types';
+import { VehicleGroup, ChargerGroup } from '../types';
 
 interface EvResultsProps {
 	results: any;
@@ -88,51 +88,6 @@ const formatCurrency = (value: any) => {
 		return `$${value.toFixed(2)}`;
 	}
 	return value; // Return the value as is if it's not a number
-};
-
-const EvResultsPie: React.FC<{ results: any }> = ({ results }) => {
-	// Find the adjusted fossil fuel price for January of current year
-	const currentYearMonthResult = results.monthly_results.find((result: { month: number; year: number; }) => result.month === new Date().getMonth() && result.year === new Date().getFullYear());
-
-	const monthlyCosts = [
-		{
-			label: 'Basic Service Fee',
-			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.basic_service_fee : 0,
-			color: '#F8971D'
-		},
-		{
-			label: 'Subscription Fee',
-			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.subscription_fee : 0,
-			color: '#1ABFD5'
-		},
-		{
-			label: 'Energy Costs',
-			value: currentYearMonthResult ? currentYearMonthResult.scenario_1.commodity_distribution_cost : 0,
-			color: '#545861'
-		}
-	];
-
-	// Ensure that the data structure is correct
-	const pieData = monthlyCosts.map(cost => ({
-		...cost,
-		formattedValue: formatCurrency(cost.value) // Add formatted value for display
-	}));
-
-	return (
-		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
-			<PieChart
-				series={[
-					{
-						data: pieData,
-						highlightScope: { fade: 'global', highlight: 'item' },
-						faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' }
-					},
-				]}
-				height={400}
-				width={400}
-			/>
-		</div>
-	);
 };
 
 const EvResultsBarChart: React.FC<{ results: any }> = ({ results }) => {
@@ -237,8 +192,31 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 	};
 
 	return (
-		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
-			<BarChart {...barChartData} />
+		<div>
+			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
+				<BarChart {...barChartData} />
+			</div>
+			<div style={{ marginTop: '20px' }}>
+				<Typography variant="h6">Insights and Recommendations</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					The load profiles represent the energy consumption patterns over a 24-hour period. Each scenario reflects different charging behaviors, allowing you to compare how various factors influence energy demand.
+				</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					The peak demand times are indicated by the highest points on the chart. These times represent when the most energy is consumed, which can help in planning for infrastructure needs and potential upgrades.
+				</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					Analyzing these scenarios can help you identify the most efficient charging strategy for your fleet.
+				</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					Understanding your load profile can also help in estimating energy costs. Higher energy consumption during peak hours may lead to increased costs, depending on your utility's pricing structure. Consider shifting some charging to off-peak hours to save on energy costs.
+				</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					The insights can inform future planning for your fleet. If certain scenarios show significantly higher energy demands, it may be necessary to consider additional charging infrastructure or energy storage solutions to accommodate growth.
+				</Typography>
+				<Typography variant="body1" sx={{ mb: 2 }}>
+					Based on the load profiles, consider implementing smart charging solutions that can dynamically adjust charging times based on energy availability and cost. This can lead to more efficient energy use and cost savings.
+				</Typography>
+			</div>
 		</div>
 	);
 };
@@ -372,7 +350,7 @@ const fossil_fuel_mpg_mapping: FossilFuelMpgMapping = {
 	"Dump Truck - Class 8": { "mpg": 6.9, "mile_per_kwh": 1.81 }
 }
 
-const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[] }> = ({ results, vehicleGroups }) => {
+const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[], chargerGroups: ChargerGroup[] }> = ({ results, vehicleGroups, chargerGroups }) => {
 	// Calculate totals
 	const totalActiveVehicles = vehicleGroups.reduce((acc, group) => acc + (group.numVehicles > 0 ? group.numVehicles : 0), 0); // Assuming all active
 
@@ -386,7 +364,7 @@ const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[] }
 
 	return (
 		<div>
-			<Typography variant="h6" align='center'>Fleet Summary</Typography>
+			<Typography variant="h6" align='center'>Summary</Typography>
 			<br />
 			<TableContainer component={Paper}>
 				<Table>
@@ -434,7 +412,7 @@ const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[] }
 	);
 };
 
-const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; isLoading: boolean }> = ({ results, vehicleGroups, isLoading }) => {
+const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
 	console.log('EvResults Props:', { results, vehicleGroups, isLoading }); // Log incoming props
 
@@ -495,21 +473,21 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; isLoadi
 					<Tab label="Overview" />
 					<Tab label="Chargers" />
 					<Tab label="Costs" />
-					<Tab label="TBD" />
+					<Tab label="Total Cost of Ownership" />
 				</Tabs>
 				<Divider />
 				<Box sx={{ p: 2 }}>
-					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} />}
+					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />}
 					{value === 1 && <ChargersSection results={results} />}
 					{value === 2 && <CostsSection results={results} />}
-					{value === 3 && <TBDSection results={results} />}
+					{value === 3 && <TCOSection results={results} />}
 				</Box>
 			</Paper>
 		</div>
 	);
 };
 // Overview Section
-const OverviewSection = ({ results, vehicleGroups }: { results: any; vehicleGroups: VehicleGroup[] }) => (
+const OverviewSection = ({ results, vehicleGroups, chargerGroups }: { results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[] }) => (
 	<div>
 
 
@@ -535,7 +513,7 @@ const OverviewSection = ({ results, vehicleGroups }: { results: any; vehicleGrou
 		</Box>
 		<Divider />
 		<br></br>
-		<EvResultsSummary results={results} vehicleGroups={vehicleGroups} />
+		<EvResultsSummary results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />
 	</div>
 );
 // Chargers Section
@@ -619,7 +597,24 @@ const CostsSection = ({ results }: { results: any }) => {
 			<br />
 			<Divider />
 			<Box mt={3} mb={3}>
-				<Typography variant="h6" align='left'>Charging Scenarios:</Typography>
+				<Typography variant="h6" align='left' color="secondary">Rate Analysis</Typography>
+				<Typography component="div">
+					<p>The <strong>Electric Vehicle-High Power (EV-HP)</strong> pricing plan is designed to eliminate demand charges and provide customers with simple, stable, monthly billing. The EV-HP pricing plan utilizes reduced Time of Use (TOU) energy charges that are incurred based on the time of day you use electricity, measured in kilowatt hours (kWh). These rates have a steep differential between "on-peak" and "super off-peak" prices to encourage fleet customers to charge during periods of lowest demand. SDG&E's reduced charging rates and simpler billing make the transition to electric vehicles easier and more cost-effective, especially if you have an EV fleet.</p>
+					<br></br>
+					<p>The <strong>EV-HP Pricing Plan</strong> allows EV customers to choose the amount of power they will need to charge their vehicles and pay for it with a monthly subscription fee — similar to a cell phone plan that lets customers choose the amount of data they will use.</p> 
+					<br></br>
+					<p>The EV-HP rate has three components: <strong>Basic Service Fee + Subscription Charge + Energy Cost (charging consumption)</strong>. EV-HP Basic Service Fee is $199.35 per month for loads under 500 kW and $766.91 for loads over 500 kW. 
+					</p>
+
+				</Typography>
+			</Box>
+			<Divider />
+			<EvResultsBarChart results={results} />
+			<Divider />
+			<EvResultsMonthlyCosts results={results} />
+			<Divider />
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='left' color="secondary">Charging Scenarios</Typography>
 				<Typography component="div">
 					<strong>Scenario 1 - Managed Optimal With On-Peak Hours</strong>
 					<p>This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.</p>
@@ -639,18 +634,16 @@ const CostsSection = ({ results }: { results: any }) => {
 
 				</Typography>
 			</Box>
-			<Divider />
-			<EvResultsBarChart results={results} />
-			<Divider />
-			{/* <EvResultsPie results={results} /> */}
-			<EvResultsMonthlyCosts results={results} />
 		</div>
 	);
 };
 // TBD Section
-const TBDSection = ({ results }: { results: any }) => (
+const TCOSection = ({ results }: { results: any }) => (
 	<div>
-		<Typography variant="h6">TBD Content</Typography>
+		{/* <Typography variant="h6">TCO</Typography> */}
+		<p>
+			<a href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</a>
+		</p>
 		{/* Add TBD-specific content here */}
 	</div>
 );

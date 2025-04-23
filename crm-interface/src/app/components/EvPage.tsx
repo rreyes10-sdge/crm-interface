@@ -3,10 +3,11 @@ import { Container, Grid, Box, Typography } from '@mui/material';
 import EvCalculator from './EvCalculator';
 import EvResults from './EvResults';
 import LegalDisclaimer from './LegalDisclaimer';
-import { Results, VehicleGroup } from '../types';
+import { Results, VehicleGroup, ChargerGroup } from '../types';
 
 const EvPage: React.FC = () => {
-    const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([]); // Specify the type here
+    const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([]);
+    const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([]);
     const [results, setResults] = useState<Results | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +47,7 @@ const EvPage: React.FC = () => {
                     });
                 }
             }
-            console.log('Extracted Vehicle Groups:', vehicleGroups); // Log the extracted vehicle groups
+            // console.log('Extracted Vehicle Groups:', vehicleGroups); // Log the extracted vehicle groups
 
             // Extract charger groups from formDataJson
             for (let i = 1; i <= 5; i++) {
@@ -67,6 +68,8 @@ const EvPage: React.FC = () => {
             });
 
             setVehicleGroups(vehicleGroups);
+            setChargerGroups(chargerGroups);
+
             console.log('Updated Results:', {
                 vehicleGroups: [],
                 chargerGroups: [],
@@ -99,6 +102,7 @@ const EvPage: React.FC = () => {
                     <EvResults
                         results={results ? results.calculations : null}
                         vehicleGroups={vehicleGroups}
+                        chargerGroups={chargerGroups}
                         isLoading={isLoading}
                     />
                 </Grid>
