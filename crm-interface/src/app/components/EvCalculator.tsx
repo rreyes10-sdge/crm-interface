@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import EvStationIcon from '@mui/icons-material/EvStation';
-import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior } from '../types';
+import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior, ProjectSite } from '../types';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 interface EvCalculatorProps {
@@ -13,6 +13,7 @@ interface EvCalculatorProps {
 const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) => {
     const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([{ id: 1, vehicleClass: 'Heavy Duty Pickup & Van - Class 3', numVehicles: 5, avgDailyMileage: 180 }]);
     const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([{ id: 1, numChargers: 5, chargerKW: 30 }]);
+    const [projectSite, setProjectSites] = useState<ProjectSite[]>([]);
     const [results, setResults] = useState<Results | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [chargingBehavior, setChargingBehavior] = useState<ChargingBehavior>({
@@ -20,6 +21,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         startTime: '22:00',
         endTime: '06:00'
     });
+
+    // Calculate project costs when the component mounts
+    useEffect(() => {
+        calculateProjectCosts();
+    }, []); // Empty dependency array means this runs once on mount
 
     // State for modal
     const [openHelpModal, setOpenHelpModal] = useState(false);
@@ -62,6 +68,72 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         "Dump Truck - Class 8"
     ];
 
+    // Helper function to format numbers with commas
+    const formatNumberWithCommas = (num: number) => {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
+
+    // Helper function to parse formatted number back to a number
+    const parseFormattedNumber = (value: string) => {
+        return Number(value.replace(/,/g, ''));
+    };
+
+    const calculateProjectCosts = () => {
+        const vehicleCostPerUnit = 300000; // Example cost per vehicle
+        const maintenanceCostPerMile = 0.15; // Example maintenance cost per mile
+        const chargerInstallationCostPerUnit = 114400; // Example cost per charger
+        const vehicleInsuranceCostPerUnit = 1500; // Example insurance cost per vehicle
+        const chargerMaintenanceCostPerUnit = 1100; // Example maintenance cost per charger
+        const vehicleIncentiveCreditPerUnit = 150000; // Example incentive credit per vehicle
+        const chargerIncentiveCreditPerUnit = 1000; // Example incentive credit per charger
+    
+        // Calculate total vehicle acquisition costs
+        const totalVehicleAcquisitionCosts = vehicleGroups.reduce((total, group) => {
+            return total + (group.numVehicles * vehicleCostPerUnit);
+        }, 0);
+    
+        // Calculate total vehicle maintenance costs (annual)
+        const totalVehicleMaintenanceCosts = vehicleGroups.reduce((total, group) => {
+            return total + (group.avgDailyMileage * group.numVehicles * maintenanceCostPerMile * 365); // Annual maintenance cost
+        }, 0);
+    
+        // Calculate total vehicle insurance costs (annual)
+        const totalVehicleInsuranceCosts = vehicleGroups.reduce((total, group) => {
+            return total + (group.numVehicles * vehicleInsuranceCostPerUnit);
+        }, 0);
+    
+        // Calculate total charger installation costs
+        const totalChargerInstallationCosts = chargerGroups.reduce((total, group) => {
+            return total + (group.numChargers * chargerInstallationCostPerUnit);
+        }, 0);
+    
+        // Calculate total charger maintenance costs (annual)
+        const totalChargerMaintenanceCosts = chargerGroups.reduce((total, group) => {
+            return total + (group.numChargers * chargerMaintenanceCostPerUnit);
+        }, 0);
+    
+        // Calculate total vehicle incentive credits
+        const totalVehicleIncentiveCredits = vehicleGroups.reduce((total, group) => {
+            return total + (group.numVehicles * vehicleIncentiveCreditPerUnit);
+        }, 0);
+    
+        // Calculate total charger incentive credits
+        const totalChargerIncentiveCredits = chargerGroups.reduce((total, group) => {
+            return total + (group.numChargers * chargerIncentiveCreditPerUnit);
+        }, 0);
+    
+        // Update projectSite state with calculated values
+        setProjectSites([{
+            vehicle_acquisition_costs: totalVehicleAcquisitionCosts,
+            vehicle_maintenance_repair_costs: totalVehicleMaintenanceCosts,
+            vehicle_insurance_costs: totalVehicleInsuranceCosts,
+            charger_installation_costs: totalChargerInstallationCosts,
+            charger_maintenance_repair_network_costs: totalChargerMaintenanceCosts,
+            vehicle_incentive_credits: totalVehicleIncentiveCredits,
+            charger_incentive_credits: totalChargerIncentiveCredits
+        }]);
+    };
+
     const addVehicleGroup = () => {
         if (vehicleGroups.length < 5) {
             setVehicleGroups([...vehicleGroups, {
@@ -85,6 +157,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             }
             return group;
         }));
+        calculateProjectCosts();
     };
 
     const addChargerGroup = () => {
@@ -108,6 +181,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             }
             return group;
         }));
+        calculateProjectCosts();
     };
 
     const handleDayChange = (day: string) => {
@@ -584,35 +658,42 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
-
                                 <TextField
                                     name="vehicle_acquisition_costs"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.vehicle_acquisition_costs || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], vehicle_acquisition_costs: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Costs</strong>
-                                <Tooltip title="Typical costs are $0.15 per mile">
+                                    <Tooltip title="Typical costs are $0.15 per mile">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
-                                    </Tooltip></Typography>
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="vehicle_maintenance_repair_costs"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.vehicle_maintenance_repair_costs || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], vehicle_maintenance_repair_costs: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Costs</strong>
-                                <Tooltip title="Typical costs are $1,500 per vehicle per year">
+                                    <Tooltip title="Typical costs are $1,500 per vehicle per year">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
-                                    </Tooltip></Typography>
+                                    </Tooltip>
+                                </Typography>
                                 <TextField
                                     name="vehicle_insurance_costs"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.vehicle_insurance_costs || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], vehicle_insurance_costs: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
@@ -621,27 +702,31 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Charger Installation Costs</strong>
-                                <Tooltip title="Typical costs are $114,400 per charger">
+                                    <Tooltip title="Typical costs are $114,400 per charger">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
                                 <TextField
                                     name="charger_installation_costs"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.charger_installation_costs || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], charger_installation_costs: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Costs</strong>
-                                <Tooltip title="Typical costs are $1,100 per charger per year">
+                                    <Tooltip title="Typical costs are $1,100 per charger per year">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
                                 <TextField
                                     name="charger_maintenance_repair_network_costs"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.charger_maintenance_repair_network_costs || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], charger_maintenance_repair_network_costs: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
@@ -650,27 +735,31 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Incentive Credits</strong>
-                                <Tooltip title="Typical incenvtives are $150,000 per vehicle">
+                                    <Tooltip title="Typical incentives are $150,000 per vehicle">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
                                 <TextField
                                     name="vehicle_incentive_credits"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.vehicle_incentive_credits || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], vehicle_incentive_credits: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Charger Incentive Credits</strong>
-                                <Tooltip title="Typical incentives are $1,000 per charger">
+                                    <Tooltip title="Typical incentives are $1,000 per charger">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
                                 <TextField
                                     name="charger_incentive_credits"
-                                    type="number"
+                                    type="text"
                                     fullWidth
+                                    value={formatNumberWithCommas(projectSite[0]?.charger_incentive_credits || 0)}
+                                    onChange={(e) => setProjectSites([{ ...projectSite[0], charger_incentive_credits: parseFormattedNumber(e.target.value) }])}
                                     sx={{ backgroundColor: 'white' }}
                                 />
                             </Grid>

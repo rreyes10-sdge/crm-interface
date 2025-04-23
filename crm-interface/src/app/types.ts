@@ -18,6 +18,16 @@ export interface OptionalSettings {
     transformerCapacity?: number;
 }
 
+export interface ProjectSite {
+    vehicle_acquisition_costs?: number;
+    vehicle_maintenance_repair_costs?: number;
+    vehicle_insurance_costs?: number;
+    charger_installation_costs?: number;
+    charger_maintenance_repair_network_costs?: number;
+    vehicle_incentive_credits?: number;
+    charger_incentive_credits?: number;
+}
+
 export interface CalculationResults {
     average_yearly_savings: number;
     totalCost: number;
@@ -40,6 +50,7 @@ export interface CalculationResults {
 export interface Results {
     vehicleGroups: VehicleGroup[];
     chargerGroups: ChargerGroup[];
+    projectSite: ProjectSite[];
     settings: OptionalSettings;
     calculations: CalculationResults | null;
 }

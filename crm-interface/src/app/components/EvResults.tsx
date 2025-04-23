@@ -7,14 +7,14 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { BarChart } from '@mui/x-charts/BarChart';
+import { BarChart, BarChartProps } from '@mui/x-charts/BarChart';
 import Divider from '@mui/material/Divider';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
 import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
-import { VehicleGroup, ChargerGroup } from '../types';
+import { VehicleGroup, ChargerGroup, ProjectSite } from '../types';
 
 interface EvResultsProps {
 	results: any;
@@ -221,6 +221,48 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 	);
 };
 
+const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSite[] }> = ({ results, projectSite }) => {
+	const config: Partial<BarChartProps> = {
+		height: 350,
+		margin: { left: 40 },
+	};
+
+	// Extracting data from projectSite
+	const data = projectSite.length > 0 ? [
+		{
+			year: 'Current', // You can adjust this to reflect the actual year or label
+			currAss: projectSite[0].vehicle_acquisition_costs || 0,
+			nCurrAss: projectSite[0].vehicle_maintenance_repair_costs || 0,
+			curLia: projectSite[0].vehicle_insurance_costs || 0,
+			nCurLia: projectSite[0].charger_installation_costs || 0,
+			capStock: projectSite[0].charger_maintenance_repair_network_costs || 0,
+			retEarn: projectSite[0].vehicle_incentive_credits || 0,
+			treas: projectSite[0].charger_incentive_credits || 0,
+		}
+	] : [];
+
+	return (
+		<BarChart
+			dataset={data}
+			series={addLabels([
+				{ dataKey: 'currAss', stack: 'assets' },
+				{ dataKey: 'nCurrAss', stack: 'assets' },
+				{ dataKey: 'curLia', stack: 'liability' },
+				{ dataKey: 'nCurLia', stack: 'liability' },
+				{ dataKey: 'capStock', stack: 'equity' },
+				{ dataKey: 'retEarn', stack: 'equity' },
+				{ dataKey: 'treas', stack: 'equity' },
+			])}
+			xAxis={[{ scaleType: 'band', dataKey: 'year' }]}
+			// yAxis={[{ width: 80 }]} // Uncomment and adjust if necessary based on the expected properties
+			{...config}
+		/>
+	);
+};
+	
+  
+  
+
 const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 	const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Default year
 	const [selectedScenario, setSelectedScenario] = useState<number>(2); // Default scenario (B)
@@ -412,9 +454,28 @@ const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[], 
 	);
 };
 
-const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, isLoading }) => {
+const translations = {
+	currAss: 'Current Assets',
+	nCurrAss: 'Non-Current Assets',
+	curLia: 'Current Liabilities',
+	nCurLia: 'Non-Current Liabilities',
+	capStock: 'Capital Stock',
+	retEarn: 'Retained Earnings',
+	treas: 'Treasury',
+	// Add any additional translations as needed
+} as const;
+
+export function addLabels<T extends { dataKey: keyof typeof translations }>(series: T[]) {
+	return series.map((item) => ({
+		...item,
+		label: translations[item.dataKey], // Use the translation for the label
+		valueFormatter: (v: number | null) => (v ? `$${v.toLocaleString()}` : '-'), // Format the value
+	}));
+}
+
+const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; projectSite: ProjectSite[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, projectSite, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
-	console.log('EvResults Props:', { results, vehicleGroups, isLoading }); // Log incoming props
+	console.log('EvResults Props:', { results, vehicleGroups, chargerGroups, projectSite, isLoading }); // Log incoming props
 
 
 	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -480,7 +541,7 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />}
 					{value === 1 && <ChargersSection results={results} />}
 					{value === 2 && <CostsSection results={results} />}
-					{value === 3 && <TCOSection results={results} />}
+					{value === 3 && <TCOSection results={results} projectSite={projectSite}/>}
 				</Box>
 			</Paper>
 		</div>
@@ -637,9 +698,10 @@ const CostsSection = ({ results }: { results: any }) => {
 	);
 };
 // TBD Section
-const TCOSection = ({ results }: { results: any }) => (
+const TCOSection = ({ results, projectSite }: { results: any, projectSite: ProjectSite[] }) => (
 	<div>
 		{/* <Typography variant="h6">TCO</Typography> */}
+		<EvTotalCostOwnershipChart results={results} projectSite={projectSite} />
 		<p>
 			<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</Link>
 		</p>

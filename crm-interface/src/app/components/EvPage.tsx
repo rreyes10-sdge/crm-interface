@@ -3,11 +3,12 @@ import { Container, Grid, Box, Typography } from '@mui/material';
 import EvCalculator from './EvCalculator';
 import EvResults from './EvResults';
 import LegalDisclaimer from './LegalDisclaimer';
-import { Results, VehicleGroup, ChargerGroup } from '../types';
+import { Results, VehicleGroup, ChargerGroup, ProjectSite } from '../types';
 
 const EvPage: React.FC = () => {
     const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([]);
     const [chargerGroups, setChargerGroups] = useState<ChargerGroup[]>([]);
+    const [projectSite, setProjectSite] = useState<ProjectSite[]>([]);
     const [results, setResults] = useState<Results | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -63,16 +64,19 @@ const EvPage: React.FC = () => {
             setResults({
                 vehicleGroups: vehicleGroups,
                 chargerGroups: chargerGroups,
+                projectSite: projectSite,
                 settings: {},
                 calculations: calculations
             });
 
             setVehicleGroups(vehicleGroups);
             setChargerGroups(chargerGroups);
+            setProjectSite(projectSite);
 
             console.log('Updated Results:', {
                 vehicleGroups: [],
                 chargerGroups: [],
+                projectSite: [],
                 settings: {},
                 calculations: calculations
             }); // Log the updated results
@@ -103,6 +107,7 @@ const EvPage: React.FC = () => {
                         results={results ? results.calculations : null}
                         vehicleGroups={vehicleGroups}
                         chargerGroups={chargerGroups}
+                        projectSite={projectSite}
                         isLoading={isLoading}
                     />
                 </Grid>
