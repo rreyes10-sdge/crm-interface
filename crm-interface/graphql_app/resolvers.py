@@ -25,7 +25,7 @@ class Resolvers:
             conditions.append("p.ProjectId = %(projectId)s")
             params['projectId'] = projectId
 
-        conditions.append("p.projectid NOT IN (3467)")
+        conditions.append("p.projectid NOT IN (3467,3197)")
         conditions.append("p.deleted = 0")
 
         where_clause = " AND ".join(conditions)
@@ -138,7 +138,7 @@ class Resolvers:
             conditions.append("p.ProjectId = %(projectId)s")
             params['projectId'] = projectId
 
-        conditions.append("p.projectid NOT IN (3467)")
+        conditions.append("p.projectid NOT IN (3467,3197)")
         conditions.append("p.deleted = 0")
 
         where_clause = " AND ".join(conditions)
@@ -159,8 +159,8 @@ class Resolvers:
             COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') as 'LatestActivity',
             activity.CreatedAt,
-            ac.TotalRequired,
-            ac.FilledCount
+            COALESCE(ac.TotalRequired, 0) AS 'TotalRequired',
+            COALESCE(ac.FilledCount, 0) AS 'FilledCount'
             FROM cleantranscrm.TeasSupportType tst
             LEFT JOIN cleantranscrm.TeasServiceType tst2 ON CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
             LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -311,8 +311,8 @@ class Resolvers:
             COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') as 'LatestActivity',
             activity.CreatedAt,
-            ac.TotalRequired,
-            ac.FilledCount
+            COALESCE(ac.TotalRequired, 0) AS 'TotalRequired',
+            COALESCE(ac.FilledCount, 0) AS 'FilledCount'
             FROM cleantranscrm.TeasSupportType tst
             LEFT JOIN cleantranscrm.TeasServiceType tst2 ON CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
             LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -467,8 +467,8 @@ class Resolvers:
             COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') AS 'LatestActivity',
             activity.CreatedAt,
-            ac.TotalRequired,
-            ac.FilledCount
+            COALESCE(ac.TotalRequired, 0) AS 'TotalRequired',
+            COALESCE(ac.FilledCount, 0) AS 'FilledCount'
             FROM cleantranscrm.TeasSupportType tst
             LEFT JOIN cleantranscrm.TeasServiceType tst2 on CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
             LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -621,8 +621,8 @@ class Resolvers:
                 COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
                 COALESCE(activity.LatestActivity, 'No recorded activity yet') AS 'LatestActivity',
                 activity.CreatedAt,
-                ac.TotalRequired,
-                ac.FilledCount
+                COALESCE(ac.TotalRequired, 0) AS 'TotalRequired',
+                COALESCE(ac.FilledCount, 0) AS 'FilledCount'
             FROM cleantranscrm.TeasSupportType tst
             LEFT JOIN cleantranscrm.TeasServiceType tst2 on CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
             LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -774,8 +774,8 @@ class Resolvers:
             COALESCE(activity.TotalDurationMins, 0) AS 'TotalDurationMins',
             COALESCE(activity.LatestActivity, 'No recorded activity yet') AS 'LatestActivity',
             activity.CreatedAt,
-            ac.TotalRequired,
-            ac.FilledCount
+            COALESCE(ac.TotalRequired, 0) AS 'TotalRequired',
+            COALESCE(ac.FilledCount, 0) AS 'FilledCount'
         FROM cleantranscrm.TeasSupportType tst
         LEFT JOIN cleantranscrm.TeasServiceType tst2 ON CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
         LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)

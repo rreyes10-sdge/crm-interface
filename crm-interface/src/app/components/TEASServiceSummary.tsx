@@ -212,7 +212,7 @@ const TEASServiceSummary: React.FC = () => {
                 <Card>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>
-                            Service Status Distribution
+                            Project Status Distribution
                         </Typography>
                         <Grid container spacing={2}>
                             {Object.entries(statusDistribution)
