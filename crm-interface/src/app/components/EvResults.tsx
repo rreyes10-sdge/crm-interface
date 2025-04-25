@@ -222,42 +222,81 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 };
 
 const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSite[] }> = ({ results, projectSite }) => {
-	const config: Partial<BarChartProps> = {
-		height: 350,
-		margin: { left: 40 },
-	};
+    const config: Partial<BarChartProps> = {
+        height: 600,
+        margin: { left: 80, top: 140 }
+    };
 
-	// Extracting data from projectSite
-	const data = projectSite.length > 0 ? [
+    // Define color mapping for each cost type
+    const colorMapping = {
+        vehAcq: '#007BFF', // Vehicle Acquisition
+        vehRep: '#00BFFF', // Vehicle Maintenance & Repair
+        vehIns: '#1E90FF', // Vehicle Insurance
+        chaIns: '#32CD32', // Charger Installation
+        chaRep: '#90EE90', // Charger Maintenance & Repair
+        vehInc: '#F8971D', // Vehicle Incentives
+        chaInc: '#00A1A4', // Charger Incentives
+		energyCosts: '#FED600', // Energy Costs
+    };
+
+    // Constructing the data structure
+    const dataset = projectSite.length > 0 ? [
+        {
+            type: 'Electric Costs Breakdown',
+            vehAcq: projectSite[0].vehicle_acquisition_costs || 0,
+            vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
+            vehIns: projectSite[0].vehicle_insurance_costs || 0,
+            chaIns: projectSite[0].charger_installation_costs || 0,
+            chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
+            vehInc: -(projectSite[0].vehicle_incentive_credits || 0),
+            chaInc: -(projectSite[0].charger_incentive_credits || 0),
+			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0
+		},
 		{
-			year: 'Current', // You can adjust this to reflect the actual year or label
-			currAss: projectSite[0].vehicle_acquisition_costs || 0,
-			nCurrAss: projectSite[0].vehicle_maintenance_repair_costs || 0,
-			curLia: projectSite[0].vehicle_insurance_costs || 0,
-			nCurLia: projectSite[0].charger_installation_costs || 0,
-			capStock: projectSite[0].charger_maintenance_repair_network_costs || 0,
-			retEarn: projectSite[0].vehicle_incentive_credits || 0,
-			treas: projectSite[0].charger_incentive_credits || 0,
-		}
-	] : [];
+			type: 'Final EV TCO',
+			vehAcq: (projectSite[0].vehicle_acquisition_costs || 0) - (projectSite[0].vehicle_incentive_credits || 0),
+            vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
+            vehIns: projectSite[0].vehicle_insurance_costs || 0,
+            chaIns: (projectSite[0].charger_installation_costs || 0) - (projectSite[0].charger_incentive_credits || 0),
+            chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
+			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0
+		},
+        {
+            type: 'Fossil Fuel TCO',
+            vehAcq: projectSite[0].fossil_vehicle_acquisition_costs || 0,
+            vehRep: projectSite[0].fossil_vehicle_maintenance_repair_costs || 0,
+            vehIns: projectSite[0].fossil_vehicle_insurance_costs || 0,
+			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_fossil_fuel_tc || 0
+        }
+    ] : [];
 
-	return (
-		<BarChart
-			dataset={data}
-			series={addLabels([
-				{ dataKey: 'currAss', stack: 'assets' },
-				{ dataKey: 'nCurrAss', stack: 'assets' },
-				{ dataKey: 'curLia', stack: 'liability' },
-				{ dataKey: 'nCurLia', stack: 'liability' },
-				{ dataKey: 'capStock', stack: 'equity' },
-				{ dataKey: 'retEarn', stack: 'equity' },
-				{ dataKey: 'treas', stack: 'equity' },
-			])}
-			xAxis={[{ scaleType: 'band', dataKey: 'year' }]}
-			// yAxis={[{ width: 80 }]} // Uncomment and adjust if necessary based on the expected properties
-			{...config}
-		/>
-	);
+    // Define the type for the series items
+    type SeriesItem = {
+        dataKey: keyof typeof translations; // Ensure dataKey matches the keys in translations
+        stack: string;
+        color: string;
+    };
+
+    // Prepare series for EV costs
+	const Series: SeriesItem[] = [
+        { dataKey: 'vehAcq', stack: 'Costs', color: colorMapping.vehAcq },
+        { dataKey: 'vehRep', stack: 'Costs', color: colorMapping.vehRep },
+        { dataKey: 'vehIns', stack: 'Costs', color: colorMapping.vehIns },
+        { dataKey: 'chaIns', stack: 'Costs', color: colorMapping.chaIns },
+        { dataKey: 'chaRep', stack: 'Costs', color: colorMapping.chaRep },
+        { dataKey: 'vehInc', stack: 'Incentives', color: colorMapping.vehInc },
+        { dataKey: 'chaInc', stack: 'Incentives', color: colorMapping.chaInc },
+		{ dataKey: 'energyCosts', stack: 'Costs', color: colorMapping.energyCosts },
+    ];
+
+    return (
+        <BarChart
+            dataset={dataset} // Flatten the costs for the BarChart
+            series={addLabels(Series)}
+			xAxis={[{ scaleType: 'band', dataKey: 'type' }]}
+            {...config}
+        />
+    );
 };
 	
   
@@ -455,14 +494,14 @@ const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[], 
 };
 
 const translations = {
-	currAss: 'Current Assets',
-	nCurrAss: 'Non-Current Assets',
-	curLia: 'Current Liabilities',
-	nCurLia: 'Non-Current Liabilities',
-	capStock: 'Capital Stock',
-	retEarn: 'Retained Earnings',
-	treas: 'Treasury',
-	// Add any additional translations as needed
+	vehAcq: 'Vehicle Acquisition',
+	vehRep: 'Vehicle Maintenance and Repair',
+	vehIns: 'Vehicle Insurance',
+	chaIns: 'Charger Install',
+	chaRep: 'Charger Maintenance, Repair and Network',
+	vehInc: 'Vehicle Incentives',
+	chaInc: 'Charger Incentives',
+	energyCosts: 'Fuel / Energy Costs'
 } as const;
 
 export function addLabels<T extends { dataKey: keyof typeof translations }>(series: T[]) {
@@ -475,8 +514,7 @@ export function addLabels<T extends { dataKey: keyof typeof translations }>(seri
 
 const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; projectSite: ProjectSite[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, projectSite, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
-	console.log('EvResults Props:', { results, vehicleGroups, chargerGroups, projectSite, isLoading }); // Log incoming props
-
+	// console.log('EvResults Props:', { projectSite }); // Log incoming props
 
 	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
 		setValue(newValue);

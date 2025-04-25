@@ -3,7 +3,8 @@ import { Container, Grid, Box, Typography } from '@mui/material';
 import EvCalculator from './EvCalculator';
 import EvResults from './EvResults';
 import LegalDisclaimer from './LegalDisclaimer';
-import { Results, VehicleGroup, ChargerGroup, ProjectSite } from '../types';
+import { Results, VehicleGroup, ChargerGroup, ProjectSite, OptionalSettings } from '../types';
+import { Settings } from 'lucide-react';
 
 const EvPage: React.FC = () => {
     const [vehicleGroups, setVehicleGroups] = useState<VehicleGroup[]>([]);
@@ -14,7 +15,6 @@ const EvPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const handleCalculate = async (formDataJson: { [key: string]: any }) => {
-        console.log('Received Form Data:', formDataJson); // Log the received form data
         setError(null);
         setIsLoading(true);
 
@@ -32,7 +32,7 @@ const EvPage: React.FC = () => {
             }
 
             const calculations = await response.json();
-            console.log('API Response:', calculations); // Log the API response
+            // console.log('API Response:', calculations); // Log the API response
 
             const vehicleGroups = [];
             const chargerGroups = [];
@@ -48,7 +48,6 @@ const EvPage: React.FC = () => {
                     });
                 }
             }
-            // console.log('Extracted Vehicle Groups:', vehicleGroups); // Log the extracted vehicle groups
 
             // Extract charger groups from formDataJson
             for (let i = 1; i <= 5; i++) {
@@ -61,25 +60,35 @@ const EvPage: React.FC = () => {
                 }
             }
 
+            // Populate projectSite with data from calculations
+            const projectSiteData: ProjectSite[] = [{
+                vehicle_acquisition_costs: formDataJson.vehicle_acquisition_costs,
+                vehicle_maintenance_repair_costs: formDataJson.vehicle_maintenance_repair_costs,
+                vehicle_insurance_costs: formDataJson.vehicle_insurance_costs,
+                charger_installation_costs: formDataJson.charger_installation_costs,
+                charger_maintenance_repair_network_costs: formDataJson.charger_maintenance_repair_network_costs,
+                vehicle_incentive_credits: formDataJson.vehicle_incentive_credits,
+                charger_incentive_credits: formDataJson.charger_incentive_credits,
+                fossil_vehicle_acquisition_costs: formDataJson.fossil_vehicle_acquisition_costs,
+                fossil_vehicle_maintenance_repair_costs: formDataJson.fossil_vehicle_maintenance_repair_costs,
+                fossil_vehicle_insurance_costs: formDataJson.fossil_vehicle_insurance_costs
+            }];
+
+            setVehicleGroups(vehicleGroups);
+            setChargerGroups(chargerGroups);
+            setProjectSite(projectSiteData); // Set the projectSite with the extracted data
+
             setResults({
                 vehicleGroups: vehicleGroups,
                 chargerGroups: chargerGroups,
-                projectSite: projectSite,
+                projectSite: projectSiteData,
                 settings: {},
                 calculations: calculations
             });
 
-            setVehicleGroups(vehicleGroups);
-            setChargerGroups(chargerGroups);
-            setProjectSite(projectSite);
-
-            console.log('Updated Results:', {
-                vehicleGroups: [],
-                chargerGroups: [],
-                projectSite: [],
-                settings: {},
-                calculations: calculations
-            }); // Log the updated results
+            // console.log('Updated Results:', {
+            //     projectSite: projectSiteData,
+            // }); // Log the updated results
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {

@@ -26,6 +26,9 @@ export interface ProjectSite {
     charger_maintenance_repair_network_costs?: number;
     vehicle_incentive_credits?: number;
     charger_incentive_credits?: number;
+    fossil_vehicle_acquisition_costs?: number;
+    fossil_vehicle_maintenance_repair_costs?: number;
+    fossil_vehicle_insurance_costs?: number;
 }
 
 export interface CalculationResults {

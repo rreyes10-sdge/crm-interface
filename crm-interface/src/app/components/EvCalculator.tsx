@@ -86,42 +86,46 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         const chargerMaintenanceCostPerUnit = 1100; // Example maintenance cost per charger
         const vehicleIncentiveCreditPerUnit = 150000; // Example incentive credit per vehicle
         const chargerIncentiveCreditPerUnit = 1000; // Example incentive credit per charger
-    
+
         // Calculate total vehicle acquisition costs
         const totalVehicleAcquisitionCosts = vehicleGroups.reduce((total, group) => {
             return total + (group.numVehicles * vehicleCostPerUnit);
         }, 0);
-    
+
         // Calculate total vehicle maintenance costs (annual)
         const totalVehicleMaintenanceCosts = vehicleGroups.reduce((total, group) => {
             return total + (group.avgDailyMileage * group.numVehicles * maintenanceCostPerMile * 365); // Annual maintenance cost
         }, 0);
-    
+
         // Calculate total vehicle insurance costs (annual)
         const totalVehicleInsuranceCosts = vehicleGroups.reduce((total, group) => {
             return total + (group.numVehicles * vehicleInsuranceCostPerUnit);
         }, 0);
-    
+
         // Calculate total charger installation costs
         const totalChargerInstallationCosts = chargerGroups.reduce((total, group) => {
             return total + (group.numChargers * chargerInstallationCostPerUnit);
         }, 0);
-    
+
         // Calculate total charger maintenance costs (annual)
         const totalChargerMaintenanceCosts = chargerGroups.reduce((total, group) => {
             return total + (group.numChargers * chargerMaintenanceCostPerUnit);
         }, 0);
-    
+
         // Calculate total vehicle incentive credits
         const totalVehicleIncentiveCredits = vehicleGroups.reduce((total, group) => {
             return total + (group.numVehicles * vehicleIncentiveCreditPerUnit);
         }, 0);
-    
+
         // Calculate total charger incentive credits
         const totalChargerIncentiveCredits = chargerGroups.reduce((total, group) => {
             return total + (group.numChargers * chargerIncentiveCreditPerUnit);
         }, 0);
-    
+
+        const fossilFuelAcquisitionCostTotal = totalVehicleAcquisitionCosts * 0.8; // 80% of electric vehicle costs
+        const fossilFuelMaintenanceCostTotal = totalVehicleMaintenanceCosts * 1.3; // 30% higher than electric vehicle costs
+        const fossilFuelInsuranceCostTotal = totalVehicleInsuranceCosts * 1.1; // 10% higher than electric vehicle costs
+
         // Update projectSite state with calculated values
         setProjectSites([{
             vehicle_acquisition_costs: totalVehicleAcquisitionCosts,
@@ -130,7 +134,10 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             charger_installation_costs: totalChargerInstallationCosts,
             charger_maintenance_repair_network_costs: totalChargerMaintenanceCosts,
             vehicle_incentive_credits: totalVehicleIncentiveCredits,
-            charger_incentive_credits: totalChargerIncentiveCredits
+            charger_incentive_credits: totalChargerIncentiveCredits,
+            fossil_vehicle_acquisition_costs: fossilFuelAcquisitionCostTotal,
+            fossil_vehicle_maintenance_repair_costs: fossilFuelMaintenanceCostTotal,
+            fossil_vehicle_insurance_costs: fossilFuelInsuranceCostTotal
         }]);
     };
 
@@ -200,8 +207,21 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         // Convert FormData to a JSON object
         const formDataJson: { [key: string]: any } = {};
         formData.forEach((value, key) => {
-            formDataJson[key] = value;
+            // Check if the key is related to project costs and parse it as an integer
+            if (key.includes('costs') || key.includes('credits')) {
+                formDataJson[key] = parseFormattedNumber(value as string); // Ensure it's an integer
+            } else {
+                formDataJson[key] = value;
+            }
         });
+
+        // Calculate project costs to get fossil fuel values
+        calculateProjectCosts(); 
+
+        // Add fossil fuel costs to formDataJson
+        formDataJson.fossil_vehicle_acquisition_costs = projectSite[0]?.fossil_vehicle_acquisition_costs || 0;
+        formDataJson.fossil_vehicle_maintenance_repair_costs = projectSite[0]?.fossil_vehicle_maintenance_repair_costs || 0;
+        formDataJson.fossil_vehicle_insurance_costs = projectSite[0]?.fossil_vehicle_insurance_costs || 0;
 
         // Include charging behavior in the form data
         formDataJson['charging_behavior'] = {
@@ -223,8 +243,6 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             formDataJson[`charger_group_${groupIndex}_num`] = group.numChargers;
             formDataJson[`charger_group_${groupIndex}_kw`] = group.chargerKW;
         });
-
-        console.log('Form Data JSON:', formDataJson); // Log the form data
 
         // Pass the FormData back to the parent component
         await onCalculate(formDataJson); // Call the parent function with the FormData
