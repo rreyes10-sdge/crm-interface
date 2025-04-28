@@ -116,7 +116,7 @@ QUERY_SUMMARY = """SELECT
         WHERE pa.ProgramId = 16 AND pa.label = 'Consultation Call' AND pav.Value IS NOT NULL
         GROUP BY pav.ProjectId
     ) H ON H.ProjectId = p.ProjectId
-    WHERE p.programid = 16 and p.projectid not in (3467) and p.deleted = 0"""
+    WHERE p.programid = 16 and p.projectid not in (3467,3197) and p.deleted = 0"""
 
 QUERY_DURATION = """SELECT 
         p.ProjectId,
@@ -565,7 +565,7 @@ QUERY_PROJECT_SERVICE_ATTRIBUTES = """SELECT
         AND p.Deleted = 0
         AND pal.Required = 1
         AND (svc.Label IS NOT NULL OR pal.PhaseId = 0)
-        AND p.ProjectId NOT IN (3467)
+        AND p.ProjectId NOT IN (3467,3197)
         AND p.ProjectId = %(projectId)s AND pp.Name LIKE %(serviceName)s
     ORDER BY
         p.ProjectId ASC, pal.SortOrder ASC;"""

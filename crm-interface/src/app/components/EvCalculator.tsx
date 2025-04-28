@@ -18,7 +18,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
     const [error, setError] = useState<string | null>(null);
     const [chargingBehavior, setChargingBehavior] = useState<ChargingBehavior>({
         days: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
-        startTime: '22:00',
+        startTime: '18:00',
         endTime: '06:00'
     });
 
@@ -92,9 +92,15 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
             return total + (group.numVehicles * vehicleCostPerUnit);
         }, 0);
 
+        // // Calculate total vehicle maintenance costs (annual)
+        // const totalVehicleMaintenanceCosts = vehicleGroups.reduce((total, group) => {
+        //     return total + (group.avgDailyMileage * group.numVehicles * maintenanceCostPerMile * 365); // Annual maintenance cost
+        // }, 0);
+
         // Calculate total vehicle maintenance costs (annual)
         const totalVehicleMaintenanceCosts = vehicleGroups.reduce((total, group) => {
-            return total + (group.avgDailyMileage * group.numVehicles * maintenanceCostPerMile * 365); // Annual maintenance cost
+            const selectedDaysCount = chargingBehavior.days.length; // Get the number of selected days
+            return total + (group.avgDailyMileage * group.numVehicles * maintenanceCostPerMile * selectedDaysCount * 52); // Annual maintenance cost
         }, 0);
 
         // Calculate total vehicle insurance costs (annual)
@@ -672,7 +678,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Acquisition Costs</strong>
-                                    <Tooltip title="Typical costs are $300,000 per vehicle">
+                                    <Tooltip title="Typical costs are $300,000 per vehicle, one-time costs applied to the first year">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
@@ -686,7 +692,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Costs</strong>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Maintenance and Repair Annual Costs</strong>
                                     <Tooltip title="Typical costs are $0.15 per mile">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
@@ -701,7 +707,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Costs</strong>
+                                <Typography color="secondary" variant="subtitle1"><strong>Vehicle Insurance Annual Costs</strong>
                                     <Tooltip title="Typical costs are $1,500 per vehicle per year">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
@@ -734,7 +740,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Costs</strong>
+                                <Typography color="secondary" variant="subtitle1"><strong>Charger Maintenance, Repair and Network Annual Costs</strong>
                                     <Tooltip title="Typical costs are $1,100 per charger per year">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
@@ -753,7 +759,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Vehicle Incentive Credits</strong>
-                                    <Tooltip title="Typical incentives are $150,000 per vehicle">
+                                    <Tooltip title="Typical incentives are a one-time $150,000 credit per vehicle">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
@@ -768,7 +774,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography color="secondary" variant="subtitle1"><strong>Charger Incentive Credits</strong>
-                                    <Tooltip title="Typical incentives are $1,000 per charger">
+                                    <Tooltip title="Typical incentives are a one-time $1,000 credit per charger">
                                         <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
                                     </Tooltip>
                                 </Typography>
