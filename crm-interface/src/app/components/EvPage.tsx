@@ -99,12 +99,12 @@ const EvPage: React.FC = () => {
         <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto', overflowX: 'auto', px: '40px' }}>
             <Grid container spacing={3}>
                 {/* Calculator - Left Side */}
-                <Grid item xs={12} lg={5}>
+                <Grid item xs={12} lg={4}>
                     <EvCalculator onCalculate={handleCalculate} isLoading={isLoading} />
                 </Grid>
 
                 {/* Results - Right Side */}
-                <Grid item xs={12} lg={7}>
+                <Grid item xs={12} lg={8}>
                     {error && (
                         <Box mb={3}>
                             <Typography color="error">{error}</Typography>

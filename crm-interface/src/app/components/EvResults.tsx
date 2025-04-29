@@ -224,7 +224,6 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSite[] }> = ({ results, projectSite }) => {
     const config: Partial<BarChartProps> = {
         height: 600,
-        margin: { left: 80, top: 140 }
     };
 
     // Define color mapping for each cost type
@@ -293,7 +292,17 @@ const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSi
         <BarChart
             dataset={dataset} // Flatten the costs for the BarChart
             series={addLabels(Series)}
-			xAxis={[{ scaleType: 'band', dataKey: 'type' }]}
+            margin={{ left: 65, right: 360, top: 20, bottom: 50 }}
+            xAxis={[{ scaleType: 'band', dataKey: 'type' }]}
+            slotProps={{
+                legend: {
+                    direction: 'column',
+                    position: { 
+                        vertical: 'middle',
+                        horizontal: 'right'
+                    }
+                }
+            }}
             {...config}
         />
     );
