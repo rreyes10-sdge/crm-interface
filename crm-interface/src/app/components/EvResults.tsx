@@ -230,7 +230,7 @@ const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSi
     const colorMapping = {
         vehAcq: '#007BFF', // Vehicle Acquisition
         vehRep: '#00BFFF', // Vehicle Maintenance & Repair
-        vehIns: '#1E90FF', // Vehicle Insurance
+        vehIns: '#1EFFFE', // Vehicle Insurance
         chaIns: '#32CD32', // Charger Installation
         chaRep: '#90EE90', // Charger Maintenance & Repair
         vehInc: '#F8971D', // Vehicle Incentives
@@ -504,10 +504,10 @@ const EvResultsSummary: React.FC<{ results: any; vehicleGroups: VehicleGroup[], 
 
 const translations = {
 	vehAcq: 'Vehicle Acquisition',
-	vehRep: 'Vehicle Maintenance and Repair',
+	vehRep: 'Vehicle Maintenance and Repairs',
 	vehIns: 'Vehicle Insurance',
 	chaIns: 'Charger Install',
-	chaRep: 'Charger Maintenance, Repair and Network',
+	chaRep: 'Charger Network, Maintenance, and Repairs',
 	vehInc: 'Vehicle Incentives',
 	chaInc: 'Charger Incentives',
 	energyCosts: 'Fuel / Energy Costs'
