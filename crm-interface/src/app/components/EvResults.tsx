@@ -85,7 +85,7 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 
 const formatCurrency = (value: any) => {
 	if (typeof value === 'number') {
-		return `$${value.toFixed(2)}`;
+		return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 	}
 	return value; // Return the value as is if it's not a number
 };
@@ -524,6 +524,8 @@ export function addLabels<T extends { dataKey: keyof typeof translations }>(seri
 const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; projectSite: ProjectSite[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, projectSite, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
 	// console.log('EvResults Props:', { projectSite }); // Log incoming props
+	const totalActiveVehicles = vehicleGroups.reduce((acc, group) => acc + (group.numVehicles > 0 ? group.numVehicles : 0), 0); // Assuming all active
+
 
 	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
 		setValue(newValue);
@@ -588,7 +590,7 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />}
 					{value === 1 && <ChargersSection results={results} />}
 					{value === 2 && <CostsSection results={results} />}
-					{value === 3 && <TCOSection results={results} projectSite={projectSite}/>}
+					{value === 3 && <TCOSection results={results} projectSite={projectSite} totalActiveVehicles={totalActiveVehicles}/>}
 				</Box>
 			</Paper>
 		</div>
@@ -745,15 +747,54 @@ const CostsSection = ({ results }: { results: any }) => {
 	);
 };
 // TBD Section
-const TCOSection = ({ results, projectSite }: { results: any, projectSite: ProjectSite[] }) => (
-	<div>
-		{/* <Typography variant="h6">TCO</Typography> */}
-		<EvTotalCostOwnershipChart results={results} projectSite={projectSite} />
-		<p>
-			<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</Link>
-		</p>
-		{/* Add TBD-specific content here */}
-	</div>
-);
+const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: any, projectSite: ProjectSite[], totalActiveVehicles: number }) => {
+	const assumptions = [
+		{ label: 'Vehicle Acquisition Cost', value: formatCurrency(projectSite[0].vehicle_acquisition_costs || 0) },
+		{ label: 'Vehicle Maintenance Cost', value: formatCurrency(projectSite[0].vehicle_maintenance_repair_costs || 0) },
+		{ label: 'Vehicle Insurance Cost', value: formatCurrency(projectSite[0].vehicle_insurance_costs || 0) },
+		{ label: 'Charger Installation Cost', value: formatCurrency(projectSite[0].charger_installation_costs || 0) },
+		{ label: 'Charger Maintenance Cost', value: formatCurrency(projectSite[0].charger_maintenance_repair_network_costs || 0) },
+		{ label: 'Energy Costs', value: formatCurrency(results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0) },
+		{ label: 'Fossil Fuel Costs', value: formatCurrency(results.yearly_costs[new Date().getFullYear()]?.total_fossil_fuel_tc || 0) },
+	];
+
+	return (
+		<div>
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='center'>
+					Taking a look at the estimated total cost breakdown for the first year of ownership of the <b>{totalActiveVehicles}</b> vehicles selected compared to equivalent fossil fuel vehicles, with electric energy costs and charging behavior based on <i>Scenario 2</i> which is outlined in the <b>Costs</b> tab.
+				</Typography>
+			</Box>
+			<EvTotalCostOwnershipChart results={results} projectSite={projectSite} />
+			
+
+			{/* Assumptions Table */}
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='center'>Assumptions Used for Calculations</Typography>
+				<TableContainer component={Paper}>
+					<Table>
+						<TableHead>
+							<TableRow>
+								<TableCell><strong>Assumption</strong></TableCell>
+								<TableCell align="right"><strong>Value</strong></TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{assumptions.map((assumption, index) => (
+								<TableRow key={index}>
+									<TableCell>{assumption.label}</TableCell>
+									<TableCell align="right">{assumption.value}</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			</Box>
+			<p>
+				<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</Link>
+			</p>
+		</div>
+	);
+};
 
 export default EvResults;
