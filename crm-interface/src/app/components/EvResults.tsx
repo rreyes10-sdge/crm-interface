@@ -222,94 +222,94 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 };
 
 const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSite[] }> = ({ results, projectSite }) => {
-    const config: Partial<BarChartProps> = {
-        height: 600,
-    };
+	const config: Partial<BarChartProps> = {
+		height: 600,
+	};
 
-    // Define color mapping for each cost type
-    const colorMapping = {
-        vehAcq: '#007BFF', // Vehicle Acquisition
-        vehRep: '#00BFFF', // Vehicle Maintenance & Repair
-        vehIns: '#1EFFFE', // Vehicle Insurance
-        chaIns: '#32CD32', // Charger Installation
-        chaRep: '#90EE90', // Charger Maintenance & Repair
-        vehInc: '#F8971D', // Vehicle Incentives
-        chaInc: '#00A1A4', // Charger Incentives
+	// Define color mapping for each cost type
+	const colorMapping = {
+		vehAcq: '#007BFF', // Vehicle Acquisition
+		vehRep: '#00BFFF', // Vehicle Maintenance & Repair
+		vehIns: '#1EFFFE', // Vehicle Insurance
+		chaIns: '#32CD32', // Charger Installation
+		chaRep: '#90EE90', // Charger Maintenance & Repair
+		vehInc: '#F8971D', // Vehicle Incentives
+		chaInc: '#00A1A4', // Charger Incentives
 		energyCosts: '#FED600', // Energy Costs
-    };
+	};
 
-    // Constructing the data structure
-    const dataset = projectSite.length > 0 ? [
-        {
-            type: 'Electric Costs Breakdown',
-            vehAcq: projectSite[0].vehicle_acquisition_costs || 0,
-            vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
-            vehIns: projectSite[0].vehicle_insurance_costs || 0,
-            chaIns: projectSite[0].charger_installation_costs || 0,
-            chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
-            vehInc: -(projectSite[0].vehicle_incentive_credits || 0),
-            chaInc: -(projectSite[0].charger_incentive_credits || 0),
+	// Constructing the data structure
+	const dataset = projectSite.length > 0 ? [
+		{
+			type: 'Electric Costs Breakdown',
+			vehAcq: projectSite[0].vehicle_acquisition_costs || 0,
+			vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
+			vehIns: projectSite[0].vehicle_insurance_costs || 0,
+			chaIns: projectSite[0].charger_installation_costs || 0,
+			chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
+			vehInc: -(projectSite[0].vehicle_incentive_credits || 0),
+			chaInc: -(projectSite[0].charger_incentive_credits || 0),
 			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0
 		},
 		{
 			type: 'Final EV TCO',
 			vehAcq: (projectSite[0].vehicle_acquisition_costs || 0) - (projectSite[0].vehicle_incentive_credits || 0),
-            vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
-            vehIns: projectSite[0].vehicle_insurance_costs || 0,
-            chaIns: (projectSite[0].charger_installation_costs || 0) - (projectSite[0].charger_incentive_credits || 0),
-            chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
+			vehRep: projectSite[0].vehicle_maintenance_repair_costs || 0,
+			vehIns: projectSite[0].vehicle_insurance_costs || 0,
+			chaIns: (projectSite[0].charger_installation_costs || 0) - (projectSite[0].charger_incentive_credits || 0),
+			chaRep: projectSite[0].charger_maintenance_repair_network_costs || 0,
 			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0
 		},
-        {
-            type: 'Fossil Fuel TCO',
-            vehAcq: projectSite[0].fossil_vehicle_acquisition_costs || 0,
-            vehRep: projectSite[0].fossil_vehicle_maintenance_repair_costs || 0,
-            vehIns: projectSite[0].fossil_vehicle_insurance_costs || 0,
+		{
+			type: 'Fossil Fuel TCO',
+			vehAcq: projectSite[0].fossil_vehicle_acquisition_costs || 0,
+			vehRep: projectSite[0].fossil_vehicle_maintenance_repair_costs || 0,
+			vehIns: projectSite[0].fossil_vehicle_insurance_costs || 0,
 			energyCosts: results.yearly_costs[new Date().getFullYear()]?.total_fossil_fuel_tc || 0
-        }
-    ] : [];
+		}
+	] : [];
 
-    // Define the type for the series items
-    type SeriesItem = {
-        dataKey: keyof typeof translations; // Ensure dataKey matches the keys in translations
-        stack: string;
-        color: string;
-    };
+	// Define the type for the series items
+	type SeriesItem = {
+		dataKey: keyof typeof translations; // Ensure dataKey matches the keys in translations
+		stack: string;
+		color: string;
+	};
 
-    // Prepare series for EV costs
+	// Prepare series for EV costs
 	const Series: SeriesItem[] = [
-        { dataKey: 'vehAcq', stack: 'Costs', color: colorMapping.vehAcq },
-        { dataKey: 'vehRep', stack: 'Costs', color: colorMapping.vehRep },
-        { dataKey: 'vehIns', stack: 'Costs', color: colorMapping.vehIns },
-        { dataKey: 'chaIns', stack: 'Costs', color: colorMapping.chaIns },
-        { dataKey: 'chaRep', stack: 'Costs', color: colorMapping.chaRep },
-        { dataKey: 'vehInc', stack: 'Incentives', color: colorMapping.vehInc },
-        { dataKey: 'chaInc', stack: 'Incentives', color: colorMapping.chaInc },
+		{ dataKey: 'vehAcq', stack: 'Costs', color: colorMapping.vehAcq },
+		{ dataKey: 'vehRep', stack: 'Costs', color: colorMapping.vehRep },
+		{ dataKey: 'vehIns', stack: 'Costs', color: colorMapping.vehIns },
+		{ dataKey: 'chaIns', stack: 'Costs', color: colorMapping.chaIns },
+		{ dataKey: 'chaRep', stack: 'Costs', color: colorMapping.chaRep },
+		{ dataKey: 'vehInc', stack: 'Incentives', color: colorMapping.vehInc },
+		{ dataKey: 'chaInc', stack: 'Incentives', color: colorMapping.chaInc },
 		{ dataKey: 'energyCosts', stack: 'Costs', color: colorMapping.energyCosts },
-    ];
+	];
 
-    return (
-        <BarChart
-            dataset={dataset} // Flatten the costs for the BarChart
-            series={addLabels(Series)}
-            margin={{ left: 65, right: 360, top: 20, bottom: 50 }}
-            xAxis={[{ scaleType: 'band', dataKey: 'type' }]}
-            slotProps={{
-                legend: {
-                    direction: 'column',
-                    position: { 
-                        vertical: 'middle',
-                        horizontal: 'right'
-                    }
-                }
-            }}
-            {...config}
-        />
-    );
+	return (
+		<BarChart
+			dataset={dataset} // Flatten the costs for the BarChart
+			series={addLabels(Series)}
+			margin={{ left: 65, right: 360, top: 20, bottom: 50 }}
+			xAxis={[{ scaleType: 'band', dataKey: 'type' }]}
+			slotProps={{
+				legend: {
+					direction: 'column',
+					position: {
+						vertical: 'middle',
+						horizontal: 'right'
+					}
+				}
+			}}
+			{...config}
+		/>
+	);
 };
-	
-  
-  
+
+
+
 
 const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 	const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Default year
@@ -590,7 +590,7 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />}
 					{value === 1 && <ChargersSection results={results} />}
 					{value === 2 && <CostsSection results={results} />}
-					{value === 3 && <TCOSection results={results} projectSite={projectSite} totalActiveVehicles={totalActiveVehicles}/>}
+					{value === 3 && <TCOSection results={results} projectSite={projectSite} totalActiveVehicles={totalActiveVehicles} />}
 				</Box>
 			</Paper>
 		</div>
@@ -711,7 +711,7 @@ const CostsSection = ({ results }: { results: any }) => {
 				<Typography component="div">
 					<p>The <strong>Electric Vehicle-High Power (EV-HP)</strong> pricing plan is designed to eliminate demand charges and provide customers with simple, stable, monthly billing. The EV-HP pricing plan utilizes reduced Time of Use (TOU) energy charges that are incurred based on the time of day you use electricity, measured in kilowatt hours (kWh). These rates have a steep differential between "on-peak" and "super off-peak" prices to encourage fleet customers to charge during periods of lowest demand. SDG&E's reduced charging rates and simpler billing make the transition to electric vehicles easier and more cost-effective, especially if you have an EV fleet.</p>
 					<br></br>
-					<p>The <strong>EV-HP Pricing Plan</strong> allows EV customers to choose the amount of power they will need to charge their vehicles and pay for it with a monthly subscription fee — similar to a cell phone plan that lets customers choose the amount of data they will use.</p> 
+					<p>The <strong>EV-HP Pricing Plan</strong> allows EV customers to choose the amount of power they will need to charge their vehicles and pay for it with a monthly subscription fee — similar to a cell phone plan that lets customers choose the amount of data they will use.</p>
 					<br></br>
 					<p>The EV-HP rate has three components: <strong>Basic Service Fee + Subscription Charge + Energy Cost (charging consumption)</strong>. EV-HP Basic Service Fee is $213.30 per month for loads under 500 kW and $766.91 for loads over 500 kW. For more details on the EV-HP rate, please visit the <Link href="https://tariffsprd.sdge.com/sdge/tariffs/?utilId=SDGE&bookId=ELEC&sectId=ELEC-SCHEDS&tarfRateGroup=Commercial/Industrial%20Rates" target="_blank" rel="noopener noreferrer">SDG&E Tariff Rates Page</Link>.
 					</p>
@@ -748,14 +748,40 @@ const CostsSection = ({ results }: { results: any }) => {
 };
 // TBD Section
 const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: any, projectSite: ProjectSite[], totalActiveVehicles: number }) => {
+
+	const currentYear = new Date().getFullYear();
 	const assumptions = [
-		{ label: 'Vehicle Acquisition Cost', value: formatCurrency(projectSite[0].vehicle_acquisition_costs || 0) },
-		{ label: 'Vehicle Maintenance Cost', value: formatCurrency(projectSite[0].vehicle_maintenance_repair_costs || 0) },
-		{ label: 'Vehicle Insurance Cost', value: formatCurrency(projectSite[0].vehicle_insurance_costs || 0) },
-		{ label: 'Charger Installation Cost', value: formatCurrency(projectSite[0].charger_installation_costs || 0) },
-		{ label: 'Charger Maintenance Cost', value: formatCurrency(projectSite[0].charger_maintenance_repair_network_costs || 0) },
-		{ label: 'Energy Costs', value: formatCurrency(results.yearly_costs[new Date().getFullYear()]?.total_electric_tc || 0) },
-		{ label: 'Fossil Fuel Costs', value: formatCurrency(results.yearly_costs[new Date().getFullYear()]?.total_fossil_fuel_tc || 0) },
+
+		{
+			label: 'Vehicle Acquisition Cost',
+			evValue: formatCurrency(projectSite[0].vehicle_acquisition_costs || 0),
+			ffvValue: formatCurrency(projectSite[0].fossil_vehicle_acquisition_costs || 0),
+		},
+		{
+			label: 'Vehicle Maintenance and Repair Cost',
+			evValue: formatCurrency(projectSite[0].vehicle_maintenance_repair_costs || 0),
+			ffvValue: formatCurrency(projectSite[0].fossil_vehicle_maintenance_repair_costs || 0),
+		},
+		{
+			label: 'Vehicle Insurance Cost',
+			evValue: formatCurrency(projectSite[0].vehicle_insurance_costs || 0),
+			ffvValue: formatCurrency(projectSite[0].fossil_vehicle_insurance_costs || 0),
+		},
+		{
+			label: 'Charger Installation Cost',
+			evValue: formatCurrency(projectSite[0].charger_installation_costs || 0),
+			ffvValue: 'N/A',
+		},
+		{
+			label: 'Charger Network, Maintenance, and Repair Cost',
+			evValue: formatCurrency(projectSite[0].charger_maintenance_repair_network_costs || 0),
+			ffvValue: 'N/A',
+		},
+		{
+			label: 'Fuel / Energy Costs',
+			evValue: formatCurrency(results.yearly_costs[currentYear]?.total_electric_tc || 0),
+			ffvValue: formatCurrency(results.yearly_costs[currentYear]?.total_fossil_fuel_tc || 0),
+		},
 	];
 
 	return (
@@ -765,33 +791,39 @@ const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: an
 					Taking a look at the estimated total cost breakdown for the first year of ownership of the <b>{totalActiveVehicles}</b> vehicles selected compared to equivalent fossil fuel vehicles, with electric energy costs and charging behavior based on <i>Scenario 2</i> which is outlined in the <b>Costs</b> tab.
 				</Typography>
 			</Box>
-			<EvTotalCostOwnershipChart results={results} projectSite={projectSite} />
-			
 
-			{/* Assumptions Table */}
+			<EvTotalCostOwnershipChart results={results} projectSite={projectSite} />
+
 			<Box mt={3} mb={3}>
-				<Typography variant="h6" align='center'>Assumptions Used for Calculations</Typography>
+				<Typography variant="h6" align='center'>Assumptions Used for the First Year</Typography>
 				<TableContainer component={Paper}>
 					<Table>
 						<TableHead>
 							<TableRow>
 								<TableCell><strong>Assumption</strong></TableCell>
-								<TableCell align="right"><strong>Value</strong></TableCell>
+								<TableCell align="right"><strong>Electric Costs</strong></TableCell>
+								<TableCell align="right"><strong>Fossil Fuel Costs</strong></TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
+
 							{assumptions.map((assumption, index) => (
 								<TableRow key={index}>
 									<TableCell>{assumption.label}</TableCell>
-									<TableCell align="right">{assumption.value}</TableCell>
+									<TableCell align="right">{assumption.evValue}</TableCell>
+									<TableCell align="right">{assumption.ffvValue}</TableCell>
 								</TableRow>
+
 							))}
 						</TableBody>
 					</Table>
 				</TableContainer>
 			</Box>
+
 			<p>
-				<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">See the Regional Fleet TCO Fact Sheet for a full analysis here.</Link>
+				<Link href="https://www.sdge.com/sites/default/files/documents/SDGE.PYDFF%20-%20TCO%20Fact%20Sheet%20-%20Regional%20Freight.pdf" target="_blank" rel="noopener noreferrer">
+					See the Regional Fleet TCO Fact Sheet for a full analysis here.
+				</Link>
 			</p>
 		</div>
 	);
