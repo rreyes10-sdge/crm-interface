@@ -571,10 +571,11 @@ QUERY_PROJECT_SERVICE_ATTRIBUTES = """SELECT
         p.ProjectId ASC, pal.SortOrder ASC;"""
 
 QUERY_PROJECT_SERVICE = """SELECT
-        p.ProjectNumber,
+        CONCAT(p.ProjectId , '-', pa.ProgramAttributeId) AS id,
+		p.ProjectNumber,
         p.ProjectId,
         tst2.Name as 'CoreName',
-        pa.Label AS ServiceName,
+        pa.Label AS Name,
         CASE
             WHEN pa.ControlType = 'select' THEN so.OptionText
             WHEN pal.Value IS NULL THEN 'False'
@@ -582,7 +583,13 @@ QUERY_PROJECT_SERVICE = """SELECT
         END AS AttributeValue,
         A.Value AS 'ServiceStartDate',
         B.Value as 'FollowUpDate',
-        C.Value as 'CompleteDate'
+        C.Value as 'CompleteDate',
+        CASE
+			WHEN C.Value IS NOT NULL THEN 'Completed'
+			WHEN B.Value IS NOT NULL THEN 'Waiting on Customer'
+			WHEN A.Value IS NOT NULL THEN 'Ready to Start'
+			ELSE 'Backlog'
+		END AS Status  
     FROM cleantranscrm.TeasSupportType tst
     LEFT JOIN cleantranscrm.TeasServiceType tst2 on CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
     LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -627,7 +634,7 @@ QUERY_PROJECT_SERVICE = """SELECT
         ) C on C.projectid = pal.ProjectId and C.programattributeid = tst.programattributeid
     WHERE
         pal.ProjectId IN (SELECT ProjectId FROM cleantranscrm.`Project` WHERE ProgramId = 16)
-        AND pa.PhaseId = 2 AND pa.ProgramId = 16 AND pal.Value='True'
+        AND pa.PhaseId = 2 AND pa.ProgramId = 16 AND pal.Value='True' AND p.projectid not in (3467,3197)
     GROUP BY p.ProjectNumber, tst2.Name, pa.Label
     ORDER BY
         p.ProjectNumber ASC, pp.SortOrder ASC, pa.SortOrder ASC;"""

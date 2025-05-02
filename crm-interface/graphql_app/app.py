@@ -244,7 +244,7 @@ def get_projects():
                 WHERE (a.Text LIKE '%%promoted this project%%' OR a.Text LIKE '%%demoted this project%%')
                 AND a.PhaseId = (SELECT MAX(a2.PhaseId) FROM cleantranscrm.Activity a2 WHERE a2.ProjectId = a.ProjectId)
             ) A ON A.ProjectId = p.ProjectId
-            where p.Deleted = 0 and pr.RoleId = 1
+            where p.Deleted = 0 and pr.RoleId = 1 AND p.ProjectId not in (3467,3197)
             GROUP BY p.ProjectId, p.ProjectNumber, p.Name, ps.LongName, p2.Name, o.Name, u.ProperName, pp.Name, A.PhaseId;
         """
         active_projects = fetch_data(active_projects_query, conn).to_dict(orient='records')

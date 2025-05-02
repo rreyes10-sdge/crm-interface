@@ -6,6 +6,7 @@ import ProjectTimelineView from './ProjectTimelineView';
 import TimelineOld from './TimelineOld';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AttributesCurrent from './AttributesCurrent';
+import KanbanBoard from './KanbanBoardv2';
 
 interface Project {
   ProjectId: string;
@@ -67,6 +68,13 @@ interface CurrentPhaseAttributes {
   AssignedUser: string;
 }
 
+interface ServiceItem {
+  id: string;
+  projectId: any;
+  name: string;
+  status: string;
+}
+
 const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -77,6 +85,9 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestones[]>([]);
   const [currentPhaseAttributes, setCurrentPhaseAttributes] = useState<CurrentPhaseAttributes[] | null>(null);
+  const [projectServices, setProjectServices] = useState([]);
+  const [allProjectServices, setAllProjectServices] = useState<ServiceItem[]>([]);
+
 
   useEffect(() => {
     axios.get('http://127.0.0.1:5000/api/projects')
@@ -99,7 +110,23 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProjectServices = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:5000/api/data/project-service`);
+        setAllProjectServices(
+          response.data.map((svc: any) => ({
+            id: svc.id,
+            name: svc.Name,
+            status: svc.Status,
+            projectId: svc.ProjectId,
+          }))
+        ); // Or response.data.services
+      } catch (error) {
+        console.error('Error fetching project services:', error);
+      }
+    };
+
+    const fetchProjectMilestones = async () => {
       try {
         const response = await fetch(`http://127.0.0.1:5000/api/data/project-milestone-dates?projectId=${projectId}`);
         if (!response.ok) throw new Error(`Error: ${response.status}`);
@@ -109,8 +136,11 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
         console.error('Error fetching project milestones:', error);
       }
     };
-    fetchData();
+
+    fetchProjectServices();
+    fetchProjectMilestones();
   }, [projectId]);
+
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -253,9 +283,9 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
             </Accordion>
           </Grid>
           <Grid item xs={12} md={5}>
-                {currentPhaseAttributes && (
-                  <AttributesCurrent attributes={currentPhaseAttributes} />
-                )}
+            {currentPhaseAttributes && (
+              <AttributesCurrent attributes={currentPhaseAttributes} />
+            )}
           </Grid>
           <Grid item xs={12} md={5}>
             <Accordion defaultExpanded={true}>
@@ -270,6 +300,11 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
             </Accordion>
           </Grid>
         </Grid>
+      )}
+      {selectedProjectId && (
+        <KanbanBoard
+          services={allProjectServices.filter(svc => String(svc.projectId) === String(selectedProjectId))}
+        />
       )}
     </Box>
   );
