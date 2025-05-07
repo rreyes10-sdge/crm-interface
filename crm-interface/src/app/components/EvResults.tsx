@@ -24,7 +24,7 @@ interface EvResultsProps {
 const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 	const rows = [
 		{
-			name: 'Monthly Average Cost',
+			name: 'Monthly Average Fuel Cost',
 			scenarioA: `$${results.averages_and_savings.monthly_average_cost.average_electric_monthly_tc_1.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
 			scenarioB: `$${results.averages_and_savings.monthly_average_cost.average_electric_monthly_tc_2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
 			scenarioC: `$${results.averages_and_savings.monthly_average_cost.average_electric_monthly_tc_3.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -32,7 +32,7 @@ const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
 			fossilFuel: `$${results.averages_and_savings.monthly_average_cost.average_fossil_fuel_monthly_tc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
 		},
 		{
-			name: 'Yearly Average Cost',
+			name: 'Yearly Average Fuel Cost',
 			scenarioA: `$${results.averages_and_savings.yearly_average_cost.yearly_electric_tc_1.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
 			scenarioB: `$${results.averages_and_savings.yearly_average_cost.yearly_electric_tc_2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
 			scenarioC: `$${results.averages_and_savings.yearly_average_cost.yearly_electric_tc_3.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -551,7 +551,7 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 						</Typography>
 					</Box>
 					<Box>
-						<Typography variant="h6">Average Annual Savings</Typography>
+						<Typography variant="h6">Average Annual Fuel Savings</Typography>
 						<Typography variant="h4" color="primary">
 							${results?.averages_and_savings?.yearly_savings?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
 						</Typography>
