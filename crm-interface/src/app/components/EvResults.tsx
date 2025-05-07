@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle, Link, Checkbox, FormControlLabel, Slider } from '@mui/material';
+import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle, Link, Checkbox, FormControlLabel, Slider, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -13,7 +13,7 @@ import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { SelectChangeEvent } from '@mui/material';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
-import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { VehicleGroup, ChargerGroup, ProjectSite } from '../types';
 
 interface EvResultsProps {
@@ -196,6 +196,63 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
 				<BarChart {...barChartData} />
 			</div>
+			{/* <Divider /> */}
+			<Accordion
+				sx={{
+					'&.MuiAccordion-root': {
+						width: '100%',
+						margin: '0 auto',
+						'&:before': {
+							display: 'none',
+						},
+					},
+				}}
+			>
+				<AccordionSummary
+					expandIcon={<ExpandMoreIcon />}
+					sx={{
+						borderBottom: '2px solid #001689',
+						backgroundColor: '#FFE1C0',
+						color: '#000000',
+						textAlign: 'center',
+						justifyContent: 'center',
+						// '& .MuiAccordionSummary-content': {
+						// 	margin: '12px 0',
+						// },
+					}}
+				>
+					<Typography variant="h6">View scenario explanations</Typography>
+				</AccordionSummary>
+				<AccordionDetails>
+					<Typography variant="body1">
+						<strong>Scenario 1 - Managed Optimal With On-Peak Hours</strong>
+					</Typography>
+					<div>
+						This scenario also involves managing the charging process, but it allows for charging during all available hours, including on-peak hours. This might be necessary if the fleet's charging needs are too high to be met during off-peak hours alone. While this approach offers more flexibility and ensures that all vehicles are charged, it can be more expensive due to the higher rates during on-peak hours.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 2 - Managed Optimal Without On-Peak Hours</strong><span style={{ color: '#1976d2' }}>*</span>
+					</Typography>
+					<div>
+						In this scenario, charging is carefully managed to occur only during off-peak and super off-peak hours, when electricity rates are lower. By avoiding on-peak hours, fleet managers can significantly reduce electricity costs. This approach requires planning and scheduling to ensure all vehicles are charged within the cheaper hours, leading to substantial savings.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 3 - Unmanaged With On-Peak Hours</strong>
+					</Typography>
+					<div>
+						In this scenario, chargers operate at full capacity during off-peak and super off-peak hours until the vehicles are fully charged. There is no active management of the charging process, meaning chargers will use as much power as needed in a shorter time frame. This can lead to higher subscription charges due to intense power usage, but it simplifies the charging process as no scheduling is required.
+					</div>
+					<br />
+					<Typography variant="body1">
+						<strong>Scenario 4 - Unmanaged Without On-Peak Hours</strong>
+					</Typography>
+					<div>
+						This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.
+					</div>
+				</AccordionDetails>
+			</Accordion>
 			<div style={{ marginTop: '20px' }}>
 				<Typography variant="h6">Insights and Recommendations</Typography>
 				<Typography variant="body1" sx={{ mb: 2 }}>
@@ -630,7 +687,7 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 		numberOfPlugs: '',
 		smartCharging: false,
 		vehicleGridIntegration: false,
-		msrpRange: [0, 100000],
+		msrpRange: [0, 200000],
 	});
 
 
@@ -639,8 +696,14 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 		return data.filter(product => {
 			const matchesManufacturer = filters.manufacturer ? product.Manufacturer === filters.manufacturer : true;
 			const matchesPlugs = filters.numberOfPlugs ? product.numberOfPlugs === Number(filters.numberOfPlugs) : true;
-			const matchesSmartCharging = filters.smartCharging ? product.smartCharging === 1 : true;
-			const matchesVGI = filters.vehicleGridIntegration ? product.vehicleGridIntegration === 1 : true;
+			const matchesSmartCharging = 
+				typeof filters.smartCharging === 'boolean' && filters.smartCharging 
+				? product.smartCharging === 1 
+				: true;
+			const matchesVGI =
+				typeof filters.vehicleGridIntegration === 'boolean' && filters.vehicleGridIntegration 
+					? product.vehicleGridIntegration === 1 
+					: true;
 			const matchesMsrp = product.cost >= filters.msrpRange[0] && product.cost <= filters.msrpRange[1];
 
 
@@ -649,8 +712,8 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 				matchesManufacturer &&
 				matchesPlugs &&
 				matchesSmartCharging &&
-				matchesVGI &&
-				matchesMsrp
+				matchesVGI 
+				// matchesMsrp
 			);
 		});
 	}, [filters]);
@@ -669,33 +732,39 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 				const response = await fetch('http://127.0.0.1:5000/api/data/charger-products');
 				const data = await response.json();
 
-
-
 				if (!Array.isArray(data)) {
 					console.error('Unexpected data format:', data);
 					return;
 				}
 
-
-
 				const powerRatings = chargerGroups.map(group => group.chargerKW);
+				const matchedProducts: any[] = [];
 
+				powerRatings.forEach(powerRating => {
+					let delta = 5;
+					let matched = [];
 
+					while (matched.length === 0 && delta <= 100) {
+						matched = data.filter((product: any) =>
+							Math.abs(product.powerFullKw - powerRating) <= delta
+						);
+						delta += 5; // increment search range
+					}
 
-				const matchedProducts = data.filter((product: any) =>
-					powerRatings.some(powerRating => Math.abs(product.powerFullKw - powerRating) <= 5)
+					matchedProducts.push(...matched);
+				});
+
+				// Remove duplicates in case the same product matched multiple ratings
+				const uniqueProducts = Array.from(
+					new Map(matchedProducts.map(p => [p.id, p])).values()
 				);
 
-
-
-				setAllChargerProducts(matchedProducts);
-				setFilteredChargerProducts(applyFilters(matchedProducts));
+				setAllChargerProducts(uniqueProducts);
+				setFilteredChargerProducts(applyFilters(uniqueProducts));
 			} catch (error) {
 				console.error('Error fetching charger products:', error);
 			}
 		};
-
-
 
 		if (chargerGroups?.length > 0) {
 			fetchChargerProducts();
@@ -735,46 +804,46 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 
 			<Box display="flex" flexWrap="wrap" justifyContent="center" gap={8} mt={2} mb={2}>
 				<Box>
-				<Typography color="secondary" variant="subtitle1"><strong>Manufacturer</strong></Typography>
-				<FormControl size="small" sx={{ minWidth: 160 }}>
-					{/* <InputLabel>Manufacturer</InputLabel> */}
-					<Select
-						value={filters.manufacturer}
-						onChange={e => setFilters(prev => ({ ...prev, manufacturer: e.target.value }))}
+					<Typography color="secondary" variant="subtitle1"><strong>Manufacturer</strong></Typography>
+					<FormControl size="small" sx={{ minWidth: 160 }}>
+						{/* <InputLabel>Manufacturer</InputLabel> */}
+						<Select
+							value={filters.manufacturer}
+							onChange={e => setFilters(prev => ({ ...prev, manufacturer: e.target.value }))}
 						// label="Manufacturer"
-					>
-						<MenuItem value="">All</MenuItem>
-						{[...new Set(allChargerProducts.map(p => p.Manufacturer))].map(manufacturer => (
-							<MenuItem key={manufacturer} value={manufacturer}>
-								{manufacturer}
-							</MenuItem>
-						))}
-					</Select>
-				</FormControl>
+						>
+							<MenuItem value="">All</MenuItem>
+							{[...new Set(allChargerProducts.map(p => p.Manufacturer))].map(manufacturer => (
+								<MenuItem key={manufacturer} value={manufacturer}>
+									{manufacturer}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
 				</Box>
 
 
-				<Box>	
-				<Typography color="secondary" variant="subtitle1"><strong>Number of Plugs</strong></Typography>
-				<FormControl size="small" sx={{ minWidth: 160 }}>
-					{/* <InputLabel>Number of Plugs</InputLabel> */}
-					<Select
-						value={filters.numberOfPlugs}
-						onChange={e => setFilters(prev => ({ ...prev, numberOfPlugs: e.target.value }))}
+				<Box>
+					<Typography color="secondary" variant="subtitle1"><strong>Number of Plugs</strong></Typography>
+					<FormControl size="small" sx={{ minWidth: 160 }}>
+						{/* <InputLabel>Number of Plugs</InputLabel> */}
+						<Select
+							value={filters.numberOfPlugs}
+							onChange={e => setFilters(prev => ({ ...prev, numberOfPlugs: e.target.value }))}
 						// label="Number of Plugs"
-					>
-						<MenuItem value="">All</MenuItem>
-						{[...new Set(allChargerProducts.map(p => p.numberOfPlugs))].sort().map(num => (
-							<MenuItem key={num} value={num}>
-								{num}
-							</MenuItem>
-						))}
-					</Select>
-				</FormControl>
+						>
+							<MenuItem value="">All</MenuItem>
+							{[...new Set(allChargerProducts.map(p => p.numberOfPlugs))].sort().map(num => (
+								<MenuItem key={num} value={num}>
+									{num}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
 				</Box>
 
 				<Box sx={{ width: 250 }}>
-					<Typography color="secondary" variant="subtitle1"><strong>MSRP Range</strong> (${filters.msrpRange[0]} - ${filters.msrpRange[1].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2})})</Typography>
+					<Typography color="secondary" variant="subtitle1"><strong>MSRP Range</strong> (${filters.msrpRange[0]} - ${filters.msrpRange[1].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</Typography>
 					<Slider
 						value={filters.msrpRange}
 						min={0}
@@ -788,71 +857,71 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 				</Box>
 
 				<Box display="flex" flexDirection="column" alignItems="flex-start">
-				<FormControlLabel
-					control={
-						<Checkbox
-							checked={filters.smartCharging}
-							onChange={e => setFilters(prev => ({ ...prev, smartCharging: e.target.checked }))}
-						/>
-					}
-					label="Smart Charging"
-				/>
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={filters.smartCharging}
+								onChange={e => setFilters(prev => ({ ...prev, smartCharging: e.target.checked }))}
+							/>
+						}
+						label="Smart Charging"
+					/>
 
 
 
-				<FormControlLabel
-					control={
-						<Checkbox
-							checked={filters.vehicleGridIntegration}
-							onChange={e => setFilters(prev => ({ ...prev, vehicleGridIntegration: e.target.checked }))}
-						/>
-					}
-					label="Vehicle Grid Integration"
-				/>
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={filters.vehicleGridIntegration}
+								onChange={e => setFilters(prev => ({ ...prev, vehicleGridIntegration: e.target.checked }))}
+							/>
+						}
+						label="Vehicle Grid Integration"
+					/>
 				</Box>
 			</Box>
 
 			<Box mt={3} mb={3}>
 				{filteredChargerProducts.length > 0 ? (
-				<Box display="flex" flexWrap="wrap" justifyContent="center">
-					{filteredChargerProducts.map((product: any) => (
-						<Box key={product.id} m={2} p={2} border={.5} borderRadius={2} width={300}>
-							<Typography variant="subtitle1" display="flex" justifyContent="space-between">
-								<strong>{product.Manufacturer}</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Model Name</span>
-								<strong>{product.ModelName}</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Model Type</span>
-								<strong>{product.ModelType || 'N/A'}</strong>
-							</Typography>
+					<Box display="flex" flexWrap="wrap" justifyContent="center">
+						{filteredChargerProducts.map((product: any) => (
+							<Box key={product.id} m={2} p={2} border={.5} borderRadius={2} width={300}>
+								<Typography variant="subtitle1" display="flex" justifyContent="space-between">
+									<strong>{product.Manufacturer}</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Model Name</span>
+									<strong>{product.ModelName}</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Model Type</span>
+									<strong>{product.ModelType || 'N/A'}</strong>
+								</Typography>
 
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Power</span>
-								<strong>{product.powerFullKw} kW</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Number of Plugs</span>
-								<strong>{product.numberOfPlugs}</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Smart Charging</span>
-								<strong>{product.smartCharging ? 'Yes' : 'No'}</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>Vehicle Grid Integration</span>
-								<strong>{product.vehicleGridIntegration ? 'Yes' : 'No'}</strong>
-							</Typography>
-							<Typography variant="body1" display="flex" justifyContent="space-between">
-								<span>MSRP</span>
-								<strong>{formatCurrency(product.cost || 0)}</strong>
-							</Typography>
-							<Link href={product.detailsLink} target="_blank" rel="noopener noreferrer">External Link</Link>
-						</Box>
-					))}
-				</Box>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Power</span>
+									<strong>{product.powerFullKw} kW</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Number of Plugs</span>
+									<strong>{product.numberOfPlugs}</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Smart Charging</span>
+									<strong>{product.smartCharging ? 'Yes' : 'No'}</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>Vehicle Grid Integration</span>
+									<strong>{product.vehicleGridIntegration ? 'Yes' : 'No'}</strong>
+								</Typography>
+								<Typography variant="body1" display="flex" justifyContent="space-between">
+									<span>MSRP</span>
+									<strong>{formatCurrency(product.cost || 0)}</strong>
+								</Typography>
+								<Link href={product.detailsLink} target="_blank" rel="noopener noreferrer">External Link</Link>
+							</Box>
+						))}
+					</Box>
 				) : (
 					<Typography align="center" color="textSecondary" mt={4}>
 						No charger products match the selected filters.
@@ -891,7 +960,6 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 					<div>
 						This scenario allows charging to occur during both off-peak and on-peak hours. It offers the most flexibility, as vehicles can be charged at any time. However, it can result in higher costs due to the higher rates during on-peak hours. This scenario is useful when there are no restrictions on charging times, but it can be the most expensive option.
 					</div>
-					<br />
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCloseHelpModal} color="primary">
