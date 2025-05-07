@@ -48,6 +48,23 @@ type_defs = """
         labelSortOrder: Int
     }
 
+    type ChargerProduct {
+        id: Int
+        cost: Float
+        power: Float
+        powerKw: Float
+        powerFullKw: Float
+        numberOfPlugs: Int
+        smartCharging: Boolean
+        vehicleGridIntegration: Boolean
+        detailsLink: String
+        manufacturer: String
+        modelName: String
+        modelType: String
+        isAc: Boolean
+        isDc: Boolean
+    }
+
     type Query {
         projectOverview(
             programId: Int

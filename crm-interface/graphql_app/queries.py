@@ -711,6 +711,27 @@ QUERY_CURRENT_PHASE_ATTRIBUTES = """
     ORDER BY pa.SortOrder ASC;
 """
 
+QUERY_CHARGER_PRODUCTS = """select 
+        cp.id
+        , cp.cost
+        , cp.power
+        , cp.powerKw 
+        , cp.powerFullKw 
+        , cp.numberOfPlugs 
+        , cp.smartCharging 
+        , cp.vehicleGridIntegration 
+        , cp.detailsLink 
+        , m.name as 'Manufacturer'
+        , cm.name as 'ModelName'
+        , cmt.name as 'ModelType'
+        , cp.isAc 
+        , cp.isDc 
+    from cleantranscrm.ChargerProduct cp 
+    left join cleantranscrm.ChargerModel cm on cp.chargerModelId = cm.id 
+    left join cleantranscrm.ChargerModelType cmt on cp.chargerModelTypeId = cmt.id 
+    left join cleantranscrm.Manufacturer m on cp.manufacturerId = m.id 
+"""
+
 
 
 # Dictionary mapping query names to their SQL strings
@@ -732,5 +753,6 @@ QUERIES = {
     'logged-time-trend': QUERY_LOGGED_TIME_TREND,
     'project-milestone-dates': QUERY_MILESTONE_DATES,
     'current-phase-attributes': QUERY_CURRENT_PHASE_ATTRIBUTES,
+    'charger-products': QUERY_CHARGER_PRODUCTS,
     # ... add other queries with descriptive names
 }

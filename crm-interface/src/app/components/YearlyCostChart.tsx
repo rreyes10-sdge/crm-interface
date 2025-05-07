@@ -1,10 +1,10 @@
 // src/app/components/YearlyCostChart.tsx
 import React from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale } from 'chart.js';
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale, Filler } from 'chart.js';
 
 // Register the necessary components
-ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale);
+ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale, Filler);
 
 interface YearlyCostChartProps {
     yearlyFossilFuelCosts: { [year: string]: number };
@@ -24,14 +24,14 @@ const YearlyCostChart: React.FC<YearlyCostChartProps> = ({ yearlyFossilFuelCosts
                 data: fossilFuelCosts,
                 borderColor: '#FED600',
                 backgroundColor: '#FFF4B8',
-                fill: true,
+                fill: false,
             },
             {
                 label: 'Electric Vehicles',
                 data: evCosts,
                 borderColor: '#001689',
                 backgroundColor: '#009BDA',
-                fill: true,
+                fill: false,
             },
         ],
     };

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle, Link } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Paper, Typography, Box, Grid, Tabs, Tab, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, Button, DialogContent, DialogTitle, Link, Checkbox, FormControlLabel, Slider } from '@mui/material';
 import YearlyCostChart from './YearlyCostChart';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -208,13 +208,10 @@ const EvResultsLoadProfile: React.FC<{ results: any }> = ({ results }) => {
 					Analyzing these scenarios can help you identify the most efficient charging strategy for your fleet.
 				</Typography>
 				<Typography variant="body1" sx={{ mb: 2 }}>
-					Understanding your load profile can also help in estimating energy costs. Higher energy consumption during peak hours may lead to increased costs, depending on your utility's pricing structure. Consider shifting some charging to off-peak hours to save on energy costs.
+					Understanding your load profile can also help in estimating energy costs. Higher energy consumption during peak hours may lead to increased costs, so consider shifting most if not all your charging to off-peak hours to save on energy costs.
 				</Typography>
 				<Typography variant="body1" sx={{ mb: 2 }}>
-					The insights can inform future planning for your fleet. If certain scenarios show significantly higher energy demands, it may be necessary to consider additional charging infrastructure or energy storage solutions to accommodate growth.
-				</Typography>
-				<Typography variant="body1" sx={{ mb: 2 }}>
-					Based on the load profiles, consider implementing smart charging solutions that can dynamically adjust charging times based on energy availability and cost. This can lead to more efficient energy use and cost savings.
+					View the <strong>Costs</strong> tab to gain further insight to the cost differences between the four charging scenarios displayed.
 				</Typography>
 			</div>
 		</div>
@@ -307,9 +304,6 @@ const EvTotalCostOwnershipChart: React.FC<{ results: any; projectSite: ProjectSi
 		/>
 	);
 };
-
-
-
 
 const EvResultsMonthlyCosts: React.FC<{ results: any }> = ({ results }) => {
 	const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear()); // Default year
@@ -523,7 +517,7 @@ export function addLabels<T extends { dataKey: keyof typeof translations }>(seri
 
 const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[]; projectSite: ProjectSite[]; isLoading: boolean }> = ({ results, vehicleGroups, chargerGroups, projectSite, isLoading }) => {
 	const [value, setValue] = useState(0); // State for managing the selected tab
-	// console.log('EvResults Props:', { projectSite }); // Log incoming props
+	console.log('EvResults Props charger data:', { chargerGroups }); // Log incoming props
 	const totalActiveVehicles = vehicleGroups.reduce((acc, group) => acc + (group.numVehicles > 0 ? group.numVehicles : 0), 0); // Assuming all active
 
 
@@ -588,7 +582,7 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 				<Divider />
 				<Box sx={{ p: 2 }}>
 					{value === 0 && <OverviewSection results={results} vehicleGroups={vehicleGroups} chargerGroups={chargerGroups} />}
-					{value === 1 && <ChargersSection results={results} />}
+					{value === 1 && <ChargersSection results={results} chargerGroups={chargerGroups} />}
 					{value === 2 && <CostsSection results={results} />}
 					{value === 3 && <TCOSection results={results} projectSite={projectSite} totalActiveVehicles={totalActiveVehicles} />}
 				</Box>
@@ -599,8 +593,6 @@ const EvResults: React.FC<{ results: any; vehicleGroups: VehicleGroup[]; charger
 // Overview Section
 const OverviewSection = ({ results, vehicleGroups, chargerGroups }: { results: any; vehicleGroups: VehicleGroup[]; chargerGroups: ChargerGroup[] }) => (
 	<div>
-
-
 		<Divider />
 
 		<Box mt={3} mb={3}>
@@ -628,8 +620,87 @@ const OverviewSection = ({ results, vehicleGroups, chargerGroups }: { results: a
 );
 // Chargers Section
 
-const ChargersSection = ({ results }: { results: any }) => {
+const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGroups: ChargerGroup[] }) => {
+	const [allChargerProducts, setAllChargerProducts] = useState<any[]>([]);
+	const [filteredChargerProducts, setFilteredChargerProducts] = useState<any[]>([]);
 	const [openHelpModal, setOpenHelpModal] = useState(false);
+
+	const [filters, setFilters] = useState({
+		manufacturer: '',
+		numberOfPlugs: '',
+		smartCharging: false,
+		vehicleGridIntegration: false,
+		msrpRange: [0, 100000],
+	});
+
+
+
+	const applyFilters = useCallback((data: any[]) => {
+		return data.filter(product => {
+			const matchesManufacturer = filters.manufacturer ? product.Manufacturer === filters.manufacturer : true;
+			const matchesPlugs = filters.numberOfPlugs ? product.numberOfPlugs === Number(filters.numberOfPlugs) : true;
+			const matchesSmartCharging = filters.smartCharging ? product.smartCharging === 1 : true;
+			const matchesVGI = filters.vehicleGridIntegration ? product.vehicleGridIntegration === 1 : true;
+			const matchesMsrp = product.cost >= filters.msrpRange[0] && product.cost <= filters.msrpRange[1];
+
+
+
+			return (
+				matchesManufacturer &&
+				matchesPlugs &&
+				matchesSmartCharging &&
+				matchesVGI &&
+				matchesMsrp
+			);
+		});
+	}, [filters]);
+
+
+
+	useEffect(() => {
+		if (allChargerProducts.length) {
+			setFilteredChargerProducts(applyFilters(allChargerProducts));
+		}
+	}, [filters, allChargerProducts, applyFilters]);
+
+	useEffect(() => {
+		const fetchChargerProducts = async () => {
+			try {
+				const response = await fetch('http://127.0.0.1:5000/api/data/charger-products');
+				const data = await response.json();
+
+
+
+				if (!Array.isArray(data)) {
+					console.error('Unexpected data format:', data);
+					return;
+				}
+
+
+
+				const powerRatings = chargerGroups.map(group => group.chargerKW);
+
+
+
+				const matchedProducts = data.filter((product: any) =>
+					powerRatings.some(powerRating => Math.abs(product.powerFullKw - powerRating) <= 5)
+				);
+
+
+
+				setAllChargerProducts(matchedProducts);
+				setFilteredChargerProducts(applyFilters(matchedProducts));
+			} catch (error) {
+				console.error('Error fetching charger products:', error);
+			}
+		};
+
+
+
+		if (chargerGroups?.length > 0) {
+			fetchChargerProducts();
+		}
+	}, [chargerGroups, applyFilters]);
 
 	const handleOpenHelpModal = () => {
 		setOpenHelpModal(true);
@@ -657,6 +728,138 @@ const ChargersSection = ({ results }: { results: any }) => {
 			</Box>
 
 			<EvResultsLoadProfile results={results} />
+			<Divider />
+			<Box mt={3} mb={3}>
+				<Typography variant="h6" align='center'>The following chargers may match the power requirements of your selected setup</Typography>
+			</Box>
+
+			<Box display="flex" flexWrap="wrap" justifyContent="center" gap={8} mt={2} mb={2}>
+				<Box>
+				<Typography color="secondary" variant="subtitle1"><strong>Manufacturer</strong></Typography>
+				<FormControl size="small" sx={{ minWidth: 160 }}>
+					{/* <InputLabel>Manufacturer</InputLabel> */}
+					<Select
+						value={filters.manufacturer}
+						onChange={e => setFilters(prev => ({ ...prev, manufacturer: e.target.value }))}
+						// label="Manufacturer"
+					>
+						<MenuItem value="">All</MenuItem>
+						{[...new Set(allChargerProducts.map(p => p.Manufacturer))].map(manufacturer => (
+							<MenuItem key={manufacturer} value={manufacturer}>
+								{manufacturer}
+							</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+				</Box>
+
+
+				<Box>	
+				<Typography color="secondary" variant="subtitle1"><strong>Number of Plugs</strong></Typography>
+				<FormControl size="small" sx={{ minWidth: 160 }}>
+					{/* <InputLabel>Number of Plugs</InputLabel> */}
+					<Select
+						value={filters.numberOfPlugs}
+						onChange={e => setFilters(prev => ({ ...prev, numberOfPlugs: e.target.value }))}
+						// label="Number of Plugs"
+					>
+						<MenuItem value="">All</MenuItem>
+						{[...new Set(allChargerProducts.map(p => p.numberOfPlugs))].sort().map(num => (
+							<MenuItem key={num} value={num}>
+								{num}
+							</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+				</Box>
+
+				<Box sx={{ width: 250 }}>
+					<Typography color="secondary" variant="subtitle1"><strong>MSRP Range</strong> (${filters.msrpRange[0]} - ${filters.msrpRange[1].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2})})</Typography>
+					<Slider
+						value={filters.msrpRange}
+						min={0}
+						max={100000}
+						step={1000}
+						onChange={(_, newValue) =>
+							setFilters(prev => ({ ...prev, msrpRange: newValue as [number, number] }))
+						}
+						valueLabelDisplay="auto"
+					/>
+				</Box>
+
+				<Box display="flex" flexDirection="column" alignItems="flex-start">
+				<FormControlLabel
+					control={
+						<Checkbox
+							checked={filters.smartCharging}
+							onChange={e => setFilters(prev => ({ ...prev, smartCharging: e.target.checked }))}
+						/>
+					}
+					label="Smart Charging"
+				/>
+
+
+
+				<FormControlLabel
+					control={
+						<Checkbox
+							checked={filters.vehicleGridIntegration}
+							onChange={e => setFilters(prev => ({ ...prev, vehicleGridIntegration: e.target.checked }))}
+						/>
+					}
+					label="Vehicle Grid Integration"
+				/>
+				</Box>
+			</Box>
+
+			<Box mt={3} mb={3}>
+				{filteredChargerProducts.length > 0 ? (
+				<Box display="flex" flexWrap="wrap" justifyContent="center">
+					{filteredChargerProducts.map((product: any) => (
+						<Box key={product.id} m={2} p={2} border={.5} borderRadius={2} width={300}>
+							<Typography variant="subtitle1" display="flex" justifyContent="space-between">
+								<strong>{product.Manufacturer}</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Model Name</span>
+								<strong>{product.ModelName}</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Model Type</span>
+								<strong>{product.ModelType || 'N/A'}</strong>
+							</Typography>
+
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Power</span>
+								<strong>{product.powerFullKw} kW</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Number of Plugs</span>
+								<strong>{product.numberOfPlugs}</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Smart Charging</span>
+								<strong>{product.smartCharging ? 'Yes' : 'No'}</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>Vehicle Grid Integration</span>
+								<strong>{product.vehicleGridIntegration ? 'Yes' : 'No'}</strong>
+							</Typography>
+							<Typography variant="body1" display="flex" justifyContent="space-between">
+								<span>MSRP</span>
+								<strong>{formatCurrency(product.cost || 0)}</strong>
+							</Typography>
+							<Link href={product.detailsLink} target="_blank" rel="noopener noreferrer">External Link</Link>
+						</Box>
+					))}
+				</Box>
+				) : (
+					<Typography align="center" color="textSecondary" mt={4}>
+						No charger products match the selected filters.
+					</Typography>
+				)}
+			</Box>
+
 			<Divider />
 			<Dialog open={openHelpModal} onClose={handleCloseHelpModal}>
 				<DialogTitle>Charging Scenarios</DialogTitle>
@@ -830,3 +1033,7 @@ const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: an
 };
 
 export default EvResults;
+
+function useCallBack(arg0: (data: any[]) => any[], arg1: { manufacturer: string; numberOfPlugs: string; smartCharging: boolean; vehicleGridIntegration: boolean; msrpRange: number[]; }[]) {
+	throw new Error('Function not implemented.');
+}

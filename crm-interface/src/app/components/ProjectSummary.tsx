@@ -6,7 +6,7 @@ import ProjectTimelineView from './ProjectTimelineView';
 import TimelineOld from './TimelineOld';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AttributesCurrent from './AttributesCurrent';
-import KanbanBoard from './KanbanBoardv2';
+import KanbanBoardv2 from './KanbanBoardv2';
 
 interface Project {
   ProjectId: string;
@@ -85,7 +85,6 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestones[]>([]);
   const [currentPhaseAttributes, setCurrentPhaseAttributes] = useState<CurrentPhaseAttributes[] | null>(null);
-  const [projectServices, setProjectServices] = useState([]);
   const [allProjectServices, setAllProjectServices] = useState<ServiceItem[]>([]);
 
 
@@ -186,7 +185,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
   const uniqueProjectLeads = [...Array.from(new Set(projects.map(project => project.ProjectLead)))];
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '1600px', mx: 'auto' }}>
+    <Box sx={{ width: '100%', mx: 'auto' }}>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Project Overview
       </Typography>
@@ -302,7 +301,7 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
         </Grid>
       )}
       {selectedProjectId && (
-        <KanbanBoard
+        <KanbanBoardv2
           services={allProjectServices.filter(svc => String(svc.projectId) === String(selectedProjectId))}
         />
       )}
