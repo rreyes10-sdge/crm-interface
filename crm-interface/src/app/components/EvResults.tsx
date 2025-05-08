@@ -712,8 +712,8 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 				matchesManufacturer &&
 				matchesPlugs &&
 				matchesSmartCharging &&
-				matchesVGI 
-				// matchesMsrp
+				matchesVGI &&
+				matchesMsrp
 			);
 		});
 	}, [filters]);
@@ -847,7 +847,7 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 					<Slider
 						value={filters.msrpRange}
 						min={0}
-						max={100000}
+						max={200000}
 						step={1000}
 						onChange={(_, newValue) =>
 							setFilters(prev => ({ ...prev, msrpRange: newValue as [number, number] }))
