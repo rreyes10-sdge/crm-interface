@@ -187,12 +187,12 @@ const KanbanBoardv2: React.FC<KanbanBoardProps> = ({ services }) => {
                                                                 >
                                                                     <DoneOutlineIcon />
                                                                     <Typography variant="body2">
-                                                                        {new Date(service.completeDate).toLocaleDateString()} - <i>{differenceInBusinessDays(service.completeDate, service.startDate)} business days</i>
+                                                                        {new Date(service.completeDate).toLocaleDateString()}
                                                                     </Typography>
                                                                 </Box>
                                                             )}
                                                             {service.followUpDate !== 'None' && service.status !== 'Completed' && (
-                                                                <div><Box
+                                                                <Box
                                                                     sx={{
                                                                         display: 'inline-flex',
                                                                         alignItems: 'center',
@@ -204,23 +204,11 @@ const KanbanBoardv2: React.FC<KanbanBoardProps> = ({ services }) => {
                                                                     }}
                                                                 >
                                                                     <AccessTimeIcon />
-                                                                    
-                                                                        <Typography variant="body2">
-                                                                            {new Date(service.followUpDate).toLocaleDateString()} 
-                                                                            
-                                                                        </Typography>
-                                                                        
-
-                                                                        
-                                                                </Box>
-                                                                <Box>
                                                                     <Typography variant="body2">
-                                                                        {service.startDate !== 'None' && (
-                                                                            <>{new Date(service.startDate).toLocaleDateString()} - <i>{differenceInBusinessDays(Date(), service.startDate)} business days</i></>
-                                                                            )}
-                                                                        </Typography>
-                                                                </Box></div>
-                                                                
+                                                                        {new Date(service.followUpDate).toLocaleDateString()}
+                                                                    </Typography>
+                                                                </Box>
+
                                                             )}
                                                             {service.activityCount > 0 && (
                                                                 <Box
