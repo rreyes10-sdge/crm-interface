@@ -586,10 +586,12 @@ QUERY_PROJECT_SERVICE = """SELECT
         C.Value as 'CompleteDate',
         CASE
 			WHEN C.Value IS NOT NULL THEN 'Completed'
-			WHEN B.Value IS NOT NULL THEN 'Waiting on Customer'
-			WHEN A.Value IS NOT NULL THEN 'Ready to Start'
+			WHEN B.Value IS NOT NULL and A.Value IS NULL THEN 'Waiting on Customer'
+			WHEN B.Value IS NULL and A.Value IS NULL THEN 'Ready to Start'
+			WHEN A.Value IS NOT NULL THEN 'In Progress'
 			ELSE 'Backlog'
-		END AS Status  
+		END AS Status,
+		COALESCE(D.ActivityCount,0) as 'ActivityCount'
     FROM cleantranscrm.TeasSupportType tst
     LEFT JOIN cleantranscrm.TeasServiceType tst2 on CAST(tst2.TeasServiceTypeId AS UNSIGNED) = CAST(tst.TeasServiceTypeId AS UNSIGNED)
     LEFT JOIN cleantranscrm.ProjectAttributeValue pal ON pal.ProgramAttributeId = CAST(tst.ProgramAttributeId AS UNSIGNED)
@@ -632,6 +634,14 @@ QUERY_PROJECT_SERVICE = """SELECT
         LEFT JOIN cleantranscrm.TeasSupportType tst ON tst.PhaseId = pa.PhaseId 
         WHERE pa.ProgramId = 16 AND pa.ControlType = 'date' AND pa.label = 'Complete' AND pav.Value IS NOT NULL
         ) C on C.projectid = pal.ProjectId and C.programattributeid = tst.programattributeid
+    LEFT JOIN (
+    		SELECT  
+    			a.ProjectId,
+    			a.Phaseid,
+    			count(*) as 'ActivityCount'
+    		FROM cleantranscrm.Activity a
+    		GROUP BY a.ProjectId, a.PhaseId
+    	) D on D.ProjectId = pal.ProjectId and D.PhaseId = tst.PhaseId 
     WHERE
         pal.ProjectId IN (SELECT ProjectId FROM cleantranscrm.`Project` WHERE ProgramId = 16)
         AND pa.PhaseId = 2 AND pa.ProgramId = 16 AND pal.Value='True' AND p.projectid not in (3467,3197)

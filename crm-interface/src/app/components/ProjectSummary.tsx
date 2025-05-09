@@ -73,6 +73,10 @@ interface ServiceItem {
   projectId: any;
   name: string;
   status: string;
+  followUpDate: string;
+  activityCount: number;
+  startDate: string;
+  completeDate: string;
 }
 
 const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
@@ -118,6 +122,10 @@ const ProjectSummary: React.FC<ProjectSummaryProps> = ({ projectId }) => {
             name: svc.Name,
             status: svc.Status,
             projectId: svc.ProjectId,
+            followUpDate: svc.FollowUpDate,
+            activityCount: svc.ActivityCount,
+            startDate: svc.ServiceStartDate,
+            completeDate: svc.CompleteDate,
           }))
         ); // Or response.data.services
       } catch (error) {

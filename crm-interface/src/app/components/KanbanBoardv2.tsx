@@ -13,11 +13,24 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AddTaskIcon from '@mui/icons-material/AddTask';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { InfoOutlined } from '@mui/icons-material';
 import Divider from '@mui/material/Divider';
+import ChatIcon from '@mui/icons-material/Chat';
+import DoneOutlineIcon from '@mui/icons-material/DoneOutline';
+import { differenceInBusinessDays } from 'date-fns';
 
 interface KanbanBoardProps {
-    services: { id: string; projectId: any; name: string; status: string }[];
+    services: {
+        id: string;
+        projectId: any;
+        name: string;
+        status: string;
+        followUpDate: string;
+        activityCount: number;
+        startDate: string;
+        completeDate: string;
+    }[];
 }
 
 const statuses = [
@@ -55,6 +68,8 @@ const statusTooltips: { [key: string]: string } = {
     'Customer Verification': 'Deliverable sent over to the customer via email or customer portal. Pending customer approval to close out this service.',
     'Completed': 'Customer received deliverable and has signed off on the service. No further action is required',
 };
+
+
 
 const KanbanBoardv2: React.FC<KanbanBoardProps> = ({ services }) => {
     const [serviceList, setServiceList] = useState(services);
@@ -144,13 +159,8 @@ const KanbanBoardv2: React.FC<KanbanBoardProps> = ({ services }) => {
                                         <Divider />
 
                                         {filteredServices.map((service, index) => (
-                                            <Draggable
-                                                key={service.id}
-                                                draggableId={service.id}
-                                                index={index}
-                                            >
+                                            <Draggable key={service.id} draggableId={service.id} index={index}>
                                                 {(provided) => (
-                                                    // Use a plain div to attach draggable refs and props.
                                                     <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
@@ -160,7 +170,77 @@ const KanbanBoardv2: React.FC<KanbanBoardProps> = ({ services }) => {
                                                             ...provided.draggableProps.style,
                                                         }}
                                                     >
-                                                        <Paper sx={{ padding: 2 }}>{service.name}</Paper>
+                                                        <Paper sx={{ padding: 2 }}>
+                                                            {service.name}
+                                                            <br></br>
+                                                            {service.status == 'Completed' && (
+                                                                <Box
+                                                                    sx={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        marginTop: 1,
+                                                                        backgroundColor: '#A7D48E',
+                                                                        padding: 1,
+                                                                        borderRadius: 1,
+                                                                    }}
+                                                                >
+                                                                    <DoneOutlineIcon />
+                                                                    <Typography variant="body2">
+                                                                        {new Date(service.completeDate).toLocaleDateString()} - <i>{differenceInBusinessDays(service.completeDate, service.startDate)} business days</i>
+                                                                    </Typography>
+                                                                </Box>
+                                                            )}
+                                                            {service.followUpDate !== 'None' && service.status !== 'Completed' && (
+                                                                <div><Box
+                                                                    sx={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        marginTop: 1,
+                                                                        backgroundColor: '#FCD502',
+                                                                        padding: 1,
+                                                                        borderRadius: 1,
+                                                                    }}
+                                                                >
+                                                                    <AccessTimeIcon />
+                                                                    
+                                                                        <Typography variant="body2">
+                                                                            {new Date(service.followUpDate).toLocaleDateString()} 
+                                                                            
+                                                                        </Typography>
+                                                                        
+
+                                                                        
+                                                                </Box>
+                                                                <Box>
+                                                                    <Typography variant="body2">
+                                                                        {service.startDate !== 'None' && (
+                                                                            <>{new Date(service.startDate).toLocaleDateString()} - <i>{differenceInBusinessDays(Date(), service.startDate)} business days</i></>
+                                                                            )}
+                                                                        </Typography>
+                                                                </Box></div>
+                                                                
+                                                            )}
+                                                            {service.activityCount > 0 && (
+                                                                <Box
+                                                                    sx={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        marginTop: 1,
+                                                                        // backgroundColor: '#FCD502',
+                                                                        padding: 1,
+                                                                        borderRadius: 1,
+                                                                    }}
+                                                                >
+                                                                    <ChatIcon />
+                                                                    <Typography variant="body2">
+                                                                        {service.activityCount}
+                                                                    </Typography>
+                                                                </Box>
+                                                            )}
+                                                        </Paper>
                                                     </div>
                                                 )}
                                             </Draggable>
