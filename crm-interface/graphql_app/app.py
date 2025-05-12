@@ -1021,7 +1021,7 @@ def subscription_fee(power_requirement, year):
         rounded_power = math.ceil(power_requirement / 25.0) * 25
         fee = subscription_fee_data['SubscriptionFeeMore'] * (rounded_power / 25)
 
-
+    # removed old code that wasn't rounding up
     # if power_requirement <= 150:
     #     fee = subscription_fee_data['SubscriptionFeeLess'] * (power_requirement / 10)
     # else:

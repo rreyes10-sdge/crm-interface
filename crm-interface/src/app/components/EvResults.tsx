@@ -732,10 +732,10 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 				const response = await fetch('http://127.0.0.1:5000/api/data/charger-products');
 				const data = await response.json();
 
-				if (!Array.isArray(data)) {
-					console.error('Unexpected data format:', data);
-					return;
-				}
+				// if (!Array.isArray(data)) {
+				// 	console.error('Unexpected data format:', data);
+				// 	return;
+				// }
 
 				const powerRatings = chargerGroups.map(group => group.chargerKW);
 				const matchedProducts: any[] = [];
