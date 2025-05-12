@@ -15,10 +15,15 @@ import { SelectChangeEvent } from '@mui/material';
 import EnergySavingsLeafTwoToneIcon from '@mui/icons-material/EnergySavingsLeafTwoTone';
 import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { VehicleGroup, ChargerGroup, ProjectSite } from '../types';
+import CumulativeCostComparisonChart from './CumulativeCostComparisonChart';
 
 interface EvResultsProps {
 	results: any;
 	isLoading: boolean;
+}
+
+function useCallBack(arg0: (data: any[]) => any[], arg1: { manufacturer: string; numberOfPlugs: string; smartCharging: boolean; vehicleGridIntegration: boolean; msrpRange: number[]; }[]) {
+	throw new Error('Function not implemented.');
 }
 
 const EvResultsTable: React.FC<{ results: any }> = ({ results }) => {
@@ -668,6 +673,7 @@ const OverviewSection = ({ results, vehicleGroups, chargerGroups }: { results: a
 				yearlyEvCosts={Object.fromEntries(
 					Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
 				)}
+				yearlyTitle='Total Fuel Costs Over Time'
 			/>
 		</Box>
 		<Divider />
@@ -696,13 +702,13 @@ const ChargersSection = ({ results, chargerGroups }: { results: any; chargerGrou
 		return data.filter(product => {
 			const matchesManufacturer = filters.manufacturer ? product.Manufacturer === filters.manufacturer : true;
 			const matchesPlugs = filters.numberOfPlugs ? product.numberOfPlugs === Number(filters.numberOfPlugs) : true;
-			const matchesSmartCharging = 
-				typeof filters.smartCharging === 'boolean' && filters.smartCharging 
-				? product.smartCharging === 1 
-				: true;
+			const matchesSmartCharging =
+				typeof filters.smartCharging === 'boolean' && filters.smartCharging
+					? product.smartCharging === 1
+					: true;
 			const matchesVGI =
-				typeof filters.vehicleGridIntegration === 'boolean' && filters.vehicleGridIntegration 
-					? product.vehicleGridIntegration === 1 
+				typeof filters.vehicleGridIntegration === 'boolean' && filters.vehicleGridIntegration
+					? product.vehicleGridIntegration === 1
 					: true;
 			const matchesMsrp = product.cost >= filters.msrpRange[0] && product.cost <= filters.msrpRange[1];
 
@@ -1055,6 +1061,20 @@ const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: an
 		},
 	];
 
+	const parseCurrency = (value: string) => {
+		return Number(value.replace(/[^0-9.-]+/g, '')) || 0;
+	};
+
+	const totalEvCost = assumptions.reduce((sum, a) => sum + parseCurrency(a.evValue), 0);
+	const totalFfCost = assumptions.reduce((sum, a) => sum + parseCurrency(a.ffvValue), 0);
+
+	const totalEvCostWithIncentives = totalEvCost - (projectSite[0].vehicle_incentive_credits || 0) - (projectSite[0].charger_incentive_credits || 0);
+
+	const formattedEvTotal = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalEvCost);
+	const formattedFfTotal = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalFfCost);
+	const formattedEvTotalWithIncentives = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalEvCostWithIncentives);
+
+
 	return (
 		<div>
 			<Box mt={3} mb={3}>
@@ -1084,8 +1104,19 @@ const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: an
 									<TableCell align="right">{assumption.evValue}</TableCell>
 									<TableCell align="right">{assumption.ffvValue}</TableCell>
 								</TableRow>
+								
 
 							))}
+								<TableRow>
+									<TableCell><strong>Total Without Incentives</strong></TableCell>
+									<TableCell align="right"><strong>{formattedEvTotal}</strong></TableCell>
+									<TableCell align="right"><strong>{formattedFfTotal}</strong></TableCell>
+								</TableRow>
+								<TableRow>
+									<TableCell><strong>Total With Incentives</strong></TableCell>
+									<TableCell align="right"><strong>{formattedEvTotalWithIncentives}</strong></TableCell>
+									<TableCell align="right"><strong>{formattedFfTotal}</strong></TableCell>
+								</TableRow>
 						</TableBody>
 					</Table>
 				</TableContainer>
@@ -1096,12 +1127,76 @@ const TCOSection = ({ results, projectSite, totalActiveVehicles }: { results: an
 					See the Regional Fleet TCO Fact Sheet for a full analysis here.
 				</Link>
 			</p>
+			<Box mt={3} mb={3}>
+				{/* <Typography variant="h6">Yearly Costs</Typography> */}
+				{/* <YearlyCostChart
+					yearlyFossilFuelCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_fossil_fuel_tc])
+					)}
+					yearlyEvCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any]) => [year, costs.total_electric_tc])
+					)}
+					yearlyTitle='Total Fuel Costs Over Time - original for reference only'
+				/> */}
+				<YearlyCostChart
+					yearlyFossilFuelCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any], index) => {
+							const isFirstYear = index === 0;
+
+							const total = costs.total_fossil_fuel_tc +
+								(projectSite[0].fossil_vehicle_maintenance_repair_costs || 0) +
+								(projectSite[0].fossil_vehicle_insurance_costs || 0) +
+								(isFirstYear ? (projectSite[0].fossil_vehicle_acquisition_costs || 0) : 0); // acquisition cost FFV (if available)
+
+							return [year, total];
+						})
+					)}
+					yearlyEvCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any], index) => {
+							const isFirstYear = index === 0;
+
+							const total = costs.total_electric_tc +
+								(projectSite[0].vehicle_maintenance_repair_costs || 0) +
+								(projectSite[0].vehicle_insurance_costs || 0) +
+								(projectSite[0].charger_maintenance_repair_network_costs || 0) +
+								(isFirstYear ? ((projectSite[0].vehicle_acquisition_costs || 0) + (projectSite[0].charger_installation_costs || 0)) - (projectSite[0].vehicle_incentive_credits || 0) - (projectSite[0].charger_incentive_credits || 0) : 0);
+
+							return [year, total];
+						})
+					)}
+					yearlyTitle="Total Costs of Ownership Over Time With Incentives"
+				/>
+				<CumulativeCostComparisonChart
+					yearlyFossilFuelCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any], index) => {
+							const isFirstYear = index === 0;
+
+							const total = costs.total_fossil_fuel_tc +
+								(projectSite[0].fossil_vehicle_maintenance_repair_costs || 0) +
+								(projectSite[0].fossil_vehicle_insurance_costs || 0) +
+								(isFirstYear ? (projectSite[0].fossil_vehicle_acquisition_costs || 0) : 0); // acquisition cost FFV (if available)
+
+							return [year, total];
+						})
+					)}
+					yearlyEvCosts={Object.fromEntries(
+						Object.entries(results.yearly_costs).map(([year, costs]: [string, any], index) => {
+							const isFirstYear = index === 0;
+
+							const total = costs.total_electric_tc +
+								(projectSite[0].vehicle_maintenance_repair_costs || 0) +
+								(projectSite[0].vehicle_insurance_costs || 0) +
+								(isFirstYear ? ((projectSite[0].vehicle_acquisition_costs || 0) + (projectSite[0].charger_installation_costs || 0)) - (projectSite[0].vehicle_incentive_credits || 0) - (projectSite[0].charger_incentive_credits || 0) : 0);
+
+							return [year, total];
+						})
+					)}
+				/>
+			</Box>
 		</div>
 	);
 };
 
 export default EvResults;
 
-function useCallBack(arg0: (data: any[]) => any[], arg1: { manufacturer: string; numberOfPlugs: string; smartCharging: boolean; vehicleGridIntegration: boolean; msrpRange: number[]; }[]) {
-	throw new Error('Function not implemented.');
-}
+

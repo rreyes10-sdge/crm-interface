@@ -9,9 +9,10 @@ ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend,
 interface YearlyCostChartProps {
     yearlyFossilFuelCosts: { [year: string]: number };
     yearlyEvCosts: { [year: string]: number }; // New prop for EV costs
+    yearlyTitle: string;
 }
 
-const YearlyCostChart: React.FC<YearlyCostChartProps> = ({ yearlyFossilFuelCosts, yearlyEvCosts }) => {
+const YearlyCostChart: React.FC<YearlyCostChartProps> = ({ yearlyFossilFuelCosts, yearlyEvCosts, yearlyTitle }) => {
     const years = Object.keys(yearlyFossilFuelCosts);
     const fossilFuelCosts = Object.values(yearlyFossilFuelCosts);
     const evCosts = Object.values(yearlyEvCosts);
@@ -44,7 +45,7 @@ const YearlyCostChart: React.FC<YearlyCostChartProps> = ({ yearlyFossilFuelCosts
             },
             title: {
                 display: true,
-                text: 'Total Costs Over Time',
+                text: yearlyTitle,
             },
         },
         scales: {
