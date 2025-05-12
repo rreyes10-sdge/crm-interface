@@ -1013,10 +1013,19 @@ def subscription_fee(power_requirement, year):
     year_data = TOU_DATA["TOU_Rates"].get(str(year), {})
     subscription_fee_data = year_data.get("SubscriptionFee", {'SubscriptionFeeLess': 48.33, 'SubscriptionFeeMore': 120.85})
     
-    if power_requirement <= 150:
-        fee = subscription_fee_data['SubscriptionFeeLess'] * (power_requirement / 10)
+    # First, round up power requirement as Excel does
+    if math.ceil(power_requirement / 10.0) * 10 <= 150:
+        rounded_power = math.ceil(power_requirement / 10.0) * 10
+        fee = subscription_fee_data['SubscriptionFeeLess'] * (rounded_power / 10)
     else:
-        fee = subscription_fee_data['SubscriptionFeeMore'] * (power_requirement / 25)
+        rounded_power = math.ceil(power_requirement / 25.0) * 25
+        fee = subscription_fee_data['SubscriptionFeeMore'] * (rounded_power / 25)
+
+
+    # if power_requirement <= 150:
+    #     fee = subscription_fee_data['SubscriptionFeeLess'] * (power_requirement / 10)
+    # else:
+    #     fee = subscription_fee_data['SubscriptionFeeMore'] * (power_requirement / 25)
     
     # Round up to the nearest cent
     fee = math.ceil(fee * 100) / 100

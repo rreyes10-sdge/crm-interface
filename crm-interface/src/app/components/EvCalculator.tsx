@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip } from '@mui/material';
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Box, IconButton, Paper, Checkbox, FormGroup, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Link } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, ExpandMore as ExpandMoreIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import EvStationIcon from '@mui/icons-material/EvStation';
 import { VehicleGroup, ChargerGroup, Results, OptionalSettings, ChargingBehavior, ProjectSite } from '../types';
@@ -222,7 +222,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
         });
 
         // Calculate project costs to get fossil fuel values
-        calculateProjectCosts(); 
+        calculateProjectCosts();
 
         // Add fossil fuel costs to formDataJson
         formDataJson.fossil_vehicle_acquisition_costs = projectSite[0]?.fossil_vehicle_acquisition_costs || 0;
@@ -305,7 +305,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         )}
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography color="secondary" variant="subtitle1"><strong>Vehicle Class</strong></Typography>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Vehicle Class</strong>
+                                            <Tooltip title="Vehicle Class refers to the category your commercial fleet vehicle falls into based on its size, weight, and purpose. To determine the correct class, check your vehicle's registration, manufacturer specifications, or industry classification standards">
+                                                <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                            </Tooltip>
+                                        </Typography>
                                         <FormControl fullWidth>
                                             <Select
                                                 name={`vehicle_group_${index + 1}_class`}
@@ -321,7 +325,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         </FormControl>
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Vehicles</strong></Typography>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Vehicles</strong>
+                                            <Tooltip title="Total number of vehicles in your fleet that belong in the specified vehicle class selected above">
+                                                <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                            </Tooltip>
+                                        </Typography>
                                         <TextField
                                             name={`vehicle_group_${index + 1}_num`}
                                             type="number"
@@ -336,7 +344,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <Typography color="secondary" variant="subtitle1"><strong>Average Daily Mileage</strong></Typography>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Average Daily Mileage</strong>
+                                            <Tooltip title="The average daily mileage that EACH vehicle in your fleet drives per day in the specified vehicle class selected. Please report the average using a 7-day week (Monday-Sunday).">
+                                                <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                            </Tooltip>
+                                        </Typography>
                                         <TextField
                                             name={`vehicle_group_${index + 1}_mileage`}
                                             type="number"
@@ -398,7 +410,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         <FormGroup>
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
-                                    <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>Days for Charging</Typography>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>Days for Charging
+                                        <Tooltip title="Select all days that the vehicles charge on">
+                                            <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                        </Tooltip>
+                                    </Typography>
                                     <Box sx={{
                                         display: 'flex',
                                         gap: 1,
@@ -438,7 +454,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Typography variant="h6" sx={{ color: '#555' }}>Charging Time Window</Typography>
+                                    <Typography variant="h6" sx={{ color: '#555' }}>Charging Time Window
+                                        <Tooltip title="Select the time windows when the vehicles are plugged in to charge. If there are multiple windows, please add additional time frames below.">
+                                            <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                        </Tooltip>
+                                    </Typography>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} sm={6}>
                                             <Typography color="secondary" variant="subtitle1"><strong>Start Time</strong></Typography>
@@ -501,12 +521,12 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                         }}
                     >
                         <Typography variant="h5">Charger Groups</Typography>
-                        <span
+                        {/* <span
                             onClick={() => window.open('https://insitetool.org/equipment_catalog', '_blank')}
                             style={{ cursor: 'pointer', marginLeft: '8px' }}
                         >
                             <EvStationIcon />
-                        </span>
+                        </span> */}
                         <span
                             onClick={(event) => {
                                 event.stopPropagation();
@@ -534,7 +554,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         )}
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Chargers</strong></Typography>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Number of Chargers</strong>
+                                            <Tooltip title="The total number of chargers you have available within the specified charger group selected">
+                                                <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                            </Tooltip>
+                                        </Typography>
                                         <TextField
                                             name={`charger_group_${index + 1}_num`}
                                             // label="Number of Chargers"
@@ -550,7 +574,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <Typography color="secondary" variant="subtitle1"><strong>Charger kW</strong></Typography>
+                                        <Typography color="secondary" variant="subtitle1"><strong>Charger kW</strong>
+                                            <Tooltip title="Charger kW refers to the power output of an EV charger, measured in kilowatts (kW). To find the correct kW value, check the charger's specifications—common power levels range from 50 kW for slower DC charging to 350+ kW for high-power fast charging. Please list the kW for EACH charger within the specified charger group, rather than the total kW for all chargers within the group.">
+                                                <HelpOutlineIcon sx={{ color: '#555', fontSize: '1rem', cursor: 'pointer' }} />
+                                            </Tooltip>
+                                        </Typography>
                                         <TextField
                                             name={`charger_group_${index + 1}_kw`}
                                             // label="Charger kW"
@@ -796,7 +824,11 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                     <DialogTitle>Charger Help Information</DialogTitle>
                     <DialogContent>
                         <Typography variant="body1">
-                            Vehicle to Charge-Port Ratios<br></br><br></br>
+                    Charger Group refers to the category your EV chargers fall into based on factors such as their power level, charging speed, or connector type. To determine the correct group, check the charger specifications.
+                    </Typography>
+                    <br></br>
+                        <Typography variant="body1">
+                            <strong>Vehicle to Charge-Port Ratios</strong><br></br>
                             <strong>1 to 1</strong>: Ideal for ensuring each vehicle has a dedicated charge port.<br></br>
                             <strong>1.25 to 1</strong>: Slightly more vehicles than charge ports, suitable for fleets with staggered charging schedules.<br></br>
                             <strong>1.5 to 1</strong>: Balanced approach for moderate usage and shared charging.<br></br>
@@ -806,6 +838,16 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             <strong>2.5 to 1</strong>: Suitable for fleets with well-managed charging schedules.<br></br>
                             <strong>2.75 to 1</strong>: Best for fleets with minimal downtime and high charge port turnover.<br></br>
                             <strong>3 to 1</strong>: Maximum efficiency for fleets with highly coordinated charging.<br></br>
+                            <br></br>
+                            <p>
+                                For additional help, refer to the equipment catalog from Insite to help pick out charger specifications <Link href="https://insitetool.org/equipment_catalog" target='_blank'>here</Link>.
+                                {/* <span
+                                    onClick={() => window.open('https://insitetool.org/equipment_catalog', '_blank')}
+                                    style={{ cursor: 'pointer', marginLeft: '8px' }}
+                                >
+                                    <EvStationIcon />
+                                </span> */}
+                            </p>
                         </Typography>
                     </DialogContent>
                     <DialogActions>
