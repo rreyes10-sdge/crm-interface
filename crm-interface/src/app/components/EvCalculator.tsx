@@ -839,7 +839,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                             <strong>2.75 to 1</strong>: Best for fleets with minimal downtime and high charge port turnover.<br></br>
                             <strong>3 to 1</strong>: Maximum efficiency for fleets with highly coordinated charging.<br></br>
                             <br></br>
-                            <p>
+                            
                                 For additional help, refer to the equipment catalog from Insite to help pick out charger specifications <Link href="https://insitetool.org/equipment_catalog" target='_blank'>here</Link>.
                                 {/* <span
                                     onClick={() => window.open('https://insitetool.org/equipment_catalog', '_blank')}
@@ -847,7 +847,7 @@ const EvCalculator: React.FC<EvCalculatorProps> = ({ onCalculate, isLoading }) =
                                 >
                                     <EvStationIcon />
                                 </span> */}
-                            </p>
+                            
                         </Typography>
                     </DialogContent>
                     <DialogActions>

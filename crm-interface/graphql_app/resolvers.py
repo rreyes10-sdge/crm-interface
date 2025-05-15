@@ -729,7 +729,7 @@ class Resolvers:
             ORDER BY
                 p.ProjectNumber ASC, pp.SortOrder ASC, pa.SortOrder ASC
             ) CTE_A
-            WHERE CTE_A.ServiceStartDate IS NULL AND CTE_A.FollowUpDate IS NULL
+            WHERE CTE_A.ServiceStartDate IS NULL AND (CTE_A.FollowUpDate IS NULL OR CTE_A.FollowUpDate > CURDATE())
             ORDER BY 
             CTE_A.ProjectNumber ASC"""
         

@@ -318,7 +318,7 @@ const TEASServiceSummary: React.FC = () => {
                                         <Typography variant="body2" sx={{ width: 310 }} noWrap>
                                             {serviceName}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ width: 100, color: 'text.secondary' }} noWrap>
+                                        <Typography variant="caption" sx={{ width: 110, color: 'text.secondary' }} noWrap>
                                             Project Count: {count} | 
                                         </Typography>
                                         <Typography variant="caption" sx={{ width: 160, color: 'text.secondary', pl: 1}} noWrap>
