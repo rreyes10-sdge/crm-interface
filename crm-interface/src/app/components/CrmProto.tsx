@@ -44,7 +44,7 @@ const CrmProto: React.FC = () => {
     const [selectedProject, setSelectedProject] = useState<any | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
-    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<string>('Active');
     const programScrollRef = useRef<HTMLDivElement>(null!);
     const statusScrollRef = useRef<HTMLDivElement>(null!);
 
