@@ -65,7 +65,20 @@ type_defs = """
         isDc: Boolean
     }
 
+    type Program {
+        programId: Int
+        programName: String
+        shortName: String
+    }
+
+    type ProjectStatus {
+        projectStatusId: Int
+        projectStatusName: String
+        projectStatusLongName: String
+    }
+
     type Query {
+        programList: [Program]
         projectOverview(
             programId: Int
             projectName: String
@@ -86,6 +99,8 @@ type_defs = """
         projectTimeline(
             projectId: Int
         ): [ProjectTimeline]
+
+        projectStatusList: [ProjectStatus]
 
     }
 """

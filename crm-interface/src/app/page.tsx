@@ -10,6 +10,7 @@ import ProjectTracker from "./components/ProjectTracker";
 import ProjectSummary from './components/ProjectSummary';
 import UserStats from './components/UserStats';
 import EvPage from './components/EvPage';
+import CrmProto from './components/CrmProto';
 import ProgramSummary from './components/ProgramSummary';
 import PageTitle from './components/PageTitle';
 import {
@@ -22,7 +23,8 @@ import {
     TableChart as TableChartIcon,
     Today as TodayIcon,
     DateRange as DateRangeIcon,
-    Inbox as InboxIcon
+    Inbox as InboxIcon,
+    Work as WorkIcon
 } from '@mui/icons-material';
 import BasicListMenu from './components/BasicListMenu';
 import PopupState from 'material-ui-popup-state';
@@ -69,6 +71,9 @@ const Home = () => {
     } else if (location.pathname === '/tasks-inbox') {
       setSelectedTab(8);
       setShowSubMenu(true);
+    } else if (location.pathname === '/crm-proto') {
+      setSelectedTab(9);
+      setShowSubMenu(false);
     } else {
       setSelectedTab(0);
       setShowSubMenu(true);
@@ -113,6 +118,8 @@ const Home = () => {
         return 'Tasks - Next 7 Days';
       case 8:
         return 'Tasks - Inbox';
+      case 9:
+        return 'CTS Core Prototype';
       default:
         return 'Project Status';
     }
@@ -155,6 +162,12 @@ const Home = () => {
                 </React.Fragment>
               )}
             </PopupState>
+            <ListItemButton selected={selectedTab === 9} onClick={() => navigate('/crm-proto')}>
+              <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
+                <WorkIcon />
+              </ListItemIcon>
+              <span style={{ color: TEXT_COLOR }}>CTS Core Prototype</span>
+            </ListItemButton>
             <ListItemButton selected={selectedTab === 2} onClick={() => navigate('/project-summary')}>
               <ListItemIcon sx={{ color: TEXT_COLOR, minWidth: '30px' }}>
                 <DescriptionIcon />
@@ -206,6 +219,7 @@ const Home = () => {
           {selectedTab === 6 && <div>Tasks - Today</div>}
           {selectedTab === 7 && <div>Tasks - Next 7 Days</div>}
           {selectedTab === 8 && <div>Tasks - Inbox</div>}
+          {selectedTab === 9 && <CrmProto />}
         </Box>
       </Box>
     </Box>
@@ -225,6 +239,7 @@ const App = () => (
         <Route path="/tasks-today" element={<Home />} />
         <Route path="/tasks-next-7-days" element={<Home />} />
         <Route path="/tasks-inbox" element={<Home />} />
+        <Route path="/crm-proto" element={<Home />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </Router>

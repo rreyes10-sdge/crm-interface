@@ -968,3 +968,31 @@ class Resolvers:
             'labelSortOrder': row['LabelSortOrder'],
             })
         return result
+    
+    @staticmethod
+    def resolve_program_list(root, info):
+        query = f"""SELECT * FROM cleantranscrm.Program p;"""
+        
+        df = fetch_data(query)
+        result = []
+        for _, row in df.iterrows():
+            result.append({
+            'programId': row['ProgramId'],
+            'programName': row['Name'],
+            'shortName': row['ShortName'],
+            })
+        return result
+    
+    @staticmethod
+    def resolve_project_status(root, info):
+        query = f"""SELECT * FROM cleantranscrm.ProjectStatus ps;"""
+        
+        df = fetch_data(query)
+        result = []
+        for _, row in df.iterrows():
+            result.append({
+            'projectStatusId': row['ProjectStatusId'],
+            'projectStatusName': row['Name'],
+            'projectStatusLongName': row['LongName'],
+            })
+        return result

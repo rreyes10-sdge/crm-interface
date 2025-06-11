@@ -20,12 +20,14 @@ from datetime import date, timedelta
 # Set up resolvers
 query = QueryType()
 query.set_field("projectOverview", Resolvers.resolve_project_overview)
+query.set_field("programList", Resolvers.resolve_program_list)
 query.set_field("projectsWithFollowUpDates", Resolvers.resolve_projects_with_follow_up_dates)
 query.set_field("servicesStarted", Resolvers.resolve_services_started)
 query.set_field("projectsNotStarted", Resolvers.resolve_projects_not_started)
 query.set_field("completedProjects", Resolvers.resolve_completed_projects)
 query.set_field("projectTimeline", Resolvers.resolve_project_timeline)
 query.set_field("projectServices", Resolvers.resolve_all_project_services)
+query.set_field("projectStatusList", Resolvers.resolve_project_status)
 
 # Create the executable schema
 schema = make_executable_schema(type_defs, query)
@@ -1130,7 +1132,7 @@ def calculate_total_costs_per_year(monthly_results):
 
     for result in monthly_results:
         year = result["year"]
-        electric_monthly_tc = result["scenario_1"]["electric_monthly_tc"]
+        electric_monthly_tc = result["scenario_2"]["electric_monthly_tc"]
         fossil_fuel_monthly_tc = result["monthly_fossil_fuel_tc"]
 
         if year not in yearly_costs:
@@ -1176,7 +1178,7 @@ def calculate_averages_and_savings(monthly_results):
     average_electric_monthly_tc_4 = total_electric_monthly_tc_4 / num_months
     yearly_electric_tc_4 = average_electric_monthly_tc_4 * 12
 
-    monthly_savings = average_fossil_fuel_monthly_tc - average_electric_monthly_tc_1
+    monthly_savings = average_fossil_fuel_monthly_tc - average_electric_monthly_tc_2
     yearly_savings = yearly_fossil_fuel_tc - yearly_electric_tc_2
 
     return {

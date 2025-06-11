@@ -10,7 +10,7 @@ const GET_PROJECT_OVERVIEW = gql`
       projectNumber
       programId
       servicesCompleted
-      status
+      projectStatus
       organizationName
     }
   }

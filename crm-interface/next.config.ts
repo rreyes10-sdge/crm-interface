@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         source: '/program-summary',
         destination: '/',
       },
+      {
+        source: '/crm-proto',
+        destination: '/',
+      },
     ];
   },
 };
