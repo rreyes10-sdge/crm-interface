@@ -809,11 +809,11 @@ def get_phase_transitions():
 
 
 # 1. Get projects filtered by org name and status
-@app.route('/projects', methods=['GET'])
-def get_projects():
+@app.route('/api/projects/filtered', methods=['GET'])
+def get_projects_filtered():
     org = request.args.get('organization')
     status = request.args.get('status')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     query = """
         SELECT p.* FROM Project p
@@ -829,10 +829,10 @@ def get_projects():
     return jsonify([dict(zip(columns, row)) for row in rows])
 
 # 2. Update project status
-@app.route('/projects/<int:project_id>/status', methods=['PUT'])
+@app.route('/api/projects/<int:project_id>/status', methods=['PUT'])
 def update_project_status(project_id):
     new_status = request.json.get('new_status')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT ProjectStatusId FROM ProjectStatus WHERE LongName = %s", (new_status,))
     status_row = cur.fetchone()
@@ -846,12 +846,12 @@ def update_project_status(project_id):
     return jsonify({"success": True})
 
 # 3. Create new project
-@app.route('/projects', methods=['POST'])
+@app.route('/api/projects', methods=['POST'])
 def create_project():
     data = request.json
     name = data.get('name')
     org_name = data.get('organization')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT OrganizationId FROM Organization WHERE Name = %s", (org_name,))
     org_row = cur.fetchone()
@@ -866,11 +866,11 @@ def create_project():
     return jsonify({"project_id": project_id})
 
 # 4. Add comment to project (Activity)
-@app.route('/projects/<int:project_id>/comments', methods=['POST'])
+@app.route('/api/projects/<int:project_id>/comments', methods=['POST'])
 def add_comment(project_id):
     user_id = request.json.get('user_id')
     text = request.json.get('text')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO Activity (ProjectId, UserId, Text, ActivityDate)
@@ -882,9 +882,9 @@ def add_comment(project_id):
     return jsonify({"success": True})
 
 # 5. Get activity for a project
-@app.route('/projects/<int:project_id>/activity', methods=['GET'])
+@app.route('/api/projects/<int:project_id>/activity', methods=['GET'])
 def get_activity(project_id):
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM Activity WHERE ProjectId = %s ORDER BY ActivityDate DESC", (project_id,))
     rows = cur.fetchall()
@@ -894,48 +894,53 @@ def get_activity(project_id):
     return jsonify([dict(zip(columns, row)) for row in rows])
 
 # 6. What is missing from a given phase in a project
-@app.route('/projects/<project_number>/missing-attributes', methods=['GET'])
+@app.route('/api/projects/<project_number>/missing-attributes', methods=['GET'])
 def get_missing_attributes(project_number):
     phase_name = request.args.get('phase')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
-
+ 
+    # Get ProgramId from project number
     cur.execute("""
-        SELECT p.ProgramId FROM Project p WHERE p.ProjectNumber = %s
+        SELECT ProgramId FROM Project WHERE ProjectNumber = %s
     """, (project_number,))
     program_row = cur.fetchone()
     if not program_row:
         return jsonify({"error": "Invalid project number"}), 400
     program_id = program_row[0]
-
+ 
+    # Get PhaseId using phase name directly from ProgramPhase table
     cur.execute("""
-        SELECT pp.ProgramPhaseId FROM ProgramPhase pp
-        JOIN Phase ph ON pp.PhaseId = ph.PhaseId
-        WHERE pp.ProgramId = %s AND ph.Name = %s
+        SELECT PhaseId FROM ProgramPhase
+        WHERE ProgramId = %s AND Name = %s
     """, (program_id, phase_name))
     phase_row = cur.fetchone()
     if not phase_row:
         return jsonify({"error": "Phase not found for program"}), 400
     program_phase_id = phase_row[0]
-
+ 
+    # Get missing attributes for that program phase and project
     cur.execute("""
-        SELECT pa.* FROM ProgramAttribute pa
-        LEFT JOIN ProjectAttributeValue pav ON pa.ProgramAttributeId = pav.ProgramAttributeId
-        AND pav.ProjectId = (SELECT ProjectId FROM Project WHERE ProjectNumber = %s)
-        WHERE pa.ProgramPhaseId = %s AND (pav.Value IS NULL OR pav.Value = '')
-    """, (project_number, program_phase_id))
+        SELECT pa.*, pav.Id as ProjectAttributeValueId, pav.Value as ProjectAttributeValue FROM ProgramAttribute pa
+        LEFT JOIN ProjectAttributeValue pav
+            ON pa.ProgramAttributeId = pav.ProgramAttributeId
+            AND pav.ProjectId = (SELECT ProjectId FROM Project WHERE ProjectNumber = %s)
+        WHERE pa.PhaseId = %s and pa.ProgramId = %s
+            AND (pav.Id IS NULL OR pav.Value IS NULL OR pav.Value = '')
+    """, (project_number, program_phase_id, program_id))
     rows = cur.fetchall()
     columns = [desc[0] for desc in cur.description]
     cur.close()
     conn.close()
     return jsonify([dict(zip(columns, row)) for row in rows])
+ 
 
 # 7. Get all activity for a user in a date range
-@app.route('/activity/user/<int:user_id>', methods=['GET'])
+@app.route('/api/activity/user/<int:user_id>', methods=['GET'])
 def get_user_activity(user_id):
     start = request.args.get('start_date')
     end = request.args.get('end_date')
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
     query = """
         SELECT * FROM Activity
